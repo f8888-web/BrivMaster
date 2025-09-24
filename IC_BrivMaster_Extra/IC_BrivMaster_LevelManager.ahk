@@ -63,7 +63,7 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
     {
 		startTime:=A_TickCount
 		clickTarget:=this.GetClickDamageTargetLevel()
-		while (g_SF.Memory.IBM_ReadClickLevel() < clickTarget AND g_SF.Memory.IBM_ReadClickLevelUpAllowed() >= 100 AND A_TickCount - startTime < timeout) ;TODO: This probably needs a check for click damage being below area base mob HP, and allowing levelling in less than 100 levels at a time if so
+		while (g_SF.Memory.IBM_ReadClickLevel() < clickTarget AND g_SF.Memory.IBM_ReadClickLevelUpAllowed() > 0 AND A_TickCount - startTime < timeout)
 		{
 			;OutputDebug % A_TickCount . ":Levelling Click Damage`n"
 			this.KEY_ClickDmg.KeyPress() ;No value in trying to build this to be able to use _Bulk() as it will mostly only be one press at a time
