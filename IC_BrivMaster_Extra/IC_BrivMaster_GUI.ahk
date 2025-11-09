@@ -19,23 +19,34 @@ class IC_IriBrivMaster_GUI
 	Init()
 	{
 		global ;required for control variables
+		GuiControl, ICScriptHub: +gIBM_Launch_Override, LaunchClickButton ;Override the main launch button to use IBM settings
 		groupWidth:=480
-		g_TabControlWidth := 520 ;Widen script hub
+		g_TabControlWidth:=520 ;Widen script hub
 		;MAIN TAB
 		Gui, ICScriptHub:Tab, Briv Master
-		;Save
-		Gui, ICScriptHub:Add, Button, xm+5 y+10 vIBM_Settings_Save gIBM_Settings_Save, Save
-		Gui, ICScriptHub:Add, Button, x+5 vIBM_Stats_Reset gIBM_Stats_Reset, Reset Stats
-		;Import warning (replacing the one on Stats)
-		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Text, vWarning_Imports_Bad x+12 yp-4 w260 r2
-		Gui, ICScriptHub:Font, w400
+		;Buttons for starting, saving etc
+		buttonWidth:=25
+		buttonSpacing:=15
+		firstButtonOffset:=(groupWidth/2) - (buttonWidth*5+buttonSpacing*4)/2 ;Place the center of the set of buttons in the centre of the group box area
+		buttonStatusWidth:=Max(firstButtonOffset-10, 50)
+		Gui, ICScriptHub:Add, Text, xm+5 y+10 r2 w%buttonStatusWidth% vIBM_MainButtons_Status 0x200
+		Gui, ICScriptHub:Add, Picture, xm+%firstButtonOffset% yp+0 h-1 w%buttonWidth% gIBM_MainButtons_Start vIBM_MainButtons_Start, %g_PlayButton%
+		Gui, ICScriptHub:Add, Picture, x+%buttonSpacing% h-1 w%buttonWidth% gIBM_MainButtons_Stop vIBM_MainButtons_Stop, %g_StopButton%
+		Gui, ICScriptHub:Add, Picture, x+%buttonSpacing% h-1 w%buttonWidth% gIBM_MainButtons_Connect vIBM_MainButtons_Connect, %g_ConnectButton%
+		Gui, ICScriptHub:Add, Picture, x+%buttonSpacing% h-1 w%buttonWidth% gIBM_MainButtons_Save vIBM_MainButtons_Save, %g_SaveButton%
+		Gui, ICScriptHub:Add, Picture, x+%buttonSpacing% h-1 w%buttonWidth% gIBM_MainButtons_Reset vIBM_MainButtons_Reset, %A_LineFile%\..\Resources\Reset-100x100.png
+		GUIFunctions.AddToolTip("IBM_MainButtons_Start", "Start Gem Farm") ;TODO: Figure out what this first entry has to be doubled. Possibly using 'A' for active window too early? Reported to Anti 08Nov25
+		GUIFunctions.AddToolTip("IBM_MainButtons_Start", "Start Gem Farm")
+        GUIFunctions.AddToolTip("IBM_MainButtons_Stop", "Stop Gem Farm")
+        GUIFunctions.AddToolTip("IBM_MainButtons_Connect", "Reconnect to Gem Farm script")
+        GUIFunctions.AddToolTip("IBM_MainButtons_Save", "Save Briv Master settings from all tabs")
+		GUIFunctions.AddToolTip("IBM_MainButtons_Reset", "Reset stats")
 		;Cycle
-		Gui, ICScriptHub:Add, Groupbox, xm+385 yp-5 w100 h30
-		Gui, ICScriptHub:Add, Text, xp+5 yp+9 w90 0x200 h18 Center vIBM_RunControl_Cycle, % "Cycle -/-"
+		Gui, ICScriptHub:Add, Groupbox, xm+385 yp-8 w100 h34
+		Gui, ICScriptHub:Add, Text, xp+5 yp+12 w90 0x200 h18 Center vIBM_RunControl_Cycle, % "Cycle -/-"
 		;Run control
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+4 w%groupWidth% h130 vIBM_RunControl_Group, Run Control
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+5 w%groupWidth% h130 vIBM_RunControl_Group, Run Control
 		Gui, ICScriptHub:Font, w400
 		;>Group for offline control options
 		Gui, ICScriptHub:Add, Groupbox, xs+8 ys+10 w290 h41
@@ -67,7 +78,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+13 w%groupWidth% h220 vIBM_Stats_Group, Run Stats
 		Gui, ICScriptHub:Font, w400
-		
+
 		Gui, ICScriptHub:Add, ListView , xs+10 ys+20 w220 0x2000 LV0x10000 vIBM_Stats_Run_LV Count3 R3 LV0x10 NoSort NoSortHdr, Time|Last|Mean|Fast|Slow ;0x2000 is remove H scroll bar, LV0x10000 is double-buffering to stop flickering, LV0x10 prevents re-ordering of columns
 		GuiControl, -Redraw, IBM_Stats_Run_LV
 		Gui, ICScriptHub:Default
@@ -91,7 +102,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, x+3 w140 vIBM_Stats_Fail_Runs, -
 		Gui, ICScriptHub:Add, Text, xs+250 y+4 w85, Failed Run Time:
 		Gui, ICScriptHub:Add, Text, x+3 w140 vIBM_Stats_Fail_Time, -
-		
+
 		highlightWidth:=FLOOR((groupWidth-21)/2)
 		GUIFunctions.UseThemeTextColor("SpecialTextColor1", 700)
 		Gui, ICScriptHub:Add, Text, xs+10 y%highlightY% w%highlightWidth% Center vIBM_Stats_BPH, BPH
@@ -123,12 +134,12 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%groupWidth% h50 vIBM_Chest_Group, Chests && Daily Platinum
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, ListView , xs+10 ys+20 w410 0x2000 LV0x10000 vIBM_ChestsSnatcher_Status Count10 -Hdr R1, Time|Action|Result ;0x2000 is remove H scroll bar, LV0x10000 is double-buffering to stop flickering
+		Gui, ICScriptHub:Add, ListView , xs+10 ys+20 w410 0x2000 LV0x10000 LV0x10 vIBM_ChestsSnatcher_Status Count10 -Hdr R1, Time|Action|Result ;0x2000 is remove H scroll bar, LV0x10000 is double-buffering to stop flickering
 		GuiControl, -Redraw, IBM_ChestsSnatcher_Status
 		Gui, ICScriptHub:Default
 		Gui, ListView, IBM_ChestsSnatcher_Status
 		LV_ModifyCol(1,50)
-		LV_ModifyCol(2,50)
+		LV_ModifyCol(2,40)
 		GuiControl, +Redraw, IBM_ChestsSnatcher_Status
 		;>Chest Log window
 		Gui, IBM_ChestSnatcher_Log:New , , Chest & Daily Platinum Log
@@ -150,18 +161,19 @@ class IC_IriBrivMaster_GUI
 		Gui, IBM_ChestSnatcher_Options:New , , Chest Options
 		Gui, IBM_ChestSnatcher_Options:-Resize -MaximizeBox +HwndOpt_Hwnd
 		this.IBM_ChestSnatcher_Opt_Hwnd:=Opt_Hwnd ;Save handle to the options window
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w35 Number Limit5 vIBM_ChestSnatcher_Options_Min_Gold gIBM_ChestSnatcher_Options_Min_Gold
-		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w180 h18 0x200, Minimum Gold held before opening
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w35 Number Limit5 vIBM_ChestSnatcher_Options_Min_Silver gIBM_ChestSnatcher_Options_Min_Silver
-		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w180 h18 0x200, Minimum Silver held before opening
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w35 Number Limit4 vIBM_ChestSnatcher_Options_Min_Buy gIBM_ChestSnatcher_Options_Min_Buy
-		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w180 h18 0x200, Minimum chest purchase
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w35 Number Limit2 vIBM_ChestSnatcher_Options_Estimate_Gold gIBM_ChestSnatcher_Options_Estimate_Gold
-		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w200 h18 0x200, Estimated time to open 1 gold chest (ms)
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w35 Number Limit2 vIBM_ChestSnatcher_Options_Estimate_Silver gIBM_ChestSnatcher_Options_Estimate_Silver
-		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w200 h18 0x200, Estimated time to open 1 silver chest (ms)
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit3 vIBM_ChestSnatcher_Options_Min_Buy gIBM_ChestSnatcher_Options_Min_Buy
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Gold to buy per call (0 to disable)
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Gold gIBM_ChestSnatcher_Options_Open_Gold
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Gold to open per call (0 to disable)
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Silver gIBM_ChestSnatcher_Options_Open_Silver
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Silver to open per call (0 to disable)
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gem gIBM_ChestSnatcher_Options_Min_Gem
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Gems
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gold gIBM_ChestSnatcher_Options_Min_Gold
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Gold
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Silver gIBM_ChestSnatcher_Options_Min_Silver
+		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Silver
 		Gui, IBM_ChestSnatcher_Options:Add, CheckBox, xm+10 h18 0x200 vIBM_ChestSnatcher_Options_Claim gIBM_ChestSnatcher_Options_Claim, Claim Daily Rewards
-		;GUIFunctions.AddToolTip( "IBM_ChestSnatcher_Options_Claim", "When enabled will attempt to claim the daily platinum reward") ;SH does not appear to be support tooltips outside of the main window, so this ends up in some odd place in the main window
 		;Game Settings
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%groupWidth% h50 vIBM_Game_Settings_Group, % "Game Settings" ;Group has a variable so we can check its location for the
@@ -261,6 +273,10 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, w5 x+0 h18 0x200 Center, :
 		Gui, ICScriptHub:Add, Edit, w12 x+0 Number Limit1 vIBM_NonGemFarm_Elly_Max_5,0
 		Gui, ICScriptHub:Add, Text, x+25 w130 vIBM_NonGemFarm_Elly_Status,
+		;Import warning TODO: This is just stuffed at the bottom, can we do something better here?
+		Gui, ICScriptHub:Font, w700
+		Gui, ICScriptHub:Add, Text, vIBM_Import_Warning xm+10 y+25 w480 Center
+		Gui, ICScriptHub:Font, w400
 
 		;ROUTE TAB
 		Gui, ICScriptHub:Tab, BM Route
@@ -276,7 +292,7 @@ class IC_IriBrivMaster_GUI
 		sideBarWidth:=72
 		mainWidth:=groupWidth-sideBarWidth-5
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+15 w%mainWidth% h270 vIBM_Route_Group, Route
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%mainWidth% h270 vIBM_Route_Group, Route
 		Gui, ICScriptHub:Font, w400
 		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, % "Select zones to jump with the Q formation ("
 		textColour:=IC_IriBrivMaster_GUI.IBM_COLOUR_ROUTE_YES_JUMP
@@ -306,15 +322,18 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_Route_BrivJump_M_Edit", "The number of additional zones Briv jumps using the M (Modron) formation when feat swapping. Used when combining to determine the initial jump. Should be the same as Q if not feat swapping")
 		;Due to the sidebar we need to get the Y location of the buttons at the bottom of the jump/stack box
 		GuiControlGet, RouteEndPosition, ICScriptHub:Pos, IBM_Route_Import_Button
-		nextY:=RouteEndPositionY+RouteEndPositionH+15
+		nextY:=RouteEndPositionY+RouteEndPositionH+9
 		;Offline stacking zones (with Flames-based options)
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y%nextY% w%groupWidth% h80, Stacking Zones
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y%nextY% w%groupWidth% h101, Stacking Zones
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Offline
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Offline:
 		Gui, ICScriptHub:Add, Edit, w35 x+3 yp+0 Number Limit4 vIBM_OffLine_Stack_Zone_Edit gIBM_OffLine_Stack_Zone_Edit
 		GUIFunctions.AddToolTip( "IBM_OffLine_Stack_Zone_Edit","Offline stacking will be performed on or after this zone during normal operation. When flames-based stacking is enabled this will be used for 0 flames cards")
-		Gui, ICScriptHub:Add, CheckBox, x+15 h18 0x200 vIBM_OffLine_Flames_Use gIBM_OffLine_Flames_Use, Flames-based:
+		Gui, ICScriptHub:Add, Text, x+10 h18 0x200, Minimum stack zone:
+		Gui, ICScriptHub:Add, Edit, w35 x+3 yp+0 Number Limit4 vIBM_OffLine_Stack_Min_Edit gIBM_OffLine_Stack_Min_Edit
+		GUIFunctions.AddToolTip( "IBM_OffLine_Stack_Min_Edit","The minimum zone Briv can farm stacks on; that is the lowest zone that the W formation does not kill enemies. Used for recovery")
+		Gui, ICScriptHub:Add, CheckBox, xs+10 y+5 h18 0x200 vIBM_OffLine_Flames_Use gIBM_OffLine_Flames_Use, Flames-based:
 		GUIFunctions.AddToolTip( "IBM_OffLine_Flames_Use", "Ellywick's Flames cards increase the damage enemies deal, reducing the stacks Briv gains during offline stacking. This option allows this to be accounted for. Spending the time calibrating your stack zone for the rare instances of 3 or more cards is unlikely to be worthwhile; set them to a lower zone so that Briv does not die. Remember that the Gem feat makes the 5-card value unnecessary")
 		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, 1
 		Gui, ICScriptHub:Add, Edit, w35 x+3 Number Limit4 vIBM_OffLine_Flames_Zone_Edit_1 gIBM_OffLine_Flames_Zone_Any_Edit Disabled
@@ -326,7 +345,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Edit, w35 x+3 Number Limit4 vIBM_OffLine_Flames_Zone_Edit_4 gIBM_OffLine_Flames_Zone_Any_Edit Disabled
 		Gui, ICScriptHub:Add, Text, x+9 h18 0x200, 5
 		Gui, ICScriptHub:Add, Edit, w35 x+3 Number Limit4 vIBM_OffLine_Flames_Zone_Edit_5 gIBM_OffLine_Flames_Zone_Any_Edit Disabled
-		Gui, ICScriptHub:Add, CheckBox, xs+10 y+10 h18 0x200 vIBM_Online_Melf_Use gIBM_Online_Melf_Use, Online Stack with Melf:
+		Gui, ICScriptHub:Add, CheckBox, xs+10 y+5 h18 0x200 vIBM_Online_Melf_Use gIBM_Online_Melf_Use, Online Stack with Melf:
 		GUIFunctions.AddToolTip( "IBM_Online_Melf_Use","When enabled online stacking will be performed when Melf's increased spawn count effect is active, within the range specified")
 		Gui, ICScriptHub:Add, Text, x+10 h18 0x200, Min
 		Gui, ICScriptHub:Add, Edit, w35 x+3 Number Limit4 vIBM_Online_Melf_Min_Edit gIBM_Online_Melf_Min_Edit
@@ -336,19 +355,26 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_Online_Ultra_Enabled", "With sufficient BUD, attempts to swap to the W formation when exiting the zone prior to the stack zone and then exit the stack zone using Briv's ultimate")
 		;Offline config
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+10 w%groupWidth% h75, Offline Settings
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%groupWidth% h99, Offline Settings
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Platform Login Target Time
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Platform login:
 		Gui, ICScriptHub:Add, Edit, w40 x+3 Number Limit5 vIBM_OffLine_Delay_Time_Edit gIBM_OffLine_Delay_Time_Edit
 		Gui, ICScriptHub:Add, Text, x+3 h18 0x200, ms
 		GUIFunctions.AddToolTip( "IBM_OffLine_Delay_Time_Edit", "The time to wait during an offline restart between the previous instance of the game saving, and the new one completing platform login. Set this high enough to consistently trigger stacking, but no higher")
-		Gui, ICScriptHub:Add, Text, x+25 h18 0x200, Offline every
+		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Restart sleep:
+		Gui, ICScriptHub:Add, Edit, w35 x+3 Number Limit4 vIBM_OffLine_Sleep_Time_Edit gIBM_OffLine_Sleep_Time_Edit
+		Gui, ICScriptHub:Add, Text, x+3 h18 0x200, ms
+		GUIFunctions.AddToolTip( "IBM_OffLine_Sleep_Time_Edit", "The time to wait between the game closing and launching a new copy. This should only be increased from 0 if the lack of delay causes platform issues")
+		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Timeout factor:
+		Gui, ICScriptHub:Add, Edit, w20 x+3 Number Limit3 vIBM_OffLine_Timeout_Edit gIBM_OffLine_Timeout_Edit
+		GUIFunctions.AddToolTip( "IBM_OffLine_Timeout_Edit", "Controls the time allowed for the game to start and close. The start time is 10s times this value, and the close value a number of seconds equal to it")
+		Gui, ICScriptHub:Add, Text, xs+10 y+5 h18 0x200, Offline every:
 		Gui, ICScriptHub:Add, Edit, w25 x+3 Number Limit3 vIBM_OffLine_Freq_Edit gIBM_OffLine_Freq_Edit
 		Gui, ICScriptHub:Add, Text, x+5 h18 0x200, runs
 		GUIFunctions.AddToolTip( "IBM_OffLine_Freq_Edit", "Often referred to as FORT (Force Offline Run Threshold)")
-		Gui, ICScriptHub:Add, CheckBox, x+25 h20 0x200 vIBM_RunControl_RestoreWindow_Default gIBM_RunControl_RestoreWindow_Default, Restore Window
+		Gui, ICScriptHub:Add, CheckBox, x+15 h20 0x200 vIBM_RunControl_RestoreWindow_Default gIBM_RunControl_RestoreWindow_Default, Restore window
 		GUIFunctions.AddToolTip( "IBM_RunControl_RestoreWindow_Default", "Sets the default Restore Window option to be used when the script starts")
-		Gui, ICScriptHub:Add, CheckBox, xs+10 y+10 h18 0x200 vIBM_OffLine_Blank gIBM_OffLine_Blank, Blank restarts
+		Gui, ICScriptHub:Add, CheckBox, xs+10 y+5 h18 0x200 vIBM_OffLine_Blank gIBM_OffLine_Blank, Blank restarts
 		GUIFunctions.AddToolTip( "IBM_OffLine_Blank", "Blank offline runs do not attempt to stack, and will online stack if needed along with a restart of the game. Use this to clear memory bloat in the game when offline stacking is slower overall than online")
 		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_OffLine_Blank_Relay gIBM_OffLine_Blank, Relay restarts
 		GUIFunctions.AddToolTip( "IBM_OffLine_Blank_Relay", "Relay blank restarts launch a new instance of the game prior to closing the current one. Not compatible with the Epic Games Launcher")
@@ -357,7 +383,7 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_OffLine_Blank_Relay_Zones", "The number of zones prior to the Offline zone that the relay will start. If stacking with Melf and the online stacking zone is within the Relay window, this will be be offset from that stacking zone instead. In any case the relay will not start until after Thellora's landing zone")
 		;Ellywick Casino
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+10 w%groupWidth% h50, % "Ellywick's Casino"
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+7 w%groupWidth% h50, % "Ellywick's Casino"
 		Gui, ICScriptHub:Font, w400
 		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Target / Redraws / Min. Gem	Base:
 		Gui, ICScriptHub:Add, Edit, w12 x+2 Number Limit1 vIBM_Casino_Target_Base gIBM_Casino_Target_Base
@@ -369,12 +395,39 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Edit, w12 x+3 Number Limit1 vIBM_Casino_MinCards_Melf gIBM_Casino_MinCards_Melf
 		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Target post-Casino:
 		Gui, ICScriptHub:Add, Edit, w15 x+2 Number Limit1 vIBM_Casino_Target_InFlight gIBM_Casino_Target_InFlight
-		
+		;Script Window Options
+		Gui, ICScriptHub:Font, w700
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+9 w%groupWidth% h50, % "Window Options"
+		Gui, ICScriptHub:Font, w400
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Screen Position (x,y):
+		Gui, ICScriptHub:Add, Edit, w35 x+2 Number Limit4 vIBM_Window_X gIBM_Window_Settings
+		Gui, ICScriptHub:Add, Text, x+2 h18 0x200, ,
+		Gui, ICScriptHub:Add, Edit, w35 x+2 Number Limit4 vIBM_Window_Y gIBM_Window_Settings
+		Gui, ICScriptHub:Add, CheckBox, x+15 h18 0x200 vIBM_Window_Hide gIBM_Window_Settings, Hide
+		Gui, ICScriptHub:Add, CheckBox, x+15 h18 0x200 vIBM_Window_Dark_Icon gIBM_Window_Settings, Dark Icon
 		;LEVELS TAB
 		Gui, ICScriptHub:Tab, BM Levels
+		;Game location
+		Gui, ICScriptHub:Font, w700
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+10 w%groupWidth% h125, Game Location
+		Gui, ICScriptHub:Font, w400
+		Gui, ICScriptHub:Add, Text, w55 xs+5 ys+20 h18 0x200, Executable:
+		Gui, ICScriptHub:Add, Edit, w40 x+10 w170 vIBM_Game_Exe gIBM_Game_Location_Settings
+		GUIFunctions.AddToolTip( "IBM_Game_Exe", "The game executable file name, normally IdleDragons.exe")
+		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Game_Hide_Launcher gIBM_Game_Location_Settings, Hide launcher
+		GUIFunctions.AddToolTip( "IBM_Game_Hide_Launcher", "Select this option to hide the window created by the launch command. Useful when using an alternative launcher and do not want to the window it creates. Do not use when launching the game directly")
+		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Game_EGS, EGS ;Note: Not a setting, only used by Copy from IC
+		GUIFunctions.AddToolTip( "IBM_Game_EGS", "Selecting this option and pressing Copy from IC will populate the launch path with the standard EGS launch command for Idle Champions")
+		Gui, ICScriptHub:Add, Button, x+10 vIBM_Game_Copy_From_Game gIBM_Game_Copy_From_Game, Copy from IC
+		Gui, ICScriptHub:Add, Text, w55 xs+5 y+5 h18 0x200, Location:
+		Gui, ICScriptHub:Add, Edit, w40 x+10 w402 r2 vIBM_Game_Path gIBM_Game_Location_Settings
+		GUIFunctions.AddToolTip( "IBM_Game_Path", "The game install location")
+		Gui, ICScriptHub:Add, Text, w55 r2 xs+5 y+5 h18, Launch Command:
+		Gui, ICScriptHub:Add, Edit, w40 x+10 w402 r2 vIBM_Game_Launch gIBM_Game_Location_Settings
+		GUIFunctions.AddToolTip( "IBM_Game_Launch", "The launch command for the game. This is seperated to allow the use of different launchers")
 		;Levelling Options
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+10 w%groupWidth% h102, Levelling Options
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+7 w%groupWidth% h102, Levelling Options
 		Gui, ICScriptHub:Font, w400
 		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Max sequential F-keys
 		Gui, ICScriptHub:Add, Edit, w40 x+5 Number w20 Limit2 vIBM_Level_Options_Input_Max gIBM_Level_Options_Input_Max
@@ -386,12 +439,14 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_Level_Options_Mod_Key", "The modifier keybind to use for levelling less than 100 levels at a time. Set all champions to multiples of 100 levels if you do not wish to use this feature")
 		Gui, ICScriptHub:Add, Text, x+5 h18 0x200, for x
 		Gui, ICScriptHub:Add, DropDownList, x+1 w35 vIBM_Level_Options_Mod_Value gIBM_Level_Options_Mod, 10|25
+		GUIFunctions.AddToolTip( "IBM_Level_Options_Mod_Value", "The levelling amount associated with the key selected. This must match the in-game keybind")
 		Gui, ICScriptHub:Add, CheckBox, xs+10 y+8 h18 0x200 vIBM_Level_Options_BrivBoost_Use gIBM_Level_Options_BrivBoost_Use, Briv Level Boost
 		GUIFunctions.AddToolTip( "IBM_Level_Options_BrivBoost_Use", "When enabled will increase Briv's level during online stacking. Use when Briv's normal level is insufficent for later stack zones")
 		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Safety Factor
 		Gui, ICScriptHub:Add, Edit, w20 x+1 Number Limit2 vIBM_Level_Options_BrivBoost_Multi gIBM_Level_Options_BrivBoost_Multi
 		GUIFunctions.AddToolTip( "IBM_Level_Options_BrivBoost_Multi", "This is how many times greater Briv's HP should be than the incoming damage of 100 enemies. Useful range 8 (fast stacking) to 12 (slower stacking)")
-		GUIFunctions.AddToolTip( "IBM_Level_Options_Mod_Value", "The levelling amount associated with the key selected. This must match the in-game keybind")
+		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Level_Diana_Cheese gIBM_Level_Diana_Cheese, Dynamic Diana
+		GUIFunctions.AddToolTip( "IBM_Level_Diana_Cheese", "Diana can give excess chests after the daily reset. This option will raise her level to 200 for Electrum Chest Scavenger from 5 minutes before the daily reset to 30 minutes after. Her level in the main options should be left at 100")
 		Gui, ICScriptHub:Add, CheckBox, xs+10 y+8 h18 0x200 vIBM_Level_Options_Limit_Tatyana gIBM_Level_Options_Limit_Tatyana, Smart Tatyana in Casino
 		GUIFunctions.AddToolTip( "IBM_Level_Options_Limit_Tatyana", "Only level Tatyana at the start of a run if Melf's Spawn More effect is not active in the Casino zone. To use this option her Start level should be set to 0")
 		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Level_Options_Suppress_Front gIBM_Level_Options_Suppress_Front, Surpress Front Row
@@ -400,10 +455,9 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_Level_Options_Ghost", "During the Casino, level champions that are not part of the formation so long as they will not be placed, either due to all slots being full or only slots at the front being available and the formation being under attack. This option makes it more likely all speed effects will be ready for the first normal zone. Only applied when combining")
 		;Level manager - headings
 		Gui, ICScriptHub:Font, w700
-		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%groupWidth% h70 vIBM_LevelManager, Level Manager
+		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+10 w%groupWidth% h70 vIBM_LevelManager, Level Manager
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, Button, w200 xs+10 ys+20 vIBM_LevelManager_Refresh gIBM_LevelManager_Refresh, Refresh Formations
-		Gui, ICScriptHub:Add, Text, xs+10 y+5 h20 w15 Left 0x200 vIBM_LevelRow_H_Seat, S
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h20 w15 Left 0x200 vIBM_LevelRow_H_Seat, S
 		Gui, ICScriptHub:Add, Text, x+1 h20 w90 Left 0x200 vIBM_LevelRow_H_Name, Champion
 		Gui, ICScriptHub:Add, Text, w40 h20 x+1 0x200 vIBM_LevelRow_H_z1, Start
 		GUIFunctions.AddToolTip( "IBM_LevelRow_H_z1", "Levels used for the first zone")
@@ -411,7 +465,8 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_LevelRow_H_Priority", "Levelling priority for the first zone. Options with levels beside them will use the selected priority only until that level is reached, at which point it will be treated as 0")
 		Gui, ICScriptHub:Add, Text, w40 h20 x+1 0x200 vIBM_LevelRow_H_min, Normal
 		Gui, ICScriptHub:Add, Text, w83 x+5 0x200 h20 Center 0x200 vIBM_LevelRow_H_Formations, Formations
-		;Level manager - create the maximum of 40 rows (4 formations x 10 champions), we will hide what we don't need when populating- TODO: Decide if we really need 40 here, it's a complete solution...but also pointlessly overkill. 12 is relatively high (as of 23Aug25)
+		Gui, ICScriptHub:Add, Button, w100 x+20 vIBM_LevelManager_Refresh gIBM_LevelManager_Refresh, Refresh Formations
+		;Level manager - create the maximum of 40 rows (4 formations x 10 champions), we will hide what we don't need when populating TODO: Decide if we really need 40 here, it's a complete solution...but also pointlessly overkill. 12 is relatively high (as of 23Aug25)
 		this.LevelRow_Priority_Value:=[5,4,3,2,1,0,-1,-2,-3,-4,-5,5,4,3,2,1,5,4,3,2,1]
 		this.LevelRow_Priority_Limit:=["","","","","","","","","","","",100,100,100,100,100,200,200,200,200,200]
 		loop 40
@@ -472,6 +527,7 @@ class IC_IriBrivMaster_GUI
     {
         ;Stacking Zone group
 		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Zone_Edit, % data.IBM_Offline_Stack_Zone
+		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Min_Edit, % data.IBM_Offline_Stack_Min
 		GuiControl, ICScriptHub:, IBM_OffLine_Flames_Use, % data.IBM_OffLine_Flames_Use
 		Loop, 5
 		{
@@ -503,13 +559,15 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Level_Options_Ghost, % data.IBM_Level_Options_Ghost
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Key, % data.IBM_Level_Options_Mod_Key
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Value, % data.IBM_Level_Options_Mod_Value
+		GuiControl, ICScriptHub:, IBM_Level_Diana_Cheese, % data.IBM_Level_Diana_Cheese
 		;Chest Options
 		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Claim, % data.IBM_DailyRewardClaim_Enable
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gem, % data.IBM_ChestSnatcher_Options_Min_Gem
 		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gold, % data.IBM_ChestSnatcher_Options_Min_Gold
 		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Silver, % data.IBM_ChestSnatcher_Options_Min_Silver
 		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Buy, % data.IBM_ChestSnatcher_Options_Min_Buy
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Estimate_Gold, % data.IBM_ChestSnatcher_Options_Estimate_Gold
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Estimate_Silver, % data.IBM_ChestSnatcher_Options_Estimate_Silver
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Gold, % data.IBM_ChestSnatcher_Options_Open_Gold
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Silver, % data.IBM_ChestSnatcher_Options_Open_Silver
 		;Game settings
 		profile:=data.IBM_Game_Settings_Option_Profile
 		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_1, % profile==1
@@ -527,15 +585,27 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Casino_Redraws_Base, % data.IBM_Casino_Redraws_Base
 		GuiControl, ICScriptHub:, IBM_Casino_MinCards_Base, % data.IBM_Casino_MinCards_Base
 		GuiControl, ICScriptHub:, IBM_Casino_Target_InFlight, % data.IBM_Casino_Target_InFlight
+		;Window
+		GuiControl, ICScriptHub:, IBM_Window_X, % data.IBM_Window_X
+		GuiControl, ICScriptHub:, IBM_Window_Y, % data.IBM_Window_Y
+		GuiControl, ICScriptHub:, IBM_Window_Hide, % data.IBM_Window_Hide
+		GuiControl, ICScriptHub:, IBM_Window_Dark_Icon, % data.IBM_Window_Dark_Icon
 		;Offline
 		GuiControl, ICScriptHub:, IBM_OffLine_Delay_Time_Edit, % data.IBM_OffLine_Delay_Time
+		GuiControl, ICScriptHub:, IBM_OffLine_Sleep_Time_Edit, % data.IBM_OffLine_Sleep_Time
 		GuiControl, ICScriptHub:, IBM_OffLine_Freq_Edit, % data.IBM_OffLine_Freq
 		GuiControl, ICScriptHub:, IBM_OffLine_Blank, % data.IBM_OffLine_Blank
 		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay, % data.IBM_OffLine_Blank_Relay
 		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay_Zones, % data.IBM_OffLine_Blank_Relay_Zones
 		IBM_Offline_Blank_EnableControls(data.IBM_OffLine_Blank,data.IBM_OffLine_Blank_Relay)
+		GuiControl, ICScriptHub:, IBM_OffLine_Timeout_Edit, % data.IBM_OffLine_Timeout
 		;Run control
 		GuiControl, ICScriptHub:, IBM_RunControl_RestoreWindow_Default, % data.IBM_Route_Offline_Restore_Window
+		;Game Location
+		GuiControl, ICScriptHub:, IBM_Game_Exe, % data.IBM_Game_Exe
+		GuiControl, ICScriptHub:, IBM_Game_Path, % data.IBM_Game_Path
+		GuiControl, ICScriptHub:, IBM_Game_Launch, % data.IBM_Game_Launch
+		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % data.IBM_Game_Hide_Launcher
     }
 
 	CreateLevelRow(index)
@@ -811,6 +881,123 @@ class IC_IriBrivMaster_GUI
 
 }
 
+
+IBM_Level_Diana_Cheese()
+{
+	GuiControlGet, value,, IBM_Level_Diana_Cheese
+	g_IriBrivMaster.UpdateSetting("IBM_Level_Diana_Cheese",value)
+}
+
+IBM_Window_Settings()
+{
+	GuiControlGet, value,, IBM_Window_X
+	g_IriBrivMaster.UpdateSetting("IBM_Window_X",value)
+	GuiControlGet, value,, IBM_Window_Y
+	g_IriBrivMaster.UpdateSetting("IBM_Window_Y",value)
+	GuiControlGet, value,, IBM_Window_Hide
+	g_IriBrivMaster.UpdateSetting("IBM_Window_Hide",value)
+	GuiControlGet, value,, IBM_Window_Dark_Icon
+	g_IriBrivMaster.UpdateSetting("IBM_Window_Dark_Icon",value)
+}
+
+IBM_MainButtons_Start() {
+    g_IriBrivMaster.Run_Clicked()
+}
+
+IBM_MainButtons_Stop() {
+    g_IriBrivMaster.Stop_Clicked()
+}
+
+IBM_MainButtons_Connect() {
+    g_IriBrivMaster.Connect_Clicked()
+}
+
+IBM_OffLine_Timeout_Edit()
+{
+	GuiControlGet, value,, IBM_OffLine_Timeout_Edit
+	g_IriBrivMaster.UpdateSetting("IBM_OffLine_Timeout",value)
+}
+
+IBM_Launch_Override() ;To allow use to use IBM game location settings TODO: The game launch routine should probably not be in the GUI file
+{
+	programLoc := g_IBM_Settings["IBM_Game_Launch"]
+    try
+    {
+		if (g_IBM_Settings["IBM_Game_Hide_Launcher"])
+			Run, %programLoc%,,Hide ;TODO: Take the PID from this if the EXE matches the game one; no need for the loop
+		else
+			Run, %programLoc% ;TODO: Take the PID from this if the EXE matches the game one; no need for the loop
+    }
+    catch
+    {
+        MsgBox, 48, % "Unable to launch game, `nVerify the game location is set properly in the Briv Master settings. If you do not wish to use Briv Master's location settings please disable the addon"
+    }
+    Process, Exist, % g_IBM_Settings["IBM_Game_Exe"]
+    g_SF.PID := ErrorLevel
+	Process, Priority, % g_SF.PID, Realtime ;Raises IC's priority
+}
+
+IBM_Game_Copy_From_Game() ;Copy game location settings from the running game. Note that using WinGet ProcessPath will return odd values for some mounted devices
+{
+	GuiControlGet, isEGS,, IBM_Game_EGS
+	GuiControlGet, currentExe,, vIBM_Game_Exe
+	useExe:="IdleDragons.exe" ;Standard .exe name
+	hWnd:=WinExist("ahk_exe " . useExe)
+	if(!hWnd)
+	{
+		useExe:=currentExe
+		hWnd := WinExist("ahk_exe " . useExe)
+	}
+	if(hWnd) ;A game window exists
+	{
+		location:=IBM_Game_Copy_From_Game_Location_Helper(useExe) . "\" ;Trailing \ is removed
+		if (isEGS)
+			launch:="explorer.exe ""com.epicgames.launcher://apps/7e508f543b05465abe3a935960eb70ac%3A48353a502e72433298f25827e03dbff0%3A40cb42e38c0b4a14a1bb133eb3291572?action=launch&silent=true"""
+		else
+		{
+			launch:=location . useExe
+		}
+		GuiControl, ICScriptHub:, IBM_Game_Exe, % useExe
+		GuiControl, ICScriptHub:, IBM_Game_Path, % location
+		GuiControl, ICScriptHub:, IBM_Game_Launch, % launch
+		IBM_Game_Location_Settings()
+	}
+	else
+	{
+		MSGBOX Idle Champions not found. If you have changed the executable file name please enter it into the Executable field and try again
+	}
+}
+
+IBM_Game_Copy_From_Game_Location_Helper(processName)
+{
+	for gameProcess in ComObjGet("winmgmts:").ExecQuery("Select * from Win32_Process where Name='" . processName . "'")  ;Notepad++ UDF langauge file can't copy with the quoted single quote for some reason
+	{
+		command:=gameProcess.CommandLine ;For sensible platforms, this will be C:\Games\IdleDragons.exe. EGS is not sensible, and so it will be "C:/Games/IdleDragons.exe" -STUFF". Those forward slashes are not typos...
+		SplitPath command, outFile, outPath
+		if (outFile!=processName)
+		{
+			exeLocation:=InStr(command,processName)
+			cleanString:=SubStr(command,1,exeLocation + StrLen(processName)-1) ;-1 as InStr returns the location of the 1st character
+			cleanString:=StrReplace(cleanString,"""") ;Remove quotes
+			cleanString:=StrReplace(cleanString,"/","\") ;Fix slashes
+			SplitPath cleanString,, outPath
+		}
+		return outPath
+	}
+}
+
+IBM_Game_Location_Settings()
+{
+	GuiControlGet, value,, IBM_Game_Exe
+	g_IriBrivMaster.UpdateSetting("IBM_Game_Exe",value)
+	GuiControlGet, value,, IBM_Game_Path
+	g_IriBrivMaster.UpdateSetting("IBM_Game_Path",value)
+	GuiControlGet, value,, IBM_Game_Launch
+	g_IriBrivMaster.UpdateSetting("IBM_Game_Launch",value)
+	GuiControlGet, value,, IBM_Game_Hide_Launcher
+	g_IriBrivMaster.UpdateSetting("IBM_Game_Hide_Launcher",value)
+}
+
 IBM_Game_Settings_Profile()
 {
 	GuiControlGet, value,, IBM_Game_Settings_Profile_1
@@ -892,16 +1079,26 @@ IBM_ChestsSnatcher_Options()
 	}
 }
 
-IBM_ChestSnatcher_Options_Estimate_Gold()
+IBM_ChestSnatcher_Options_Open_Gold()
 {
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Estimate_Gold
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Estimate_Gold",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Gold
+	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
+		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Gold",value)
 }
 
-IBM_ChestSnatcher_Options_Estimate_Silver()
+IBM_ChestSnatcher_Options_Open_Silver()
 {
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Estimate_Silver
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Estimate_Silver",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Silver
+	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
+		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Silver",value)
+}
+
+IBM_ChestSnatcher_Options_Min_Gem()
+{
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gem
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gem",value)
 }
 
 IBM_ChestSnatcher_Options_Min_Gold()
@@ -919,6 +1116,8 @@ IBM_ChestSnatcher_Options_Min_Silver()
 IBM_ChestSnatcher_Options_Min_Buy()
 {
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Buy
+	if (value>g_IriBrivMaster.CONSTANT_serverRateBuy) ;Can't buy more than 250 chests at a time
+		value:=g_IriBrivMaster.CONSTANT_serverRateBuy
 	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Buy",value)
 }
 
@@ -972,6 +1171,12 @@ IBM_OffLine_Delay_Time_Edit()
 {
 	GuiControlGet, value,, IBM_OffLine_Delay_Time_Edit
 	g_IriBrivMaster.UpdateSetting("IBM_OffLine_Delay_Time",value)
+}
+
+IBM_OffLine_Sleep_Time_Edit()
+{
+	GuiControlGet, value,, IBM_OffLine_Sleep_Time_Edit
+	g_IriBrivMaster.UpdateSetting("IBM_OffLine_Sleep_Time",value)
 }
 
 IBM_NonGemFarm_Elly_Start()
@@ -1152,6 +1357,12 @@ IBM_OffLine_Stack_Zone_Edit()
 	g_IriBrivMaster.UpdateSetting("IBM_Offline_Stack_Zone",value)
 }
 
+IBM_OffLine_Stack_Min_Edit()
+{
+	GuiControlGet, value,, IBM_OffLine_Stack_Min_Edit
+	g_IriBrivMaster.UpdateSetting("IBM_Offline_Stack_Min",value)
+}
+
 IBM_Route_J_Click()
 {
 	RegExMatch(A_GuiControl,"_(\d+)$",index)
@@ -1265,18 +1476,18 @@ IBM_OffLine_Flames_Zone_Any_Edit() ;Nothing to do here
 {
 }
 
-IBM_Stats_Reset()
+IBM_MainButtons_Reset()
 {
-	GuiControl, ICScriptHub: Disable, IBM_Stats_Reset
+	GuiControl, ICScriptHub: Disable, IBM_MainButtons_Reset
 	g_IriBrivMaster.ResetStats()
 	g_IriBrivMaster.UpdateStatus() ;NOT UpdateStats(), as that assumes we've already checked the COM object is valid
-	GuiControl, ICScriptHub: Enable, IBM_Stats_Reset
+	GuiControl, ICScriptHub: Enable, IBM_MainButtons_Reset
 }
 
-IBM_Settings_Save()
+IBM_MainButtons_Save()
 {
 	Gui, ICScriptHub:Submit, NoHide
-	GuiControl, ICScriptHub: Disable, IBM_Settings_Save
+	GuiControl, ICScriptHub: Disable, IBM_MainButtons_Save
 	flamesZones:=[]
 	loop, 5
 		{
@@ -1289,5 +1500,5 @@ IBM_Settings_Save()
 		g_IriBrivMaster.UpdateLevelSettings(g_IriBrivMaster_GUI.GetLevelRowData())
 	;Done with levels
 	g_IriBrivMaster.SaveSettings()
-	GuiControl, ICScriptHub: Enable, IBM_Settings_Save
+	GuiControl, ICScriptHub: Enable, IBM_MainButtons_Save
 }

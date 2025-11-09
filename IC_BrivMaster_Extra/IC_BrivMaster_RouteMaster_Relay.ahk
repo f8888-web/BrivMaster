@@ -10,7 +10,6 @@ Process, Priority,, Realtime
 #include %A_LineFile%\..\..\..\SharedFunctions\MemoryRead\classMemory.ahk ;Memory manager
 
 Relay:=new IC_BrivMaster_Relay_Class(A_Args[1]) ;Must be called with the relay COM object GUI as an argument
-;Relay:=new IC_BrivMaster_Relay_Class("{DAF5A23C-989D-4367-B4EC-671C6F0BB9B5}") ;Must be called with the relay COM object GUI as an argument
 Relay.RunRelay()
 ExitApp
 
@@ -22,6 +21,7 @@ ExitApp
 		3: Game started
 		4: Game started and Relay ended before platform login
 		5: Game held after platform login
+		6: Complete (any outcome) - not set by this helper script
 		-1: Failed to launch
 		-2: Failed to suspend (game will have started, current instance will be invalid)
 	*/
@@ -43,19 +43,17 @@ class IC_BrivMaster_Relay_Class
 				this.MEMORY_baseAddress:=this.RelayData.MEMORY_baseAddress ;TODO: Actually the module offset now. Change this name...
 				this.MEMORY_LOADED_Type:=this.RelayData.MEMORY_LOADED_Type
 				this.MEMORY_LOADED_Offsets:=[]
-				DEBUG_OFFSET_STRING:="" ;Remove once the fail-once-then-fail-forever issue is resolved. If it's resolved...
 				for k,_ in this.RelayData.MEMORY_LOADED_Offsets
 				{
 					this.MEMORY_LOADED_Offsets.Push(k)
-					DEBUG_OFFSET_STRING.=k . ";"
 				}
-				this.InstallPath:=this.RelayData.InstallPath
+				this.LaunchCommand:=this.RelayData.LaunchCommand
+				this.HideLauncher:=this.RelayData.HideLauncher
 				this.ExeName:=this.RelayData.ExeName
 				this.RestoreWindow:=this.RelayData.RestoreWindow
 				this.LogFile:=this.RelayData.LogFile
 				this.RelayData.State:=2 ;Connected
 				this.ForceRelease:=false
-				this.LogString.=A_TickCount . " Read from Relay Data COM object,MainPID=[" . this.MainPID . "] MainHwnd=[" . this.MainHwnd . "] MEMORY_baseAddress=[" . this.MEMORY_baseAddress . "] MEMORY_LOADED_Type=[" . this.MEMORY_LOADED_Type . "] MEMORY_LOADED_Offsets=[" . DEBUG_OFFSET_STRING . "] InstallPath=[" . this.InstallPath . "] ExeName=[" . this.ExeName . "]`n"
 			}
 			catch
 			{
@@ -280,12 +278,10 @@ class IC_BrivMaster_Relay_Class
         this.handle := handle
         if !IsObject(this.MemoryManager)
 		{
-            this.baseAddress[moduleName] := -1 ;TODO: Unused?
             return false
         }
-        this.baseAddress[moduleName] := this.MemoryManager.getModuleBaseAddress(moduleName) ;TODO: Compact this is a bit, this.baseAddress[moduleName] isn't useful to keep
-		this.gameBaseAddress:=this.baseAddress[moduleName] + this.MEMORY_baseAddress
-		this.LogString.= A_TickCount . " MemoryManagerRefresh() complete with Module BaseAddress=[" . this.baseAddress[moduleName]  . "] gameBaseAddress=[" . this.gameBaseAddress . "]`n"
+		this.gameBaseAddress:=this.MemoryManager.getModuleBaseAddress(moduleName) + this.MEMORY_baseAddress
+		this.LogString.= A_TickCount . " MemoryManagerRefresh() complete with gameBaseAddress=[" . this.gameBaseAddress . "]`n"
 		return true
     }
 
@@ -397,10 +393,13 @@ class IC_BrivMaster_Relay_Class
 
 	OpenProcess()
     {
-		programLoc:=this.InstallPath
+		programLoc:=this.LaunchCommand
 		try
 		{
-			Run, %programLoc%,,,openPID
+			if (this.HideLauncher)
+				Run, %programLoc%,,Hide,openPID
+			else
+				Run, %programLoc%,,,openPID
 			if (this.GetProcessName(openPID)==this.ExeName) ;If we launch the game .exe directly (e.g. Steam) the Run PID will be the game, but for things like EGS it will not so we need to check this
 			{
 				this.PID:=openPID

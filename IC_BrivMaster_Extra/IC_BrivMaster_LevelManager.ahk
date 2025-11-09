@@ -1,19 +1,32 @@
 class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 {
-	Champions:={} ;Stores the level data for each champion in the formation . By champID; seat, levelling key (eg {F5}) min and max. Seat is included so we can surpress by seat if wanted
-	levelingDone:={} ;Records if levelling type is completely done, so we don't go through all the checks when we're already done for the run, key by formation, then for z1,min,max, eg levelingDone["Q","min"]==true
-	maxKeyPresses:=4
-	failedConversionMode:=false
-	savedFormations:={} ;Formations as per standard memory reads
-	savedFormationChamps:={} ;Champions in each formation, eg savedFormationChamps["E",58]==true -> Briv is in E
-	currentWorkList:="" ;Current IC_BrivMaster_LevelManager_WorkList_Class object
-
+	__New(combine) ;This processes all the formations so it is only done once. As a result to change a target level the script would have to be restarted
+	{
+		Champions:={} ;Stores the level data for each champion in the formation . By champID; seat, levelling key (eg {F5}) min and max. Seat is included so we can surpress by seat if wanted
+		levelingDone:={} ;Records if levelling type is completely done, so we don't go through all the checks when we're already done for the run, key by formation, then for z1,min,max, eg levelingDone["Q","min"]==true
+		savedFormations:={} ;Formations as per standard memory reads
+		savedFormationChamps:={} ;Champions in each formation, eg savedFormationChamps["E",58]==true -> Briv is in E
+		currentWorkList:="" ;Current IC_BrivMaster_LevelManager_WorkList_Class object
+		levelSettings:=g_IBM_Settings["IBM_LevelManager_Levels",combine]
+		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(1),"Q")
+		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(2),"W")
+		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(3),"E")
+		this.ExtractFormation(g_SF.Memory.GetActiveModronFormationSaveSlot(),"M")
+		this.ProcessFormation(levelSettings)
+		this.ResetLevellingDone()
+		this.maxKeyPresses:=g_IBM_Settings["IBM_LevelManager_Input_Max"]
+		this.KEY_ClickDmg:=g_IBM.inputManager.getKey("ClickDmg")
+		this.ExtactFrontColumn()
+		this.failedConversionMode:=false
+		this.KEY_Modifier:=g_IBM.inputManager.getKey(g_IBM_Settings["IBM_Level_Options_Mod_Key"]=="Ctrl" ? "LCtrl" : g_IBM_Settings["IBM_Level_Options_Mod_Key"]) ;Modifer to hold - the game uses LeftControl in the keybindings, as much as it doesn't seem to make a lick of difference
+		this.modifierLevelUpAmount:=g_IBM_Settings["IBM_Level_Options_Mod_Value"] ;How many levels applying the modifier key will give per keypress
+	}
+	
 	LevelFormation(formationIndex, mode:="min", allowedTime:=10000, forcePriority:=false, surpressByID:="", waitForGold:=false)
 	{
 		if (this.levelingDone[formationIndex,mode]) ;This formation is done for the given mode
 			return
 		this.CreateWorklist(formationIndex,mode,surpressByID,waitForGold)
-		;OutputDebug % A_TickCount . ":LevelFormation.CreateWorklist() complete`n"
 		this.LevelWorklist(allowedTime,forcePriority,waitForGold)
 	}
 
@@ -23,12 +36,10 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 			return
 		startTime:=A_TickCount
 		runTime:=0
-		while (runTime<=allowedTime) ;Note that as we've set runTime to 0, an AllowedTime of 0 will run once
+		while (runTime<=allowedTime) ;Note that as we've set runTime to 0, an AllowedTime of 0 will run at least once
 		{
-			;OutputDebug % A_TickCount . ":LevelWorklist Loop Done()=[" . this.currentWorkList.Done() . "] ForcePrio=[" . forcePriority . "] IsPriorityDone()=[" . this.currentWorkList.IsPriorityDone() . "]`n"
 			if (this.currentWorkList.Done() OR (forcePriority AND this.currentWorkList.IsPriorityDone())) ;Nothing to do
 				break
-			;OutputDebug % A_TickCount . ":LevelWorklist Calling Level()`n"
 			this.currentWorkList.Level(this.maxKeyPresses,waitForGold,forcePriority)
 			runTime:=A_TickCount-startTime
 		}
@@ -48,7 +59,6 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		}
 		if(pendingChampCounter==0 AND !(formationIndex==""))
 			this.levelingDone[formationIndex,mode]:=true
-		;OutputDebug % A_TickCount . ":CreateWorklist() end Size=[" . this.currentWorkList.Champs.Count() . "] pendingChampCounter=[" . pendingChampCounter . "]`n"
 	}
 
 	GetClickDamageTargetLevel() ;TODO: This needs a way to factor in the increased level curve beyond z2000
@@ -56,7 +66,7 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		if (g_SF.Memory.ReadCurrentZone()==1) ;On z1 we want to level to meet Thellora's rush target
 			return this.clickDamageTargetRush
 		else
-			return Min(this.clickDamageTargetFinal,g_SF.Memory.ReadHighestZone()+g_BrivGemFarm.routeMaster.zonesPerJumpQ*2) ;Return the lowest of the reset zone click damage requirement, and one jump from the next landing zone to ensure we don't overlevel, but never have to wait for levelling
+			return Min(this.clickDamageTargetFinal,g_SF.Memory.ReadHighestZone()+g_IBM.routeMaster.zonesPerJumpQ*2) ;Return the lowest of the reset zone click damage requirement, and one jump from the next landing zone to ensure we don't overlevel, but never have to wait for levelling
 	}
 
 	LevelClickDamage(timeout:=500) ;Default 500ms should be good for a min of 3 upgrades, being 300 levels on x100, which should be enough even going 300 zones with Thellora
@@ -65,9 +75,8 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		clickTarget:=this.GetClickDamageTargetLevel()
 		while (g_SF.Memory.IBM_ReadClickLevel() < clickTarget AND g_SF.Memory.IBM_ReadClickLevelUpAllowed() > 0 AND A_TickCount - startTime < timeout)
 		{
-			;OutputDebug % A_TickCount . ":Levelling Click Damage`n"
 			this.KEY_ClickDmg.KeyPress() ;No value in trying to build this to be able to use _Bulk() as it will mostly only be one press at a time
-			Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_INPUT ;Sleep here seems to be necessary to prevent overlevelling
+			g_IBM.IBM_Sleep(10)
 		}
     }
 
@@ -86,39 +95,6 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		for champID,_ in this.Champions
 		{
 			this.Champions[champID].SetSoftCap()
-		}
-	}
-
-	;Note that this is only done once, to change a target level the script would have to be restarted
-	__New(combine) ;Process all the formations
-	{
-		levelSettings:=g_BrivUserSettingsFromAddons["IBM_LevelManager_Levels",combine]
-		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(1),"Q")
-		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(2),"W")
-		this.ExtractFormation(g_SF.Memory.GetSavedFormationSlotByFavorite(3),"E")
-		this.ExtractFormation(g_SF.Memory.GetActiveModronFormationSaveSlot(),"M")
-		this.BuildHeroIndexTable() ;Must be before ProcessFormation() TODO: Replace with Sep25 base memory functions table
-		this.ProcessFormation(levelSettings)
-		this.ResetLevellingDone()
-		this.maxKeyPresses:=g_BrivUserSettingsFromAddons["IBM_LevelManager_Input_Max"]
-		this.KEY_ClickDmg:=g_BrivGemFarm.inputManager.getKey("ClickDmg")
-		this.ExtactFrontColumn()
-		this.failedConversionMode:=false
-		this.KEY_Modifier:=g_BrivGemFarm.inputManager.getKey(g_BrivUserSettingsFromAddons["IBM_Level_Options_Mod_Key"]=="Ctrl" ? "LCtrl" : g_BrivUserSettingsFromAddons["IBM_Level_Options_Mod_Key"]) ;Modifer to hold - the game uses LeftControl in the keybindings, as much as it doesn't seem to make a lick of difference
-		this.modifierLevelUpAmount:=g_BrivUserSettingsFromAddons["IBM_Level_Options_Mod_Value"] ;How many levels applying the modifier key will give per keypress
-	}
-
-	BuildHeroIndexTable() ;Builds a table of all used champion IDs with the associated HeroHandler indicies (due to some being skipped it isn't just champID-1)
-	{
-		size:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes.size.Read()
-		this.HeroIndexTable:={}
-		loop %size%
-		{
-			champID:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[A_Index-1].def.ID.Read()
-			if (this.savedFormationChamps["A"].HasKey(champID))
-			{
-				this.HeroIndexTable[champID]:=A_Index-1
-			}
 		}
 	}
 
@@ -240,18 +216,18 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		for _,Champion in this.Champions ;Reset each champion
 			Champion.Reset()
 		this.failedConversionMode:=false
-		this.clickDamageTargetFinal:=g_BrivGemFarm.routeMaster.targetZone ;These need a curve for post-z2000 HP. Done in Reset() as __New() is current called before the routemaster is set up
-		if (g_BrivGemFarm.routeMaster.combining)
-			this.clickDamageTargetRush:=g_BrivGemFarm.routeMaster.ThelloraTarget ;Only needs to be high enough for the Thellora target as we will stop there are do the Casino
+		this.clickDamageTargetFinal:=g_IBM.routeMaster.targetZone ;These need a curve for post-z2000 HP. Done in Reset() as __New() is current called before the routemaster is set up
+		if (g_IBM.routeMaster.combining)
+			this.clickDamageTargetRush:=g_IBM.routeMaster.ThelloraTarget ;Only needs to be high enough for the Thellora target as we will stop there are do the Casino
 		else
-			this.clickDamageTargetRush:=g_BrivGemFarm.routeMaster.ThelloraTarget + g_BrivGemFarm.routeMaster.zonesPerJumpQ*2 ;Include 2 jumps
+			this.clickDamageTargetRush:=g_IBM.routeMaster.ThelloraTarget + g_IBM.routeMaster.zonesPerJumpQ*2 ;Include 2 jumps
 	}
 
 	ProcessFormation(levelSettings)
 	{
 		for champID,_ in this.savedFormationChamps["A"]
 		{
-			curChamp:=new IC_BrivMaster_Champion_Class(this,champID,levelSettings)
+			curChamp:=new IC_BrivMaster_Champion_Class(champID,levelSettings)
 			this.Champions[champID]:=curChamp
 		}
 	}
@@ -273,12 +249,12 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 
 class IC_BrivMaster_Champion_Class ;Represents a champion, along with mostly levelling related properties
 {
-	__New(levelManager,champID,levelSettings)
+	__New(champID,levelSettings)
 	{
 		this.ID:=champID
-		this.HeroIndex:=levelManager.HeroIndexTable[champID]
+		this.HeroIndex:=g_SF.Memory.HeroIDToIndexMap[champID]
 		this.Seat:=g_SF.Memory.IBM_ReadChampSeatByIndex(this.HeroIndex)
-		this.Key:=g_BrivGemFarm.inputManager.getKey("F" . this.Seat) ;So we don't have to re-calc this constantly
+		this.Key:=g_IBM.inputManager.getKey("F" . this.Seat) ;So we don't have to re-calc this constantly
 		this.Key.Tag:=this.Seat ;Use the tag to track the seat. TODO: If levelling is encapsulated properly this might not be needed
 		this.lastUpgradeLevel:=g_SF.Memory.IBM_GetLastUpgradeLevelByIndex(this.HeroIndex)
 		this.Master:={}
@@ -289,14 +265,14 @@ class IC_BrivMaster_Champion_Class ;Represents a champion, along with mostly lev
 				this.Master.Min:=champData["min"]
 			else
 			{
-				level:=g_BrivUserSettingsFromAddons["IBM_LevelManager_Defaults_Min"]
+				level:=g_IBM_Settings["IBM_LevelManager_Defaults_Min"]
 				this.Master.Min:=(level == "" or !level) ? 0 : 1
 			}
 			if champData.hasKey("z1")
 				this.Master.z1:=champData["z1"]
 			else
 			{
-				level:=g_BrivUserSettingsFromAddons["IBM_LevelManager_Defaults_Min"]
+				level:=g_IBM_Settings["IBM_LevelManager_Defaults_Min"]
 				this.Master.z1:=(level == "" or !level) ? 0 : 1
 			}
 			if champData.hasKey("z1c")
@@ -314,7 +290,7 @@ class IC_BrivMaster_Champion_Class ;Represents a champion, along with mostly lev
 		}
 		else ;No data, apply defaults
 		{
-			level:=g_BrivUserSettingsFromAddons["IBM_LevelManager_Defaults_Min"]
+			level:=g_IBM_Settings["IBM_LevelManager_Defaults_Min"]
 			this.Master.Min:=(level == "" or !level) ? 0 : 1
 			this.Master.z1:=0 ;This is a champion with no settings at all - do not level them in z1, as that is intended to be a vaguely controlled enviroment
 			this.Master.z1c:=false
@@ -427,7 +403,7 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 		;OutputDebug % A_TickCount . ":levelManager.Level(), x100 count=[" . keyList100.Count() . "] x10 count=[" . keyList10.Count() . "]`n"
 		if (keyList100.Count()==0 AND keyList10.Count()==0) ;Due to z1c restrictions, it is possible that .Done() is false but there is nothing to do this iteration
 			return
-		g_BrivGemFarm.inputManager.gameFocus() ;This might be a bit early when waitforgold is needed. Possibly checking adventure gold, then calling gameFocus(), then checking hero gold might be better for the first run
+		g_IBM.inputManager.gameFocus() ;This might be a bit early when waitforgold is needed. Possibly checking adventure gold, then calling gameFocus(), then checking hero gold might be better for the first run
 		if (waitForGold) ;Wait for gold if requested, for start-of-run calls only
 		{
 			waitForGold:=!this.WaitForFirstGold(keyList100.Count()>0 ? keyList100[1].tag : keyList10[1].tag)
@@ -448,13 +424,11 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
     {
         StartTime := A_TickCount
 		gold:=g_SF.ConvQuadToDouble(g_SF.Memory.IBM_ReadGoldFirst8BytesBySeat(checkSeat), g_SF.Memory.IBM_ReadGoldSecond8BytesBySeat(checkSeat))
-		;OutputDebug % A_TickCount . " waiting for gold - seat [" . gold . "] adventure [" . g_SF.ConvQuadToDouble(g_SF.Memory.ReadGoldFirst8Bytes(), g_SF.Memory.ReadGoldSecond8Bytes()) . "]`n"
 		while ((gold==0 OR gold=="") AND A_TickCount - StartTime < 10000 ) ;Note that the seat gold value will be null whilst the new run gets set up by the game
         {
 			Sleep 0
 			gold:=g_SF.ConvQuadToDouble(g_SF.Memory.IBM_ReadGoldFirst8BytesBySeat(checkSeat), g_SF.Memory.IBM_ReadGoldSecond8BytesBySeat(checkSeat))
         }
-		;OutputDebug % A_TickCount . ":Waited for first gold - seat [" . gold . "] adventure [" . g_SF.ConvQuadToDouble(g_SF.Memory.ReadGoldFirst8Bytes(), g_SF.Memory.ReadGoldSecond8Bytes()) . "]`n"
 		return gold>0
     }
 

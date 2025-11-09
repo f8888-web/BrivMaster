@@ -1,3 +1,112 @@
+class IC_BrivMaster_DianaCheese_Class ;A class for cheesing Diana's Electrum drops
+{
+	__new()
+	{
+		this.SetCapacity("TZData", 172)
+        DllCall( "RtlFillMemory", "Ptr",this.GetAddress("TZData"), "Ptr",172, "Char",0 ) ; Zero fill memory
+        this.ReadCNETimeZone(this.GetAddress("TZData"))
+	}
+
+	GetCNETime()
+	{
+		; Get current UTC system time
+		VarSetCapacity(SYSTEMTIME, 16, 0)
+		DllCall("GetSystemTime", "Ptr", &SYSTEMTIME)
+		;Convert UTC to PST/PDT, accounting for DST
+		VarSetCapacity(LocalTime, 16, 0)
+		Result := DllCall("SystemTimeToTzSpecificLocalTime", "Ptr", this.GetAddress("TZData"), "Ptr", &SYSTEMTIME, "Ptr", &LocalTime)
+		if (!Result) {
+			return ""
+		}
+		; Extract fields from LocalTime
+		Hour := NumGet(LocalTime, 8, "UShort")
+		Minute := NumGet(LocalTime, 10, "UShort")
+		Return Hour + Minute/60
+	}
+
+	ReadCNETimeZone(TIME_ZONE_INFORMATION) ;Gets time data for CNE's Pacific standard time location. It's okay for this to error with message boxes as it's a one-off at startup
+	{
+		; Read Pacific Standard Time data from registry (Windows 11 format)
+		RegRead, TZIHex, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Pacific Standard Time, TZI
+		if ErrorLevel {
+			MsgBox % "Diana Cheese Setup: Failed to read TZI registry key."
+			return
+		}
+		RegRead, StandardName, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Pacific Standard Time, Std
+		if ErrorLevel {
+			MsgBox % "Diana Cheese Setup: Failed to read Std registry key."
+			return
+		}
+		RegRead, DaylightName, HKEY_LOCAL_MACHINE, SOFTWARE\Microsoft\Windows NT\CurrentVersion\Time Zones\Pacific Standard Time, Dlt
+		if ErrorLevel {
+			MsgBox % "Diana Cheese Setup: Failed to read Dlt registry key."
+			return
+		}
+		; Parse TZI hex string
+		Bias := this.HexToInt(SubStr(TZIHex, 1, 8))
+		StandardBias := this.HexToInt(SubStr(TZIHex, 9, 8))
+		DaylightBias := this.HexToInt(SubStr(TZIHex, 17, 8))
+		; Parse StandardDate (bytes 13-28, hex 25-56, SYSTEMTIME: 8 USHORTs)
+		VarSetCapacity(StandardDate, 16, 0)
+		NumPut(this.HexToUShort(SubStr(TZIHex, 25, 4)), StandardDate, 0, "UShort")  ; wYear
+		NumPut(this.HexToUShort(SubStr(TZIHex, 29, 4)), StandardDate, 2, "UShort")  ; wMonth
+		NumPut(this.HexToUShort(SubStr(TZIHex, 33, 4)), StandardDate, 4, "UShort")  ; wDayOfWeek
+		NumPut(this.HexToUShort(SubStr(TZIHex, 37, 4)), StandardDate, 6, "UShort")  ; wDay
+		NumPut(this.HexToUShort(SubStr(TZIHex, 41, 4)), StandardDate, 8, "UShort")  ; wHour
+		NumPut(this.HexToUShort(SubStr(TZIHex, 45, 4)), StandardDate, 10, "UShort") ; wMinute
+		NumPut(this.HexToUShort(SubStr(TZIHex, 49, 4)), StandardDate, 12, "UShort") ; wSecond
+		NumPut(this.HexToUShort(SubStr(TZIHex, 53, 4)), StandardDate, 14, "UShort") ; wMilliseconds
+		; Parse DaylightDate (bytes 29-44, hex 57-88, SYSTEMTIME: 8 USHORTs)
+		VarSetCapacity(DaylightDate, 16, 0)
+		NumPut(this.HexToUShort(SubStr(TZIHex, 57, 4)), DaylightDate, 0, "UShort")  ; wYear
+		NumPut(this.HexToUShort(SubStr(TZIHex, 61, 4)), DaylightDate, 2, "UShort")  ; wMonth
+		NumPut(this.HexToUShort(SubStr(TZIHex, 65, 4)), DaylightDate, 4, "UShort")  ; wDayOfWeek
+		NumPut(this.HexToUShort(SubStr(TZIHex, 69, 4)), DaylightDate, 6, "UShort")  ; wDay
+		NumPut(this.HexToUShort(SubStr(TZIHex, 73, 4)), DaylightDate, 8, "UShort")  ; wHour
+		NumPut(this.HexToUShort(SubStr(TZIHex, 77, 4)), DaylightDate, 10, "UShort") ; wMinute
+		NumPut(this.HexToUShort(SubStr(TZIHex, 81, 4)), DaylightDate, 12, "UShort") ; wSecond
+		NumPut(this.HexToUShort(SubStr(TZIHex, 85, 4)), DaylightDate, 14, "UShort") ; wMilliseconds
+		; Populate TIME_ZONE_INFORMATION
+		NumPut(Bias, TIME_ZONE_INFORMATION + 0, 0, "Int")          ; Bias
+		StrPut(StandardName, TIME_ZONE_INFORMATION + 4, 64, "UTF-16")
+		DllCall("RtlMoveMemory", "Ptr", TIME_ZONE_INFORMATION + 68, "Ptr", &StandardDate, "UInt", 16)
+		NumPut(StandardBias, TIME_ZONE_INFORMATION + 0, 84, "Int")  ; StandardBias
+		StrPut(DaylightName, TIME_ZONE_INFORMATION + 88, 64, "UTF-16")
+		DllCall("RtlMoveMemory", "Ptr", TIME_ZONE_INFORMATION + 152, "Ptr", &DaylightDate, "UInt", 16)
+		NumPut(DaylightBias, TIME_ZONE_INFORMATION + 0, 168, "Int")  ; DaylightBias
+	}
+
+	ReverseHexBytes(hex)
+	{
+		len:=StrLen(hex)
+		result:=""
+		Loop, % len // 2 		; Process two chars (one byte) at a time, from end to start
+		{
+			pos:=len - (2 * A_Index) + 1
+			result.=SubStr(hex, pos, 2)
+		}
+		return result
+	}
+
+	HexToInt(hex)
+	{
+		hex := this.ReverseHexBytes(hex) ; Reverse byte order (little-endian)
+		val :="0x" . hex
+		val+=0 ; Convert to unsigned integer and ensure numeric output
+		if (val > 0x7FFFFFFF) ; Convert to signed 32-bit integer
+			val := val - 0x100000000
+		return val
+	}
+
+
+	HexToUShort(hex)
+	{
+		hex:=this.ReverseHexBytes(hex) ; Reverse byte order (little-endian)
+		hex:="0x" . hex ; Convert to unsigned short and ensure numeric output
+		return hex + 0
+	}
+}
+
 class IC_BrivMaster_Logger_Class ;A class for recording run logs
 {
 	__New(logPath)
@@ -5,10 +114,10 @@ class IC_BrivMaster_Logger_Class ;A class for recording run logs
 		this.logPath:=logPath
 		reset:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.StatHandler.Resets.Read() ;TODO: Move this to .Memory and use that both here and in Melf Manager?
 		if (reset!="") ;If we can read the current reset use that, otherwise set to -1 for invalid
-			g_SharedData.RunLogResetNumber:=reset
+			g_SharedData.IBM_UpdateOutbound("RunLogResetNumber",reset)
 		else
-			g_SharedData.RunLogResetNumber:=-1
-		g_SharedData.RunLog:={}
+			g_SharedData.IBM_UpdateOutbound("RunLogResetNumber",-1)
+		g_SharedData.IBM_UpdateOutbound("RunLog",{})
 		this.LogEntries:={}
 		this.OutputHeader()
 	}
@@ -19,13 +128,13 @@ class IC_BrivMaster_Logger_Class ;A class for recording run logs
 		if (this.LogEntries.HasKey("Run")) ;There will be no entry for the first run
 		{
 			this.LogEntries.Run.End:=startTime
-			if (this.LogEntries.Run.LastZone > g_BrivGemFarm.RouteMaster.targetZone) ;We don't get anything from bosses jumped after our reset, so clamp
-				this.LogEntries.Run.LastZone:=g_BrivGemFarm.RouteMaster.targetZone
-			else if (this.LogEntries.Run.LastZone < g_BrivGemFarm.RouteMaster.targetZone) ;If we didn't make it to reset
+			if (this.LogEntries.Run.LastZone > g_IBM.RouteMaster.targetZone) ;We don't get anything from bosses jumped after our reset, so clamp
+				this.LogEntries.Run.LastZone:=g_IBM.RouteMaster.targetZone
+			else if (this.LogEntries.Run.LastZone < g_IBM.RouteMaster.targetZone) ;If we didn't make it to reset
 				this.LogEntries.Run.Fail:=true
-			g_SharedData.RunLogResetNumber:=-1 ;Invalid whilst updating
-			g_SharedData.RunLog:=AHK_JSON.Dump(this.LogEntries)
-			g_SharedData.RunLogResetNumber:=this.LogEntries.Run.ResetNumber
+			g_SharedData.IBM_UpdateOutbound("RunLogResetNumber",-1) ;Invalid whilst updating
+			g_SharedData.IBM_UpdateOutbound("RunLog",AHK_JSON.Dump(this.LogEntries))
+			g_SharedData.IBM_UpdateOutbound("RunLogResetNumber",this.LogEntries.Run.ResetNumber)
 			;Output log
 			runString:=this.LogEntries.Run.ResetNumber . "," . this.LogEntries.Run.StartRealTime . "," . this.LogEntries.Run.Start . "," . this.LogEntries.Run.End - this.LogEntries.Run.Start . "," . this.LogEntries.Run.ResetReached - this.LogEntries.Run.Start . "," . this.LogEntries.Run.End - this.LogEntries.Run.ResetReached . "," . this.LogEntries.Run.Cycle . "," . this.LogEntries.Run.Fail . "," . this.LogEntries.Run.LastZone
 			messageString:=""
@@ -46,7 +155,7 @@ class IC_BrivMaster_Logger_Class ;A class for recording run logs
 		this.LogEntries.Run.Fail:=false
 		this.LogEntries.Run.Cycle:=""
 	}
-	
+
 	SetRunCycle(cycleNumber) ;The routeMaster won't be .Reset() until after the log starts, so need to add the cylce number once available
 	{
 		if (this.LogEntries.HasKey("Run"))
@@ -104,13 +213,16 @@ class IC_BrivMaster_InputManager_Class ;A class for managing input related matte
 
 	__new() ;Currently it is up to code using this to add the necessary keys
 	{
+		this.KeyMap:={}
+		this.SCKeyMap:={}
+		KeyHelper.BuildVirtualKeysMap(this.KeyMap, this.SCKeyMap) ;Note: KeyHelper is in SH_KeyHelper.ahk, which is an #include in SH_SharedFunctions.ahk.
 		this.gameFocus()
 	}
 
 	addKey(key)
 	{
 		if (!this.keyList.HasKey(key))
-			this.keyList[key]:=new IC_BrivMaster_InputManager_Key_Class(key)
+			this.keyList[key]:=new IC_BrivMaster_InputManager_Key_Class(key,this.KeyMap,this.SCKeyMap)
 	}
 
 	getKey(key)
@@ -129,11 +241,11 @@ class IC_BrivMaster_InputManager_Class ;A class for managing input related matte
 
 class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_BrivMaster_InputManager_Class
 {
-	__new(key)
+	__new(key,KeyMap,SCKeyMap)
 	{
-		this.key:=key ;TODO: Is this useful?
-		this.mappedKey:=g_KeyMap[key]
-		sc:=g_SCKeyMap[key] << 16
+		this.key:=key
+		this.mappedKey:=KeyMap[key]
+		sc:=SCKeyMap[key] << 16
         this.lparamDown := Format("0x{:X}", 0x0 | sc)
 		this.lparamUp := Format("0x{:X}", 0xC0000001 | sc)
 		this.tag:="" ;Used for tracking arbitary infomation on the key, e.g. the associated seat for F-keys
@@ -144,7 +256,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
         hwnd:=g_SF.Hwnd
 		mk:=this.mappedKey ;We have to copy the variables locally due to limitations of AHK :(
 		lD:=this.lparamDown
-        ControlFocus,, ahk_id %hwnd% ;TODO: is this strictly necessary for every input event? It is needed to some extent - the script clearly fails to sent inputs without it, but it seems this is only after focus is removed from the game window
+        ControlFocus,, ahk_id %hwnd%
 		SendMessage, 0x0100, %mk%, %lD%,, ahk_id %hwnd%,,,,1000
 	}
 
@@ -201,382 +313,381 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card draws and her ultimate use. This is based heavily on ImpEGamer's RNGWaitingRoom addon
 {
-		static HERO_ID_DM:=99
-		static HERO_ID_ELLY:=83
-		static ULTIMATE_RESOLUTION_TIME:=300 ;Real world milliseconds. Normally seems to be 0 to 140ms
+	static HERO_ID_DM:=99
+	static HERO_ID_ELLY:=83
+	static ULTIMATE_RESOLUTION_TIME:=300 ;Real world milliseconds. Normally seems to be 0 to 140ms
 
-		CasinoTimer := ObjBindMethod(this, "Casino")
-        GemCardsNeeded := {} ;These are pairs of base and melf mode values, eg {0:2,1:3} for 2 without melf and 3 with
-        MaxRedraws := {}
-		MinCards:={}
-		GemCardsNeededInFlight:=0
-        Complete := false
-        Redraws := 0 ;Current redraws
-        UsedUlt := false ;Tracks Elly's ult being in progress, as her cards are only cleared when it ENDS, despite the visual
-        MelfMode:=false ;Is melf spawning more? Used to select the appropriate options
-		StatusString:=" STATUS=" ;Used to return basic information on problems (eg DM fails)
-		EFFECT_HANDLER_CARDS:="" ;Deck of Many Things effect handler cards object, dereferrenced from main memory functions for performance
-		EFFECT_KEY_DOMT:="ellywick_deck_of_many_things"
+	CasinoTimer := ObjBindMethod(this, "Casino")
+	GemCardsNeeded := {} ;These are pairs of base and melf mode values, eg {0:2,1:3} for 2 without melf and 3 with
+	MaxRedraws := {}
+	MinCards:={}
+	GemCardsNeededInFlight:=0
+	Complete := false
+	Redraws := 0 ;Current redraws
+	UsedUlt := false ;Tracks Elly's ult being in progress, as her cards are only cleared when it ENDS, despite the visual
+	MelfMode:=false ;Is melf spawning more? Used to select the appropriate options
+	StatusString:=" STATUS=" ;Used to return basic information on problems (eg DM fails)
+	EFFECT_HANDLER_CARDS:="" ;Deck of Many Things effect handler cards object, dereferrenced from main memory functions for performance
+	EFFECT_KEY_DOMT:="ellywick_deck_of_many_things"
 
-		;DEBUG THINGS
-		DEBUG:=false
-		DEBUG_LOG_STRING:=""
+	;DEBUG THINGS
+	DEBUG:=false
+	DEBUG_LOG_STRING:=""
 
-		__new()
+	__new()
+	{
+		this.HERO_INDEX_ELLY:=g_IBM.LevelManager.Champions[IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY].HeroIndex ;Only needs to be done once TODO: Not sure there is much value copying this?
+	}
+
+	DEBUG_ELLY_STATUS_CSV(commentString:="")
+	{
+		this.DEBUG_LOG_STRING.=A_NOW . "," . A_TickCount . "," . commentString . ","
+		this.DEBUG_LOG_STRING.="Elly:" . g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . ","
+		this.DEBUG_LOG_STRING.="DM:" . g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . ","
+		this.DEBUG_LOG_STRING.="Redraws:" . this.Redraws . "/" . this.MaxRedraws[this.melfMode] . ","
+		this.DEBUG_LOG_STRING.="Transitioning:" . g_SF.Memory.ReadTransitioning() . ","
+		this.DEBUG_LOG_STRING.="Hand:"
+		loop, % this.EFFECT_HANDLER_CARDS.size.Read()
 		{
-			this.HERO_INDEX_ELLY:=g_SF.Memory.GetHeroHandlerIndexByChampID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) ;Only needs to be done once TODO: Use LevelManager lookup
+			if (3==this.EFFECT_HANDLER_CARDS[A_index - 1].CardType.Read())
+				this.DEBUG_LOG_STRING.="G"
+			else
+				this.DEBUG_LOG_STRING.="x"
 		}
+		this.DEBUG_LOG_STRING.=",MelfMode:" . this.melfMode . ","
+		this.DEBUG_LOG_STRING.="EllyUltViaRead:" . g_SF.Memory.IBM_GetEllywickUltimateActive() . ","
+		this.DEBUG_LOG_STRING.="z" . g_SF.Memory.ReadCurrentZone() . ","
+		this.DEBUG_LOG_STRING.=this.DEBUG_FORMATION_STRING() . ","
+		this.DEBUG_LOG_STRING.="DM Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . "`n"
+	}
 
-		DEBUG_ELLY_STATUS_CSV(commentString:="")
+	DEBUG_FORMATION_STRING()
+	{
+		size := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.formation.slots.size.Read()
+		if(size <= 0 OR size > 14) ; sanity check, 12 is the max number of concurrent champions possible.
+			return "X:[]"
+		formation:=":["
+		champCount:=0
+		loop, %size%
 		{
-			this.DEBUG_LOG_STRING.=A_NOW . "," . A_TickCount . "," . commentString . ","
-			this.DEBUG_LOG_STRING.="Elly:" . g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . ","
-			this.DEBUG_LOG_STRING.="DM:" . g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . ","
-			this.DEBUG_LOG_STRING.="Redraws:" . this.Redraws . "/" . this.MaxRedraws[this.melfMode] . ","
-			this.DEBUG_LOG_STRING.="Transitioning:" . g_SF.Memory.ReadTransitioning() . ","
-			this.DEBUG_LOG_STRING.="Hand:"
-			loop, % this.EFFECT_HANDLER_CARDS.size.Read()
+			heroID := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.formation.slots[A_index - 1].hero.def.ID.Read()
+			if (heroID>0)
+				champCount++
+			else
+				heroID:=-1
+			formation.=heroID . ";"
+		}
+		formation:=champCount . formation . "]"
+		return formation
+	}
+
+	;END DEBUG THINGS
+
+	Start(setMelfMode:=false)
+	{
+		this.MelfMode:=setMelfMode
+		timerFunction := this.CasinoTimer
+		this.InitHandler()
+		SetTimer, %timerFunction%, 20, 0
+		this.Casino() ;Is this useful here?
+
+	}
+
+	InitHandler()
+	{
+		EK_HANDLER:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[this.HERO_INDEX_ELLY].effects.effectKeysByHashedKeyName
+		EK_HANDLER_SIZE := EK_HANDLER.size.Read()
+		loop, %EK_HANDLER_SIZE%
+		{
+			PARENT_HANDLER:=EK_HANDLER["value", A_Index - 1].List[0].parentEffectKeyHandler
+			if (this.EFFECT_KEY_DOMT == PARENT_HANDLER.def.Key.Read())
 			{
-				if (3==this.EFFECT_HANDLER_CARDS[A_index - 1].CardType.Read())
-					this.DEBUG_LOG_STRING.="G"
-				else
-					this.DEBUG_LOG_STRING.="x"
+				this.EFFECT_HANDLER_CARDS:=PARENT_HANDLER.activeEffectHandlers[0].Clone()
+				break
 			}
-			this.DEBUG_LOG_STRING.=",MelfMode:" . this.melfMode . ","
-			this.DEBUG_LOG_STRING.="EllyUltViaRead:" . g_SF.Memory.IBM_GetEllywickUltimateActive() . ","
-			this.DEBUG_LOG_STRING.="z" . g_SF.Memory.ReadCurrentZone() . ","
-			this.DEBUG_LOG_STRING.=this.DEBUG_FORMATION_STRING() . ","
-			this.DEBUG_LOG_STRING.="DM Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . "`n"
 		}
+		if (this.EFFECT_HANDLER_CARDS)
+			this.EFFECT_HANDLER_CARDS.IBM_ReBase() ;Breaks the links with the main memory management structure. This will mean it could (and usually will) become invalid on reset or restart. Doesn't work from the hub but isn't neccesary there as we don't really care about performance
+	}
 
-		DEBUG_FORMATION_STRING()
+	Stop() ;Note - do not clear EFFECT_HANDLER_CARDS here as it might be needed for Flames-based stack zones
+	{
+		this.ClearTimers()
+	}
+
+	Reset()
+	{
+		this.ClearTimers() ;Timers must be stopped BEFORE we set any variables, as otherwise the timer functions could 'un-reset' them afterwards
+		this.Complete := false
+		this.Redraws := 0
+		this.UsedUlt := false ;This assumes Reset() will only be called after an adventure resets
+		this.MaxRedraws := {0:g_IBM_Settings["IBM_Casino_Redraws_Base"],1:g_IBM_Settings["IBM_Casino_Redraws_Melf"]}
+		this.GemCardsNeeded := {0:g_IBM_Settings["IBM_Casino_Target_Base"],1:g_IBM_Settings["IBM_Casino_Target_Melf"]}
+		this.MinCards:={0:g_IBM_Settings["IBM_Casino_MinCards_Base"],1:g_IBM_Settings["IBM_Casino_MinCards_Melf"]}
+		this.GemCardsNeededInFlight:=g_IBM_Settings["IBM_Casino_Target_InFlight"]
+		this.MelfMode:=false
+		this.StatusString:=""
+		this.EFFECT_HANDLER_CARDS:="" ;We can't get this yet as Elly's handler won't be available until she is levelled
+	}
+
+	ClearTimers()
+	{
+		timerFunction := this.CasinoTimer
+		SetTimer, %timerFunction%, Off
+	}
+
+	Casino()
+	{
+		if (this.DEBUG)
+			this.DEBUG_ELLY_STATUS_CSV("Casino() Timer Handler")
+		if (!this.EFFECT_HANDLER_CARDS) ;Check the effect handler has been set up
 		{
-			size := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.formation.slots.size.Read()
-			if(size <= 0 OR size > 14) ; sanity check, 12 is the max number of concurrent champions possible.
-				return "X:[]"
-			formation:=":["
-			champCount:=0
-			loop, %size%
-			{
-				heroID := g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.formation.slots[A_index - 1].hero.def.ID.Read()
-				if (heroID>0)
-					champCount++
-				else
-					heroID:=-1
-				formation.=heroID . ";"
-			}
-			formation:=champCount . formation . "]"
-			return formation
-		}
-
-		;END DEBUG THINGS
-
-		Start(setMelfMode:=false)
-        {
-            this.MelfMode:=setMelfMode
-			timerFunction := this.CasinoTimer
 			this.InitHandler()
-            SetTimer, %timerFunction%, 20, 0
-			this.Casino() ;Is this useful here?
-
-        }
-
-		InitHandler()
-		{
-			EK_HANDLER:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[this.HERO_INDEX_ELLY].effects.effectKeysByHashedKeyName
-			EK_HANDLER_SIZE := EK_HANDLER.size.Read()
-			loop, %EK_HANDLER_SIZE%
-			{
-				PARENT_HANDLER:=EK_HANDLER["value", A_Index - 1].List[0].parentEffectKeyHandler
-				if (this.EFFECT_KEY_DOMT == PARENT_HANDLER.def.Key.Read())
-				{
-					this.EFFECT_HANDLER_CARDS:=PARENT_HANDLER.activeEffectHandlers._items.Clone()
-					break
-				}
-			}
-			if (this.EFFECT_HANDLER_CARDS)
-				this.EFFECT_HANDLER_CARDS.IBM_ReBase() ;Breaks the links with the main memory management structure. This will mean it could (and usually will) become invalid on reset or restart. Doesn't work from the hub but isn't neccesary there as we don't really care about performance
+			return ;Re-check on next timer tick
 		}
-
-        Stop() ;Note - do not clear EFFECT_HANDLER_CARDS here as it might be needed for Flames-based stack zones
-        {
-            this.ClearTimers()
-        }
-
-        Reset()
-        {
-			this.ClearTimers() ;Timers must be stopped BEFORE we set any variables, as otherwise the timer functions could 'un-reset' them afterwards
-            this.Complete := false
-            this.Redraws := 0
-			this.UsedUlt := false ;This assumes Reset() will only be called after an adventure resets
-			this.MaxRedraws := {0:g_BrivUserSettingsFromAddons["IBM_Casino_Redraws_Base"],1:g_BrivUserSettingsFromAddons["IBM_Casino_Redraws_Melf"]}
-            this.GemCardsNeeded := {0:g_BrivUserSettingsFromAddons["IBM_Casino_Target_Base"],1:g_BrivUserSettingsFromAddons["IBM_Casino_Target_Melf"]}
-            this.MinCards:={0:g_BrivUserSettingsFromAddons["IBM_Casino_MinCards_Base"],1:g_BrivUserSettingsFromAddons["IBM_Casino_MinCards_Melf"]}
-			this.GemCardsNeededInFlight:=g_BrivUserSettingsFromAddons["IBM_Casino_Target_InFlight"]
-			this.MelfMode:=false
-			this.StatusString:=""
-			this.EFFECT_HANDLER_CARDS:="" ;We can't get this yet as Elly's handler won't be available until she is levelled
-        }
-
-		ClearTimers()
+		if (g_SF.Memory.ReadResetting() OR g_SF.Memory.ReadCurrentZone() == "" OR this.GetNumCards() == "")
+			return
+		if (this.UsedUlt AND g_SF.Memory.IBM_GetEllywickUltimateActive()!=1) ;Check for completed ultimate
 		{
-		    timerFunction := this.CasinoTimer
-            SetTimer, %timerFunction%, Off
-		}
-
-        Casino()
-        {
+			this.UsedUlt:=False
 			if (this.DEBUG)
-				this.DEBUG_ELLY_STATUS_CSV("Casino() Timer Handler")
-			if (!this.EFFECT_HANDLER_CARDS) ;Check the effect handler has been set up
+				this.DEBUG_ELLY_STATUS_CSV("Casino() cleared ultimate block")
+		}
+		if (this.Complete AND !this.UsedUlt) ;In flight re-roll checks. Order of lazy ANDs matters to avoid calling CanUseEllyWickUlt() every tick
+		{
+			if (this.RedrawsLeft() AND this.ShouldDrawMoreCards() AND this.ShouldRedraw() AND this.CanUseEllyWickUlt()) ;When we exit the waitroom early we might still need to do a re-roll
+				this.UseEllywickUlt()
+			else if (this.GetNumGemCards() < this.GemCardsNeededInFlight AND this.GetNumCards() == 5 AND this.CanUseEllyWickUlt()) ; Use ultimate to redraw cards if Ellywick doesn't have GemCardsNeededInFlight (due to maxRedraws being less than the maximum possible)
+				this.UseEllywickUlt()
+		}
+		else if (this.ShouldDrawMoreCards())
+		{
+			if (this.RedrawsLeft()) ;Use ultimate if it's not on cooldown and there are redraws left
 			{
-				this.InitHandler()
-				return ;Re-check on next timer tick
+				 if (!this.UsedUlt AND this.ShouldRedraw())
+					this.UseEllywickUlt()
 			}
-			if (g_SF.Memory.ReadResetting() OR g_SF.Memory.ReadCurrentZone() == "" OR this.GetNumCards() == "")
-                return
-			if (this.UsedUlt AND g_SF.Memory.IBM_GetEllywickUltimateActive()!=1) ;Check for completed ultimate
+			else if (this.GetMinCards() == 0 OR (!this.UsedUlt AND this.GetNumCards()>=this.GetMinCards())) ;If we want to release at a certain number of cards we need to wait for the ult to resolve to be able to count correctly
+				this.WaitRoomExit()
+		}
+		else
+			this.WaitRoomExit()
+	}
+
+	WaitRoomExit() ;Seperate so we can put some status strings in here
+	{
+		this.Complete:=true
+		if (this.GetNumGemCards() >= this.GemCardsNeededInFlight) ;If we've reached our in-flight re-roll target in the waitroom there is no reason to keep the timer running
+			this.Stop()
+	}
+
+	GetMinCards()
+	{
+		return this.MinCards[this.melfMode]
+	}
+
+	DrawsLeft()
+	{
+		return 5 - this.GetNumCards()
+	}
+
+	RedrawsLeft()
+	{
+		return this.MaxRedraws[this.melfMode] - this.Redraws
+	}
+
+	ShouldDrawMoreCards()
+	{
+		if (this.GetNumCards() < this.GetMinCards())
+			return true
+		return this.GetNumGemCards() < this.GemCardsNeeded[this.melfMode]
+	}
+
+	ShouldRedraw()
+	{
+		numCards := this.GetNumCards()
+		if (numCards == 5)
+			return true
+		else if (numCards == 0)
+			return false
+		return this.DrawsLeft() < this.GemCardsNeeded[this.melfMode] - this.GetNumGemCards()
+	}
+
+	GetNumCards()
+	{
+		size := this.EFFECT_HANDLER_CARDS.cardsInHand.size.Read()
+		if (size == "" AND this.IsEllyWickOnTheField())
+		{
+			this.StatusString.="FAIL-GetNumCards() was empty & Elly(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . "):"
+		}
+		return size == "" ? 0 : size
+	}
+
+	GetNumGemCards()
+	{
+		return this.GetNumCardsOfType(3)
+	}
+
+	GetNumCardsOfType(cardType:=3) ;3 is Gem, 5 is Flames
+	{
+		numCards := 0
+		loop, % this.EFFECT_HANDLER_CARDS.cardsInHand.size.Read()
+		{
+			if (cardType==this.EFFECT_HANDLER_CARDS.cardsInHand[A_index - 1].CardType.Read())
+				numCards++
+		}
+		return numCards
+	}
+
+	UseEllywickUlt()
+	{
+		if (this.DEBUG)
+			this.DEBUG_ELLY_STATUS_CSV("UseEllywickUlt() start")
+		if (g_SF.Memory.ReadTransitioning()) ;Do not try using the ults during a transition - possible source of Weird Stuff
+		{
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("UseEllywickUlt() aborted due to transition")
+			return
+		}
+		if (this.CanUseEllyWickUlt())
+		{
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Can use ult")
+			this.UsedUlt := true ;Set here to block-double presses, until we can confirm it has / hasn't been used
+			Critical On ;Champion levelling between reading the ultimate key and pressing it could cause the incorrect button to be pressed
+			startTime:=A_TickCount
+			elapsedTime:=0
+			ultActivated:=false
+			retryCount:=g_SF.Memory.IBM_UseUltimate(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
+			if (retryCount=="")
+				this.StatusString.="FAIL-Elly ultButton returned empty:"
+			Critical Off
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Post-input; pre-loop")
+			while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
+			{
+				g_IBM.IBM_Sleep(15)
+				if (this.DEBUG)
+					this.DEBUG_ELLY_STATUS_CSV("ultActivated loop post-sleep " . elapsedTime . "ms")
+				ultActivated:=g_SF.Memory.IBM_GetEllywickUltimateActive() ;Specific read for Elly from her handler, seemed more reliable than the cooldown
+				if (ultActivated=="") ;This should be 0 or 1, if we fail to get a value something has gone weird
+					this.StatusString.="FAIL-Elly ultActivated was empty:"
+				elapsedTime:=A_TickCount - startTime
+			}
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Exited loop after " . elapsedTime)
+			If (ultActivated)
+			{
+				this.Redraws++
+				if (this.DEBUG)
+					this.DEBUG_ELLY_STATUS_CSV("Redraws incremented-calling DM")
+				this.UseDMUlt()
+			}
+			else
 			{
 				this.UsedUlt:=False
+				this.StatusString.="FAIL-Elly Ult Attempted but failed to register:"
 				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Casino() cleared ultimate block")
+					this.DEBUG_ELLY_STATUS_CSV("Ult was attempted but failed to register")
 			}
-            if (this.Complete AND !this.UsedUlt) ;In flight re-roll checks. Order of lazy ANDs matters to avoid calling CanUseEllyWickUlt() every tick
-            {
-                if (this.RedrawsLeft() AND this.ShouldDrawMoreCards() AND this.ShouldRedraw() AND this.CanUseEllyWickUlt()) ;When we exit the waitroom early we might still need to do a re-roll
-					this.UseEllywickUlt()
-				else if (this.GetNumGemCards() < this.GemCardsNeededInFlight AND this.GetNumCards() == 5 AND this.CanUseEllyWickUlt()) ; Use ultimate to redraw cards if Ellywick doesn't have GemCardsNeededInFlight (due to maxRedraws being less than the maximum possible)
-                    this.UseEllywickUlt()
-            }
-            else if (this.ShouldDrawMoreCards())
-            {
-                if (this.RedrawsLeft()) ;Use ultimate if it's not on cooldown and there are redraws left
-                {
-                     if (!this.UsedUlt AND this.ShouldRedraw())
-                        this.UseEllywickUlt()
-                }
-                else if (this.GetMinCards() == 0 OR (!this.UsedUlt AND this.GetNumCards()>=this.GetMinCards())) ;If we want to release at a certain number of cards we need to wait for the ult to resolve to be able to count correctly
-                    this.WaitRoomExit()
-            }
-            else
-				this.WaitRoomExit()
-        }
-
-		WaitRoomExit() ;Seperate so we can put some status strings in here
-		{
-			this.Complete:=true
-			if (this.GetNumGemCards() >= this.GemCardsNeededInFlight) ;If we've reached our in-flight re-roll target in the waitroom there is no reason to keep the timer running
-				this.Stop()
 		}
-
-		GetMinCards()
+		else
 		{
-			return this.MinCards[this.melfMode]
-		}
-
-        DrawsLeft()
-        {
-			return 5 - this.GetNumCards()
-        }
-
-        RedrawsLeft()
-        {
-			return this.MaxRedraws[this.melfMode] - this.Redraws
-        }
-
-        ShouldDrawMoreCards()
-        {
-            if (this.GetNumCards() < this.GetMinCards())
-                return true
-            return this.GetNumGemCards() < this.GemCardsNeeded[this.melfMode]
-        }
-
-        ShouldRedraw()
-        {
-            numCards := this.GetNumCards()
-            if (numCards == 5)
-                return true
-            else if (numCards == 0)
-                return false
-            return this.DrawsLeft() < this.GemCardsNeeded[this.melfMode] - this.GetNumGemCards()
-        }
-
-        GetNumCards()
-        {
-            size := this.EFFECT_HANDLER_CARDS.cardsInHand.size.Read()
-            if (size == "" AND this.IsEllyWickOnTheField())
-            {
-				this.StatusString.="FAIL-GetNumCards() was empty & Elly(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . "):"
-            }
-            return size == "" ? 0 : size
-        }
-
-        GetNumGemCards()
-        {
-            return this.GetNumCardsOfType(3)
-        }
-
-        GetNumCardsOfType(cardType:=3) ;3 is Gem, 5 is Flames
-        {
-            numCards := 0
-			loop, % this.EFFECT_HANDLER_CARDS.cardsInHand.size.Read()
-			{
-				if (cardType==this.EFFECT_HANDLER_CARDS.cardsInHand[A_index - 1].CardType.Read())
-					numCards++
-			}
-            return numCards
-        }
-
-        UseEllywickUlt()
-        {
 			if (this.DEBUG)
-				this.DEBUG_ELLY_STATUS_CSV("UseEllywickUlt() start")
-			if (g_SF.Memory.ReadTransitioning()) ;Do not try using the ults during a transition - possible source of Weird Stuff
+				this.DEBUG_ELLY_STATUS_CSV("Can't use ult")
+			if (this.CanUseDMUlt()) ;Somehow Elly's ult isn't ready by DM's is - try using it
 			{
+				this.StatusString.="FAIL-Elly Ult not available-DM available:"
 				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("UseEllywickUlt() aborted due to transition")
-				return
+					this.DEBUG_ELLY_STATUS_CSV("Can't use ult-DM available-calling")
+				this.UseDMUlt(0)
 			}
-			if (this.CanUseEllyWickUlt())
-            {
-                if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Can use ult")
-				this.UsedUlt := true ;Set here to block-double presses, until we can confirm it has / hasn't been used
-				Critical On ;Champion levelling between reading the ultimate key and pressing it could cause the incorrect button to be pressed
-				startTime:=A_TickCount
-				elapsedTime:=0
-				ultActivated:=false
-				retryCount:=g_SF.Memory.IBM_UseUltimate(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
-				if (retryCount=="")
-					this.StatusString.="FAIL-Elly ultButton returned empty:"
-				Critical Off
-				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Post-input; pre-loop")
-				while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
-				{
-					Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("ultActivated loop post-sleep " . elapsedTime . "ms")
-					ultActivated:=g_SF.Memory.IBM_GetEllywickUltimateActive() ;Specific read for Elly from her handler, seemed more reliable than the cooldown
-					if (ultActivated=="") ;This should be 0 or 1, if we fail to get a value something has gone weird
-						this.StatusString.="FAIL-Elly ultActivated was empty:"
-					elapsedTime:=A_TickCount - startTime
-				}
-				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Exited loop after " . elapsedTime)
-                If (ultActivated)
-				{
-					this.Redraws++
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("Redraws incremented-calling DM")
-					this.UseDMUlt()
-				}
-				else
-				{
-					this.UsedUlt:=False
-					this.StatusString.="FAIL-Elly Ult Attempted but failed to register:"
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("Ult was attempted but failed to register")
-				}
-            }
 			else
 			{
+				this.StatusString.="FAIL-Elly(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . ") Ult not available-DM(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . ") Ult not available-Lowered Max Rerolls to " . this.Redraws . ":"
 				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Can't use ult")
-				if (this.CanUseDMUlt()) ;Somehow Elly's ult isn't ready by DM's is - try using it
-				{
-					this.StatusString.="FAIL-Elly Ult not available-DM available:"
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("Can't use ult-DM available-calling")
-					this.UseDMUlt(0)
-				}
-				else
-				{
-					this.StatusString.="FAIL-Elly(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY) . ") Ult not available-DM(Level:" . g_SF.Memory.ReadChampLvlByID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) . ") Ult not available-Lowered Max Rerolls to " . this.Redraws . ":"
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("Can't use ult-DM not available-lowering max reroll from:" . this.MaxRedraws[this.melfMode] . " to: " . this.Redraws)
-					this.MaxRedraws[this.melfMode]:=this.Redraws ;Lower max re-rolls so we move on; this Casino is busted
-				}
+					this.DEBUG_ELLY_STATUS_CSV("Can't use ult-DM not available-lowering max reroll from:" . this.MaxRedraws[this.melfMode] . " to: " . this.Redraws)
+				this.MaxRedraws[this.melfMode]:=this.Redraws ;Lower max re-rolls so we move on; this Casino is busted
 			}
-        }
+		}
+	}
 
-        CanUseEllyWickUlt()
-        {
-            return this.IsEllyWickOnTheField() AND this.IsEllywickUltReady()
-        }
+	CanUseEllyWickUlt()
+	{
+		return this.IsEllyWickOnTheField() AND this.IsEllywickUltReady()
+	}
 
-		IsEllyWickOnTheField()
-        {
-            return g_SF.Memory.IBM_IsChampInCurrentFormation(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
-        }
+	IsEllyWickOnTheField()
+	{
+		return g_SF.Memory.IBM_IsChampInCurrentFormation(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
+	}
 
-		IsEllywickUltReady()
-        {
-			ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
-			if (ultCooldown=="")
-				this.StatusString.="FAIL-IsEllywickUltReady() ultCooldown returned empty:"
-			return ultCooldown <= 0
-        }
+	IsEllywickUltReady()
+	{
+		ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_ELLY)
+		if (ultCooldown=="")
+			this.StatusString.="FAIL-IsEllywickUltReady() ultCooldown returned empty:"
+		return ultCooldown <= 0
+	}
 
-        UseDMUlt(sleepTime:=30) ;30ms default sleep is for use after Elly's ult triggers, to let the game process it
-        {
+	UseDMUlt(sleepTime:=30) ;30ms default sleep is for use after Elly's ult triggers, to let the game process it
+	{
+		if (this.DEBUG)
+			this.DEBUG_ELLY_STATUS_CSV("UseDMUlt() start")
+		if (this.CanUseDMUlt())
+		{
 			if (this.DEBUG)
-				this.DEBUG_ELLY_STATUS_CSV("UseDMUlt() start")
-			if (this.CanUseDMUlt())
-            {
-				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Can use DM ult; sleeping for " . sleepTime . "ms")
-				Sleep sleepTime
-				Critical On ;Champion levelling between reading the ultimate key and pressing it could cause the incorrect button to be pressed
-				startTime:=A_TickCount
-				elapsedTime:=0
-				ultActivated:=false
-				retryCount:=g_SF.Memory.IBM_UseUltimate(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
-				if (retryCount=="")
-					this.StatusString.="FAIL-DM ultButton returned empty:"
-				Critical Off
-				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Post-input; pre-loop")
-				while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
-				{
-					Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
-					if (this.DEBUG)
-						this.DEBUG_ELLY_STATUS_CSV("ultActivated loop post-sleep " . elapsedTime . "ms")
-					ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
-					if (ultCooldown=="")
-						this.StatusString.="FAIL-DM ultCooldown returned empty:"
-					ultActivated:=ultCooldown > 0
-					elapsedTime:=A_TickCount - startTime
-				}
-				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Exited loop after " . elapsedTime . "ms")
-            }
-			else
+				this.DEBUG_ELLY_STATUS_CSV("Can use DM ult; sleeping for " . sleepTime . "ms")
+			g_IBM.IBM_Sleep(sleepTime)
+			Critical On ;Champion levelling between reading the ultimate key and pressing it could cause the incorrect button to be pressed
+			startTime:=A_TickCount
+			elapsedTime:=0
+			ultActivated:=false
+			retryCount:=g_SF.Memory.IBM_UseUltimate(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
+			if (retryCount=="")
+				this.StatusString.="FAIL-DM ultButton returned empty:"
+			Critical Off
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Post-input; pre-loop")
+			while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
 			{
+				g_IBM.IBM_Sleep(15)
 				if (this.DEBUG)
-					this.DEBUG_ELLY_STATUS_CSV("Can't use DM ult")
+					this.DEBUG_ELLY_STATUS_CSV("ultActivated loop post-sleep " . elapsedTime . "ms")
+				ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
+				if (ultCooldown=="")
+					this.StatusString.="FAIL-DM ultCooldown returned empty:"
+				ultActivated:=ultCooldown > 0
+				elapsedTime:=A_TickCount - startTime
 			}
-        }
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Exited loop after " . elapsedTime . "ms")
+		}
+		else
+		{
+			if (this.DEBUG)
+				this.DEBUG_ELLY_STATUS_CSV("Can't use DM ult")
+		}
+	}
 
-        CanUseDMUlt()
-        {
-            return this.IsDMOnTheField() AND this.IsDMUltReady()
-        }
+	CanUseDMUlt()
+	{
+		return this.IsDMOnTheField() AND this.IsDMUltReady()
+	}
 
-		IsDMOnTheField()
-        {
-            return g_SF.Memory.IBM_IsChampInCurrentFormation(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
-        }
+	IsDMOnTheField()
+	{
+		return g_SF.Memory.IBM_IsChampInCurrentFormation(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
+	}
 
-        IsDMUltReady()
-        {
-            ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
-			if (ultCooldown=="")
-				this.StatusString.="FAIL-IsDMUltReady() ultCooldown returned empty:"
-			return ultCooldown <= 0
-        }
-
-    }
+	IsDMUltReady()
+	{
+		ultCooldown:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
+		if (ultCooldown=="")
+			this.StatusString.="FAIL-IsDMUltReady() ultCooldown returned empty:"
+		return ultCooldown <= 0
+	}
+}
 
 class IC_BrivMaster_EllywickDealer_NonFarm_Class extends IC_BrivMaster_EllywickDealer_Class
 {
@@ -643,8 +754,8 @@ class IC_BrivMaster_EllywickDealer_NonFarm_Class extends IC_BrivMaster_EllywickD
 
 	Start() ;Overriden as we might need to get the process when launching this way
 	{
-		g_SF.Hwnd := WinExist("ahk_exe " . g_UserSettings[ "ExeName"])
-		existingProcessID := g_UserSettings[ "ExeName"]
+		g_SF.Hwnd := WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])
+		existingProcessID := g_IBM_Settings["IBM_Game_Exe"]
 		Process, Exist, %existingProcessID%
 		g_SF.PID := ErrorLevel
 		g_SF.Memory.OpenProcessReader()
@@ -674,7 +785,7 @@ class IC_BrivMaster_EllywickDealer_NonFarm_Class extends IC_BrivMaster_EllywickD
 				Critical Off
 				while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
 				{
-					Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+					Sleep 15 ;BrivGemFarm will not be available here
 					ultActivated:=g_SF.Memory.IBM_GetEllywickUltimateActive() ;No check for empty in this version as we can't do much about it (no log)
 					elapsedTime:=A_TickCount - startTime
 				}
@@ -696,12 +807,12 @@ class IC_BrivMaster_EllywickDealer_NonFarm_Class extends IC_BrivMaster_EllywickD
 				}
 			}
         }
-		
+
 		UseDMUlt(sleepTime:=30) ;30ms default sleep is for use after Elly's ult triggers, to let the game process it
         {
 			if (this.CanUseDMUlt())
             {
-				Sleep sleepTime
+				Sleep sleepTime ;BrivGemFarm will not be available here
 				Critical On ;Champion levelling between reading the ultimate key and pressing it could cause the incorrect button to be pressed
 				ultButton := g_SF.GetUltimateButtonByChampID(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM)
 				ultKey:=this.inputManager.getKey(ultButton)
@@ -712,7 +823,7 @@ class IC_BrivMaster_EllywickDealer_NonFarm_Class extends IC_BrivMaster_EllywickD
 				Critical Off
 				while (!ultActivated AND elapsedTime < IC_BrivMaster_EllywickDealer_Class.ULTIMATE_RESOLUTION_TIME)
 				{
-					Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+					Sleep 15 ;BrivGemFarm will not be available here
 					ultActivated:=g_SF.Memory.IBM_GetUltimateCooldown(IC_BrivMaster_EllywickDealer_Class.HERO_ID_DM) > 0 ;Not checking for empty in this version as nothing much we can do (no log)
 					elapsedTime:=A_TickCount - startTime
 				}

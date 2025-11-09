@@ -1,18 +1,130 @@
-class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
+#Requires AutoHotkey 1.1.37+ <1.2
+#SingleInstance Force
+;Based on BrivGemFarm Preformance by MikeBaldi and Antilectual, and on various addons created by ImpEGamer. This project would not have been possible without the work of those who came before
+
+;=======================
+;Script Optimization
+;=======================
+#HotkeyInterval 1000  ; The default value is 2000 (milliseconds).
+#MaxHotkeysPerInterval 70 ; The default value is 70
+#NoEnv ; Avoids checking empty variables to see if they are environment variables (recommended for all new scripts). Default behavior for AutoHotkey v2.
+SetWorkingDir %A_ScriptDir%
+SetWinDelay, 33 ; Sets the delay that will occur after each windowing command, such as WinActivate. (Default is 100)
+SetControlDelay, 0 ; Sets the delay that will occur after each control-modifying command. -1 for no delay, 0 for smallest possible delay. The default delay is 20.
+SetBatchLines, -1 ; How fast a script will run (affects CPU utilization).(Default setting is 10ms - prevent the script from using any more than 50% of an idle CPU's time.
+                  ; This allows scripts to run quickly while still maintaining a high level of cooperation with CPU sensitive tasks such as games and video capture/playback.
+ListLines Off
+Process, Priority,, High
+CoordMode, Mouse, Client
+
+#include %A_LineFile%\..\..\..\SharedFunctions\json.ahk ;TODO: Move to AHK JSON lib
+#include %A_LineFile%\..\IC_BrivMaster_SharedFunctions.ahk ;Indirectly #includes IC_BrivMaster_Memory.ahk
+#include %A_LineFile%\..\IC_BrivMaster_Functions.ahk
+#include %A_LineFile%\..\IC_BrivMaster_Overrides.ahk
+#include %A_LineFile%\..\IC_BrivMaster_RouteMaster.ahk
+#include %A_LineFile%\..\IC_BrivMaster_LevelManager.ahk
+#include %A_LineFile%\..\..\..\ServerCalls\SH_ServerCalls_Includes.ahk
+#include %A_LineFile%\..\..\IC_Core\IC_SaveHelper_Class.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\SH_GUIFunctions.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\SH_UpdateClass.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\ObjRegisterActive.ahk ;TODO: This was the very last line in IC_BrivGemFarm_Functions.ahk, why?
+
+global g_SF:=new IC_BrivMaster_SharedFunctions_Class ; includes IBM-extended MemoryFunctions in g_SF.Memory
+global g_IBM_Settings:={}
+global g_IBM:=new IC_BrivMaster_GemFarm_Class
+global g_ServerCall ;This is instantiated by g_SF.ResetServerCall()
+global g_SaveHelper:=new IC_SaveHelper_Class ;TODO: This doesn't really need to be a global? Stacks is RouteMaster business, so should possibly be there. Otherwise Servercalls?
+global g_IBM_SettingsFromAddons:={}
+
+#include *i %A_LineFile%\..\IC_BrivMaster_Mods.ahk
+
+SH_UpdateClass.UpdateClassFunctions(g_SharedData, IC_BrivMaster_SharedData_Class) ;Note: g_SharedData is populated by IC_SharedFunctions_Class
+SH_UpdateClass.AddClassFunctions(GameObjectStructure, IC_BrivMaster_GameObjectStructure_Add)
+SH_UpdateClass.UpdateClassFunctions(_MemoryManager, IBM_Memory_Manager)
+
+g_SharedData.IBM_Init() ;Loads settings so must be prior to the window launch settings
+
+try
 {
-	Static IRI_LOOP_WAIT_FAST:=10 ;Milliseconds to wait for fast loop control (eg main loop)
-	Static IRI_LOOP_WAIT_INPUT:=15 ;Milliseconds to wait for input related delays
+    if (g_IBM_Settings["IBM_Window_Dark_Icon"])
+		Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_D.ico
+	else
+		Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_L.ico
+}
+
+Gui, IBM_GemFarm:New, -Resize
+Gui, IBM_GemFarm:+Resize -MaximizeBox
+FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
+Gui IBM_GemFarm:Add, Text, w95 xm+5, % "Gem Farm Started:"
+Gui IBM_GemFarm:Add, Text, w110 x+5, % formattedDateTime
+Gui IBM_GemFarm:Add, Text, w95 h18 xm+5, % "Settings Updated:"
+Gui IBM_GemFarm:Add, Text, w110 h18 x+5 vIBM_GemFarm_Settings_Update_Time, % formattedDateTime
+
+if(!g_IBM_Settings["IBM_Window_Hide"])
+{
+    Gui, IBM_GemFarm:Show,% "x" . g_IBM_Settings["IBM_Window_X"] . " y" . g_IBM_Settings["IBM_Window_Y"], Briv Master
+}
+
+if(A_Args[1])
+{
+    ObjRegisterActive(g_SharedData, A_Args[1])
+    g_SF.WriteObjectToJSON(A_LineFile . "\..\LastGUID_IBM_GemFarm.json", A_Args[1])
+}
+else
+{
+    GuidCreate := ComObjCreate("Scriptlet.TypeLib")
+    guid := GuidCreate.Guid
+    ObjRegisterActive(g_SharedData, guid)
+    g_SF.WriteObjectToJSON(A_LineFile . "\..\LastGUID_IBM_GemFarm.json", guid)
+}
+
+g_IBM.GemFarm()
+
+OnExit(ComObjectRevoke())
+
+ComObjectRevoke()
+{
+    ObjRegisterActive(g_SharedData, "")
+    ExitApp
+}
+
+IBM_GemFarmGuiClose()
+{
+    MsgBox, 35, Close, Really close the gem farm script? `n`nWarning: This script is required for gem farming. `n"Yes" will close the gem farm script. `n"No" will miniize the script to the tray.`nYou can open it again by pressing the play button in Script Hub.
+    IfMsgBox, Yes
+        ExitApp
+    IfMsgBox, No
+        Gui, BrivPerformanceGemFarm:hide
+    IfMsgBox, Cancel
+        return true
+}
+
+;+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+class IC_BrivMaster_GemFarm_Class
+{
+	;TODO: Review all of these class variables for relevance
+	TimerFunctions := {}
+    TargetStacks := 0
+    GemFarmGUID := ""
+    StackFailAreasTally := {}
+    LastStackSuccessArea := 0
+    MaxStackRestartFails := 3
+    StackFailAreasThisRunTally := {}
+    StackFailRetryAttempt := 0
 
 	GemFarm()
     {
         static lastResetCount := 0
         this.TriggerStart:=true
-        g_SF.Hwnd := WinExist("ahk_exe " . g_UserSettings[ "ExeName"])
-        existingProcessID := g_UserSettings[ "ExeName"]
+		g_SF.Hwnd := WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])
+        existingProcessID := g_IBM_Settings["IBM_Game_Exe"] ;TODO: This...isn't the process ID? Just an odd variable name I guess
         Process, Exist, %existingProcessID%
         g_SF.PID := ErrorLevel
         Process, Priority, % g_SF.PID, Realtime ;Raises IC's priority if needed - the SH launch will just leave it at normal. Trying script High and game Realtime
-        g_SF.Memory.OpenProcessReader()
+        DllCall("QueryPerformanceFrequency", "Int64*", PerformanceCounterFrequency) ;Get the performance counter frequency once
+		this.CounterFrequency:=PerformanceCounterFrequency//1000 ;Convert from seconds to milliseconds as that is our main interest
+		g_SF.Memory.OpenProcessReader()
 		g_SF.Memory.GetChampIDToIndexMap() ;This is normally in the effect key handler, which is unhelpful for us, so having to call manually. TODO: Put somewhere sensible if using, or move everything to the LevelManager champ objects
         if (g_SF.VerifyAdventureLoaded() < 0)
             return
@@ -20,22 +132,28 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
         g_ServerCall.UpdatePlayServer()
         g_SF.ResetServerCall()
         g_SF.PatronID := g_SF.Memory.ReadPatronID()
-        g_SF.GameStartFormation := "Q"
-        g_SaveHelper.Init() ; slow call, loads briv dictionary (3+s)
+        g_SaveHelper.Init() ; slow call, loads briv dictionary (3+s) Irisiri: pretty sure that isn't 3s in 2025 numbers...
         if (this.PreFlightCheck() == -1) ; Did not pass pre flight check.
             return -1
         g_PreviousZoneStartTime := A_TickCount
 		FormatTime, formattedDateTime,, yyyyMMddTHHmmss ;Can't include : in a filename so using the less human friendly version here
-		LogBase:=A_LineFile . "\..\RunLog_" . formattedDateTime ;A separate variable so other logs can use a matching start time
+		LogDir:=A_LineFile . "\..\Logs\"
+		if (!FileExist(LogDir)) ;Create the log subdirectory if not present
+			FileCreateDir, %LogDir%
+		LogBase:=LogDir . "\RunLog_" . formattedDateTime ;A separate variable so other logs can use a matching start time
 		offRamp:=false ;Irisiri - trying to stop the script failing to stop a new run on time by limiting the code that runs at the end of a run
 		this.Logger:=new IC_BrivMaster_Logger_Class(LogBase . ".csv")
 		this.inputManager:=new IC_BrivMaster_InputManager_Class()
-		this.levelManager:=new IC_BrivMaster_LevelManager_Class(g_BrivUserSettingsFromAddons["IBM_Route_Combine"])
-		this.routeMaster:=new IC_BrivMaster_RouteMaster_Class(g_BrivUserSettingsFromAddons["IBM_Route_Combine"],LogBase)
+		this.levelManager:=new IC_BrivMaster_LevelManager_Class(g_IBM_Settings["IBM_Route_Combine"])
+		this.routeMaster:=new IC_BrivMaster_RouteMaster_Class(g_IBM_Settings["IBM_Route_Combine"],LogBase)
 		this.routeMaster.LoadRoute() ;Once per script run load of route
 		this.EllywickCasino:=new IC_BrivMaster_EllywickDealer_Class()
+		;Diana Electrum Chest Cheese things
+		if (g_IBM_Settings["IBM_Level_Diana_Cheese"])
+			this.DianaCheeseHelper:=new IC_BrivMaster_DianaCheese_Class
+		;End Diana Cheese
 		this.DialogSwatter_Setup() ;This needs to be built in a more organised way, but will do for now
-		g_SharedData.IBM_SmartChests_Time:=0
+		g_SharedData.IBM_UpdateOutbound("IBM_BuyChests",false)
 		Loop
         {
 			currentZone := g_SF.Memory.ReadCurrentZone()
@@ -50,12 +168,14 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 			}
 			if (this.TriggerStart OR g_SF.Memory.ReadResetsCount() > lastResetCount) ; first loop or Modron has reset
             {
-				g_SharedData.IBM_SmartChests_Time:=0
+				g_SharedData.IBM_UpdateOutbound("IBM_BuyChests",false)
+				if (g_SharedData.BossesHitThisRun)
+				{
+					this.Logger.AddMessage("Bosses:" . g_SharedData.BossesHitThisRun) ;Boss hits from previous run
+					g_SharedData.IBM_UpdateOutbound("BossesHitThisRun",0)
+				}
 				currentZone:=this.IBM_WaitForZoneLoad(currentZone)
 				this.routeMaster.ToggleAutoProgress(this.routeMaster.combining ? 1 : 0) ;Set initial autoprogess ASAP. routeMaster.combining can't change run-to-run as loaded at script start
-                if (g_SharedData.BossesHitThisRun)
-					this.Logger.AddMessage("Bosses:" . g_SharedData.BossesHitThisRun) ;Boss hits from previous run
-				g_SharedData.BossesHitThisRun := 0
 				this.Logger.NewRun()
 				offRamp:=false
 				needToStack:=true ;Irisiri - added initialisation to make sure the offramp doesn't trigger if we've never checked
@@ -63,16 +183,17 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
                 this.routeMaster.Reset()
 				this.EllywickCasino.Reset()
 				this.IBM_FirstZone(currentZone)
-                lastResetCount := g_SF.Memory.ReadResetsCount()
-				if (!this.routeMaster.ExpectingGameRestart()) ;Don't do standard online chests during offline runs as there will be an early save when closing the game
-					g_SharedData.IBM_SmartChests_Time:=2500
+                lastResetCount:=g_SF.Memory.ReadResetsCount()
+				if (!this.routeMaster.ExpectingGameRestart() OR this.routeMaster.cycleMax==1) ;When running hybrid don't do standard online chests during offline runs as there will be an early save when closing the game. Without hybrid we don't have a choice
+					g_SharedData.IBM_UpdateOutbound("IBM_BuyChests",true)
                 g_PreviousZoneStartTime := A_TickCount
 				this.TriggerStart:=false
-                g_SharedData.LoopString := "Main Loop"
+				DllCall("QueryPerformanceCounter", "Int64*", lastLoopEndTime) ;Set for the first loop
+				g_SharedData.IBM_UpdateOutbound("LoopString","Main Loop")
                 previousZone:=currentZone ;Update these as we may have progressed during first-zone logic
 				currentZone:=g_SF.Memory.ReadCurrentZone()
             }
-			g_SharedData.LoopString := offRamp ? "Off Ramp" : "Main Loop"
+			g_SharedData.IBM_UpdateOutbound("LoopString",offRamp ? "Off Ramp" : "Main Loop")
 			if (g_SF.Memory.ReadResetting())
 			{
 				this.Logger.ResetReached()
@@ -105,8 +226,8 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 					this.RouteMaster.InitZone()
 					if ((!Mod( g_SF.Memory.ReadCurrentZone(), 5 )) AND (!Mod( g_SF.Memory.ReadHighestZone(), 5)))
 					{
-						g_SharedData.TotalBossesHit++
-						g_SharedData.BossesHitThisRun++
+						g_SharedData.IBM_UpdateOutbound_Increment("TotalBossesHit")
+						g_SharedData.IBM_UpdateOutbound_Increment("BossesHitThisRun")
 					}
 					if (!offRamp) ;Only until we're nearly at the end of the run
 					{
@@ -117,25 +238,66 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 							{
 								offRamp:=True
 								this.EllywickCasino.Stop() ;Stop the Ellywick checker, to avoid it running as the next run starts
-								g_SharedData.IBM_SmartChests_Time:=0 ;Cancel any pending chest order at this point
+								g_SharedData.IBM_UpdateOutbound("IBM_BuyChests",false) ;Cancel any pending chest order at this point
 							}
 						}
 					}
 				}
-				this.routeMaster.StartAutoProgressSoft()
+				else
+					this.routeMaster.StartAutoProgressSoft() ;InitZone() will handle this for new zones (which makes it odd it is separate...)
 			}
 			else
 			{
 				this.Logger.ResetReached()
-				g_SharedData.LoopString := "Pending modron reset"
+				g_SharedData.IBM_UpdateOutbound("LoopString","Pending modron reset")
 			}
             if (g_SF.CheckifStuck())
             {
                 this.TriggerStart := true
             }
-			Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+			;Loop frequency check
+			this.IBM_SleepOffset(lastLoopEndTime,30)
+			DllCall("QueryPerformanceCounter", "Int64*", lastLoopEndTime)
 		}
     }
+
+	RefreshGemFarmWindow() ;Updates the time settings were updated TODO: EN-CAP-SU-LATE EN-CAP-SU-LATE
+	{
+	   FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
+	   GuiControl, IBM_GemFarm:, IBM_GemFarm_Settings_Update_Time, % formattedDateTime
+	}
+
+	IBM_Sleep(sleepTime) ;A more accurate sleep. Relevant for any short sleep (<100ms?)
+	{
+		DllCall("QueryPerformanceCounter", "Int64*", currentTime)
+		targetEndTime:=currentTime+this.CounterFrequency*sleepTime
+		while (currentTime < targetEndTime)
+		{
+			targetTick:=(targetTime - currentTime)//this.CounterFrequency
+			if (targetTick <= 5) ;With <5ms to go make individual 1ms calls
+				tick:=1
+			else
+				tick:=Min(15,targetTick) ;Make calls of no more than 15ms to ensure timers run etc
+			DllCall("Sleep", "UInt", tick)
+			DllCall("QueryPerformanceCounter", "Int64*", currentTime)
+		}
+	}
+
+	IBM_SleepOffset(baseTime,offsetMilliseconds) ;baseTime is in performance counter ticks, acquired from DllCall("QueryPerformanceCounter", "Int64*", var). Use to sleep until a specific time has elapsed from a previous event (rather than the call, per IBM_Sleep)
+	{
+		targetTime:=baseTime+this.CounterFrequency*offsetMilliseconds
+		DllCall("QueryPerformanceCounter", "Int64*", currentTime)
+		while (currentTime < targetTime)
+		{
+			targetTick:=(targetTime - currentTime)//this.CounterFrequency
+			if (targetTick <= 5) ;With <5ms to go make individual 1ms calls
+				tick:=1
+			else
+				tick:=Min(15,targetTick) ;Make calls of no more than 15ms to ensure timers run etc
+			DllCall("Sleep", "UInt", tick)
+			DllCall("QueryPerformanceCounter", "Int64*", currentTime)
+		}
+	}
 
 	IBM_WaitForZoneLoad(existingZone) ;Waits for a valid zone. Used because force restarts seem to go into the main loop before the game has loaded z1
 	{
@@ -146,8 +308,8 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 		ElapsedTime:=0
 		while (currentZone=="" and ElapsedTime < 2000) ;Was 1s - possibly not enough for potatotablet
 		{
+			this.IBM_Sleep(15)
 			currentZone:=g_SF.Memory.ReadCurrentZone()
-			sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
 			ElapsedTime:=A_TickCount-startTime
 		}
 		return currentZone
@@ -162,16 +324,13 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 			tatyanaPresent:=this.levelManager.IsChampInFormation(97, "M")
 			BBEGPresent:=this.levelManager.IsChampInFormation(125, "M")
 			melfSpawningMore:=melfPresent AND this.routeMaster.MelfManager.IsMelfEffectSpawnMore()
-			
-			PH_OPTION_DIANA_CHEESE:=true 
-			PH_OPTION_DIANA_RESET_HOUR:=20 ;Local reset hour, 0 for midnight
-			PH_OPTION_DIANA_CYCLE_SET_ESTIMATE:=30 ;How many minutes we expect between restarts, must be <60
-			if (PH_OPTION_DIANA_CHEESE) ;Diana can give excess chests after the daily reset, as it seems things don't get synced up until a restart. Level her to 200 only in that window
+
+			if (g_IBM_Settings["IBM_Level_Diana_Cheese"]) ;Diana can give excess chests after the daily reset, as it seems things don't get synced up until a restart. Level her to 200 only in that window
 			{
-				prevHour:=PH_OPTION_DIANA_RESET_HOUR==0 ? 23 : PH_OPTION_DIANA_RESET_HOUR - 1
-				if ( (A_Hour==PH_OPTION_DIANA_RESET_HOUR AND A_Min<=PH_OPTION_DIANA_CYCLE_SET_ESTIMATE) OR (A_Hour==prevHour AND A_Min>=58) ) ;Either up to the specified number of minutes after reset, or 2min before
+				serverTime:=this.DianaCheeseHelper.GetCNETime() ;Returns hours with minutes as a fraction, e.g. 8.5 = 08:30, 23.95 = 23:57
+				if (serverTime > 11.95 AND serverTime < 12.5) ;11:57 to 12:30. Reset is at 12:00 CNE time (Pacific local time)
 					this.levelManager.OverrideLevelByIDRaiseToMin(148,"min",200)
-			}	
+			}
 
 			if (this.routeMaster.combining)
 			{
@@ -181,7 +340,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				{
 					this.levelManager.OverrideLevelByID(59,"z1c", true) ;Do not level melf until after zone completion if not spawning more, to avoid the multiple-credit buff ruining the combine
 				}
-				if (g_BrivUserSettingsFromAddons["IBM_Level_Options_Limit_Tatyana"])
+				if (g_IBM_Settings["IBM_Level_Options_Limit_Tatyana"])
 				{
 					if (!melfSpawningMoreAfterRush and tatyanaPresent) ;If Melf won't be spawning more in the waitroom level Tatyana if present
 					{
@@ -199,7 +358,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				frontColumn:=this.levelManager.GetFrontColumnNoBriv() ;This assumes Briv is appropriately prioritised already - which he should be
 				for _, v in frontColumn
 				{
-					if (g_BrivUserSettingsFromAddons["IBM_Level_Options_Suppress_Front"]) ;Avoid levelling any front-row champion but Briv - in which case don't prioritise
+					if (g_IBM_Settings["IBM_Level_Options_Suppress_Front"]) ;Avoid levelling any front-row champion but Briv - in which case don't prioritise
 					{
 						this.levelManager.OverrideLevelByIDLowerToMax(v,"z1",0)
 						this.levelManager.OverrideLevelByIDLowerToMax(v,"min",0)
@@ -209,7 +368,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 						this.levelManager.RaisePriorityForFrontRow(v)
 					}
 				}
-				g_SharedData.LoopString := "Start Zone Levelling"
+				g_SharedData.IBM_UpdateOutbound("LoopString","Start Zone Levelling")
 				;OutputDebug % A_TickCount . ":Start Zone Levelling`n"
 				this.levelManager.LevelFormation("M", "z1",,true,[28],true) ;Level until priority champions hit target only
 				;OutputDebug % A_TickCount . ":Done Start Zone Levelling - raising BBEG level if needed`n"
@@ -222,14 +381,14 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				this.routeMaster.ToggleAutoProgress(0, false, true) ;We may or may not have been stopped by DoRushWait()
 				;OutputDebug % A_TickCount . ":Progress stopped - Starting Casino`n"
 				this.EllywickCasino.Start(melfSpawningMoreAfterRush) ;Start the Elly handler before rushwaiting, using the post-rush Melf status
-				g_SharedData.LoopString := "Standard Levelling: M"
+				g_SharedData.IBM_UpdateOutbound("LoopString","Standard Levelling: M")
 				;OutputDebug % A_TickCount . ":Casino Started - Standard Levelling: M`n"
 				this.levelManager.LevelFormation("M","min") ;Level M to minimum
 				;OutputDebug % A_TickCount . ":Done Standard Levelling - Updating Thellora`n"
 				this.routeMaster.UpdateThellora()
 				;OutputDebug % A_TickCount . ":Updated Thellora - Calling Casino`n"
-				g_SharedData.LoopString := "Elly Wait: Post-rush Casino"
-				this.IBM_EllywickCasino(frontColumn,"min",g_BrivUserSettingsFromAddons["IBM_Level_Options_Ghost"])
+				g_SharedData.IBM_UpdateOutbound("LoopString","Elly Wait: Post-rush Casino")
+				this.IBM_EllywickCasino(frontColumn,"min",g_IBM_Settings["IBM_Level_Options_Ghost"])
 
 				if (!this.routeMaster.IsFeatSwap()) ;If featswapping Briv will jump with whatever value he had at zone completion, so checking here isn't useful, for non-feat swap, check if Briv is correctly placed so we do/don't jump out of the waitroom
 				{
@@ -253,7 +412,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				;TODO: Update to check BBEGPresent
 				if (melfSpawningMore)
 					this.levelManager.OverrideLevelByIDRaiseToMin(125,"z1",200)
-				else if (tatyanaPresent AND g_BrivUserSettingsFromAddons["IBM_Level_Options_Limit_Tatyana"]) ;If Melf won't be spawning more in the waitroom level Tatyana if present
+				else if (tatyanaPresent AND g_IBM_Settings["IBM_Level_Options_Limit_Tatyana"]) ;If Melf won't be spawning more in the waitroom level Tatyana if present
 				{
 					this.levelManager.OverrideLevelByIDRaiseToMin(97,"z1",100)
 				}
@@ -272,7 +431,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				frontColumn:=this.levelManager.GetFrontColumnNoBriv() ;This assumes Briv is appropriately prioritised already - which he should be
 				for _, v in frontColumn
 				{
-					if (g_BrivUserSettingsFromAddons["IBM_Level_Options_Suppress_Front"]) ;Avoid levelling any front-row champion but Briv - in which case don't prioritise
+					if (g_IBM_Settings["IBM_Level_Options_Suppress_Front"]) ;Avoid levelling any front-row champion but Briv - in which case don't prioritise
 					{
 						this.levelManager.OverrideLevelByIDLowerToMax(v,"z1",0)
 						this.levelManager.OverrideLevelByIDLowerToMax(v,"min",0)
@@ -285,13 +444,13 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				this.levelManager.LevelFormation("M", "z1",, true, melfSpawningMore ? [28]:[28, 59], true)
 				if (melfSpawningMore)
 				{
-					g_SharedData.LoopString := "Elly Wait: Casino with Melf spawning more"
+					g_SharedData.IBM_UpdateOutbound("LoopString","Elly Wait: Casino with Melf spawning more")
 					this.EllywickCasino.Start(melfSpawningMore) ;Start the Elly handler
 					this.IBM_EllywickCasino(frontColumn,"z1") ;TODO: Think about ghost levelling in this case
 				}
 				else
 				{
-					g_SharedData.LoopString := "Elly Wait: Express Casino"
+					g_SharedData.IBM_UpdateOutbound("LoopString","Elly Wait: Express Casino")
 					this.EllywickCasino.Start() ;Start the Elly handler
 					this.IBM_EllywickCasino(frontColumn,"z1") ;TODO: Think about ghost levelling in this case
 				}
@@ -300,7 +459,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				while (quest > 0)
 				{
 					this.levelManager.LevelWorklist() ;Level existing M worklist whilst waiting
-					Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+					this.IBM_Sleep(15)
 					quest := g_SF.Memory.ReadQuestRemaining()
 				}
 				this.levelManager.LevelWorklist(,true) ;Force briv to z1 level (due to z1c he won't have been levelled by the earlier calls)
@@ -314,7 +473,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 				} until (g_SF.IsChampInFormation(139, g_SF.Memory.GetCurrentFormation())) OR (swapAttempts > 10) ;139 is Thellora
 				;if (swapAttempts > 1)
 					;OutputDebug % "IBM_FirstZone: Done loading z1 Formation. Required attempts: " . swapAttempts . "`n"
-				;Sleep, IC_RNGWaitingRoom_Class.IRI_LOOP_WAIT_FAST ;sleep to allow the change to actually apply - Do we need to verify this?
+				;this.IBM_Sleep(15) ;sleep to allow the change to actually apply - Do we need to verify this?
 				;TODO: Is using Min here appropriate?
 				this.levelManager.LevelFormation("Q","min",0) ;One tap of levelling after the change so that BBEG->Dyna swap or such happens
 				if (thelloraPresent)
@@ -357,7 +516,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 					this.levelManager.LevelFormation("A",formationToLevelPostUnlock)
 					ghostLevellingAllowed:=true
 				}
-				Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+				this.IBM_Sleep(15)
 				ElapsedTime := A_TickCount - StartTime
             }
 			if (!frontColumnLevellingAllowed) ;If not released in the loop, reset levels but don't level as we need to get on with progression
@@ -392,6 +551,9 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
 		}
 	}
 
+	;START PRE-FLIGHT CHECK
+	;TODO: Review all this against current script hub (PreFlightCheck() is quite an old override, the associated functions are newer), and make use of LevelManager formation data
+
 	;Overidden to allow for feat swap (Briv can be in E)
 	; Tests to make sure Gem Farm is properly set up before attempting to run.
     PreFlightCheck()
@@ -414,7 +576,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
         if (formationW == -1 AND this.RunChampionInFormationTests(champion, favorite := 2, includeChampion := True, txtCheck) == -1)
             return -1
 
-		featSwapping:=g_BrivUserSettingsFromAddons["IBM_Route_BrivJump_E"]!=0 ;Can't check via routeMaster as that won't have been instantiated yet
+		featSwapping:=g_IBM_Settings["IBM_Route_BrivJump_E"]!=0 ;Can't check via routeMaster as that won't have been instantiated yet
         formationE := g_SF.FindChampIDinSavedFavorite( champion, favorite := 3, includeChampion := featSwapping  )
         if (formationE == -1 AND this.RunChampionInFormationTests(champion, favorite := 3, includeChampion := featSwapping, txtCheck) == -1)
             return -1
@@ -441,14 +603,82 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
         return 0
     }
 
+	    ; Test that favorite exists
+    TestFormationSlotByFavorite(favorite := "", txtCheck := "")
+    {
+        if (!favorite)
+            return ""
+        testFunc := ObjBindMethod(g_SF.Memory, "GetSavedFormationSlotByFavorite", favorite)
+        errMsg := "Please confirm a formation is saved in formation favorite slot " . favorite . ". " . txtCheck
+        formationSlot := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := -1, shouldBeEqual := False)
+        if (formationSlot == -1)
+            return -1
+        return formationSlot
+    }
+
+    ; Test that formation has champions
+    TestFormationFavorite( formationSlot := "", favorite := "", txtCheck := "")
+    {
+        if (!formationSlot)
+            return ""
+        team := {1:"Speed", 2:"Stack Farm", 3:"Speed No Briv"}
+        testFunc := ObjBindMethod(g_SF.Memory, "GetFormationSaveBySlot", formationSlot, 0) ; don't ignore empty
+        errMsg := "Please confirm your " . team[favorite] . " team is saved in formation favorite slot " . favorite . ". " . txtCheck
+        formation := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := 0, shouldBeEqual := False, testSize := True)
+        if (formation == -1)
+            return -1
+        return formation
+    }
+
+    ; Test that formation has champions
+    TestChampInFormation( champID := "", formation := "", includeChampion := True, favorite := 1, txtCheck := "")
+    {
+        if (!champID)
+            return ""
+        team := {1:"Speed", 2:"Stack Farm", 3:"Speed No Briv"}
+        testFunc := ObjBindMethod(g_SF, "IsChampInFavoriteFormation", champID, favorite ) ; don't ignore empty
+        foundChampName := g_SF.Memory.ReadChampNameByID(champID)
+
+        errMsg := "Please confirm " . foundChampName . stateText . (includeChampion ? " is" : " is NOT") .  " saved in formation favorite slot " . favorite . ". " . txtCheck
+        formation := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := True, shouldBeEqual := includeChampion)
+        if (formation == -1)
+            return -1
+        return formation
+    }
+
+    ; Test Modron Reset Automation is enabled
+    TestModronResetAutomationEnabled()
+    {
+        testFunc := ObjBindMethod(g_SF.Memory, "ReadModronAutoReset")
+        foundModronResetStatus := g_SF.Memory.ReadModronAutoReset()
+
+        errMsg := "Please confirm that Modron Reset Automation is enabled."
+        modronAutomationStatus := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := True, shouldBeEqual := True)
+        return modronAutomationStatus
+    }
+
+	; Run tests to check if favorite formations are saved, they have champions, and that the expected champion is/isn't included
+    RunChampionInFormationTests(champion, favorite, includeChampion, txtCheck)
+    {
+        formationSlot := this.TestFormationSlotByFavorite( favorite , txtcheck)
+        if (formationSlot == -1)
+            return -1
+        formation := this.TestFormationFavorite(formationSlot, favorite, txtcheck)
+        if (formation == -1)
+            return -1
+        isChampInFormation := this.TestChampInFormation(champion, formation, includeChampion, favorite, txtcheck)
+        if (isChampInFormation == -1)
+            return -1
+    }
+
+	;END PRE-FLIGHT CHECK
+
 	;Overidden to set TriggerStart for new run check
 	;Waits for modron to reset. Closes IC if it fails.
     ModronResetCheck()
     {
-        modronResetTimeout := 75000
-        if (!g_SF.WaitForModronReset(modronResetTimeout))
+        if (!g_SF.WaitForModronReset(50000))
             g_SF.CheckifStuck(True)
-            ;g_SF.CloseIC( "ModronReset, resetting exceeded " . Floor(modronResetTimeout/1000) . "s" )
         g_PreviousZoneStartTime := A_TickCount
 		this.TriggerStart := true
     }
@@ -477,7 +707,7 @@ class IC_BrivMaster_BrivGemFarm_Class extends IC_BrivGemFarm_Class
     {
         if (g_SF.Memory.ReadWelcomeBackActive())
 		{
-            ;g_SF.Hwnd := WinExist("ahk_exe " . g_UserSettings[ "ExeName" ]) ;Is this necessary here? It shouldn't be, OpenIC()->SetLastActiveWindowWhileWaingForGameExe should set it as it opens
+            ;g_SF.Hwnd := WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"]) ;Is this necessary here? It shouldn't be, OpenIC()->SetLastActiveWindowWhileWaingForGameExe should set it as it opens
             this.KEY_ESC.KeyPress()
         }
 		else if (A_TickCount > this.SwatterStartTime + 3000) ;3s should be enough to get the swat done

@@ -1,36 +1,48 @@
-class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
+#include %A_LineFile%\..\..\IC_Core\IC_SharedFunctions_Class.ahk
+#include %A_LineFile%\..\IC_BrivMaster_Memory.ahk
+
+class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 {
 	static BASE_64_CHARACTERS := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_" ;RFC 4648 S5 URL-safe, aka base64url
 	
-	;Overriden to allow a string to be passed to OpenIC() to aid debugging
+	;TODO: Determine if these class variables are needed
+	steelbones := ""
+    sprint := ""
+    PatronID := 0
+	
+	__new()
+    {
+        this.Memory := New IC_BrivMaster_MemoryFunctions_Class(A_LineFile . "\..\..\IC_Core\MemoryRead\CurrentPointers.json")
+    }
+	
+	;Overriden to allow a string to be passed to OpenIC() to aid debugging, and to avoid using recursion
 	;Reopens Idle Champions if it is closed. Calls RecoverFromGameClose after opening IC. Returns true if window still exists.
     SafetyCheck()
     {
-        ; TODO: Base case check in case safety check never succeeds in opening the game.
-        if (Not WinExist( "ahk_exe " . g_userSettings[ "ExeName"] ))
+        if (Not WinExist( "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"]))
         {
-            if(this.OpenIC("Called from SafetyCheck()") == -1)
+            openResult:=this.OpenIC("Called from SafetyCheck()")
+			while(openResult==-1) ;OpenIC returns -1 when it times out
             {
-                this.CloseIC("Failed to start Idle Champions")
-                this.SafetyCheck()
+				this.CloseIC("Failed to start Idle Champions")
+				openResult:=this.OpenIC("Called from SafetyCheck() loop")
             }
             if(this.Memory.ReadResetting() AND this.Memory.ReadCurrentZone() <= 1 AND this.Memory.ReadCurrentObjID() == "")
                 this.WorldMapRestart()
-            this.RecoverFromGameClose(this.GameStartFormation)
+            this.RecoverFromGameClose(this.KEY_GameStartFormation)
             this.BadSaveTest()
             return false
         }
-         ; game loaded but can't read zone? failed to load proper on last load? (Tests if game started without script starting it)
-        else if ( this.Memory.ReadCurrentZone() == "" )
+        else if ( this.Memory.ReadCurrentZone() == "" )  ; game loaded but can't read zone? failed to load proper on last load? (Tests if game started without script starting it)
         {
-            g_BrivGemFarm.Logger.AddMessage("SafetyCheck() Resetting process reader - old PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "] ")
-			this.Hwnd := WinExist( "ahk_exe " . g_userSettings[ "ExeName"] )
-            existingProcessID := g_userSettings[ "ExeName"]
-            Process, Exist, %existingProcessID%
+            g_IBM.Logger.AddMessage("SafetyCheck() Resetting process reader - old PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "] ")
+			gameExe := g_IBM_Settings["IBM_Game_Exe"]
+			this.Hwnd := WinExist("ahk_exe " . gameExe)
+            Process, Exist, %gameExe%
             this.PID := ErrorLevel
             this.Memory.OpenProcessReader()
             this.ResetServerCall()
-			g_BrivGemFarm.Logger.AddMessage("SafetyCheck() Reset process reader - new PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "] ")
+			g_IBM.Logger.AddMessage("SafetyCheck() Reset process reader - new PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "] ")
         }
         return true
     }
@@ -41,34 +53,34 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
     {
         static lastCheck := 0
         static fallBackTries := 0
-        dtCurrentZoneTime := Round((A_TickCount - g_PreviousZoneStartTime) / 1000, 2)
         if (isStuck)
         {
-            this.RestartAdventure( "Game is stuck z[" . this.Memory.ReadCurrentZone() . "]")
+            this.RestartAdventure("Game is stuck z[" . this.Memory.ReadCurrentZone() . "]")
             this.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
             lastCheck := 0
             fallBackTries := 0
             return true
         }
+		dtCurrentZoneTime := Round((A_TickCount - g_PreviousZoneStartTime) / 1000, 2)
 		if (dtCurrentZoneTime <= 35) ;Irisiri - added fast exit for the standard case
 			return false
         else if (dtCurrentZoneTime > 35 AND dtCurrentZoneTime <= 45 AND dtCurrentZoneTime - lastCheck > 5) ; first check - ensuring autoprogress enabled
         {
-            g_BrivGemFarm.RouteMaster.ToggleAutoProgress(1, true)
+            g_IBM.RouteMaster.ToggleAutoProgress(1, true)
             if(dtCurrentZoneTime < 40)
                 lastCheck := dtCurrentZoneTime
         }
         if (dtCurrentZoneTime > 45 AND fallBackTries < 3 AND dtCurrentZoneTime - lastCheck > 15) ; second check - Fall back to previous zone and try to continue
         {
             ; reset memory values in case they missed an update.
-            this.Hwnd := WinExist( "ahk_exe " . g_userSettings[ "ExeName"] )
+            this.Hwnd := WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])
             this.Memory.OpenProcessReader()
             this.ResetServerCall()
             ; try a fall back
             this.FallBackFromZone()
-            g_BrivGemFarm.RouteMaster.SetFormation() ;In the base script this just goes to Q, which might not be ideal, especially for feat swap
-            g_BrivGemFarm.RouteMaster.ToggleAutoProgress(1, true)
+            g_IBM.RouteMaster.SetFormation() ;In the base script this just goes to Q, which might not be ideal, especially for feat swap
+            g_IBM.RouteMaster.ToggleAutoProgress(1, true)
             lastCheck := dtCurrentZoneTime
             fallBackTries++
         }
@@ -127,74 +139,47 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 	;Uses server calls to test for being on world map, and if so, start an adventure (CurrentObjID). If force is declared, will use server calls to stop/start adventure.
 	RestartAdventure( reason := "" )
     {
-		g_SharedData.LoopString := "ServerCall: Restarting adventure"
-		g_BrivGemFarm.Logger.AddMessage("Forced Restart (Reason:" . reason . " at:z" . this.Memory.ReadCurrentZone() . " with haste:" . this.Memory.ReadHasteStacks() . ")")
+		g_SharedData.IBM_UpdateOutbound("LoopString","ServerCall: Restarting adventure")
+		g_IBM.Logger.AddMessage("Forced Restart (Reason:" . reason . " at:z" . this.Memory.ReadCurrentZone() . " with haste:" . this.Memory.ReadHasteStacks() . ")")
 		this.CloseIC(reason)
 		if (this.steelbones != "")
-			convertedSteelbones:=FLOOR(this.steelbones * g_BrivGemFarm.RouteMaster.stackConversionRate) ;Handle Thunder Step
+			convertedSteelbones:=FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) ;Handle Thunder Step
 		if (this.sprint != "" AND this.steelbones != "" AND (this.sprint + convertedSteelbones) < 190000)
 		{
-			g_BrivGemFarm.Logger.AddMessage("Servercall Save (Haste:" . this.sprint . " Steelbones[Raw:" . this.steelbones . " Converted:" . convertedSteelbones . "] for a total of:" . this.sprint + convertedSteelbones . ")")
+			g_IBM.Logger.AddMessage("Servercall Save (Haste:" . this.sprint . " Steelbones[Raw:" . this.steelbones . " Converted:" . convertedSteelbones . "] for a total of:" . this.sprint + convertedSteelbones . ")")
 			response := g_serverCall.CallPreventStackFail(this.sprint + convertedSteelbones)
 		}
 		else if (this.sprint != "" AND this.steelbones != "")
 		{
-			g_BrivGemFarm.Logger.AddMessage("Servercall Save (Haste:" . this.sprint . " raw Steelbones:" . this.steelbones . " which should convert to:" . convertedSteelbones . ")")
+			g_IBM.Logger.AddMessage("Servercall Save (Haste:" . this.sprint . " raw Steelbones:" . this.steelbones . " which should convert to:" . convertedSteelbones . ")")
 			response := g_serverCall.CallPreventStackFail(this.sprint + convertedSteelbones)
-			g_SharedData.LoopString := "ServerCall: Restarting with >190k stacks, some stacks lost."
+			g_SharedData.IBM_UpdateOutbound("LoopString","ServerCall: Restarting with >190k stacks, some stacks lost")
 		}
 		else
 		{
-			g_BrivGemFarm.Logger.AddMessage("Servercall Save Not Required (Haste:" . this.sprint . " raw Steelbones:" . this.steelbones . " which should convert to:" . convertedSteelbones . ")")
-			g_SharedData.LoopString := "ServerCall: Restarting adventure (no manual stack conv.)"
+			g_IBM.Logger.AddMessage("Servercall Save Not Required (Haste:" . this.sprint . " raw Steelbones:" . this.steelbones . " which should convert to:" . convertedSteelbones . ")")
+			g_SharedData.IBM_UpdateOutbound("LoopString","ServerCall: Restarting adventure (no manual stack conv.)")
 		}
 		response:=g_ServerCall.CallEndAdventure()
 		response:=g_ServerCall.CallLoadAdventure( this.CurrentAdventure )
-		g_BrivGemFarm.TriggerStart:=true
+		g_IBM.TriggerStart:=true
     }
 	
-	;Override to remove swap to E when feat swapping. TODO: Why did this swap to E anyway? Just using a normal SetFormation
-	;This is called when trying to stack, if for some reason we're trying to stack on a boss zone A) things have gone weird (fallback maybe?) and B) We should complete on the expected formation to stay on-route. If that jumps us into the Modron reset that's a route setup issue (although perhaps we should check for it)
-	KillCurrentBoss( maxLoopTime := 25000 )
-    {
-        CurrentZone := this.Memory.ReadCurrentZone()
-        if mod( CurrentZone, 5 )
-            return 1
-        StartTime := A_TickCount
-        ElapsedTime := 0
-        counter := 0
-        sleepTime := 67
-        g_SharedData.LoopString := "Killing boss before stacking."
-        while ( !mod( this.Memory.ReadCurrentZone(), 5 ) AND ElapsedTime < maxLoopTime )
-        {
-            ElapsedTime := A_TickCount - StartTime
-            g_BrivGemFarm.routeMaster.SetFormation()
-            if(!this.Memory.ReadQuestRemaining()) ; Quest complete, still on boss zone. Skip boss bag.
-                g_BrivGemFarm.RouteMaster.ToggleAutoProgress(1,0,false)
-            Sleep, %sleepTime%
-        }
-        if(ElapsedTime >= maxLoopTime)
-            return 0
-        this.WaitForTransition()
-        return 1
-    }
-
-	;Override to make it MASH KEYS FASTER, in an attempt to avoid fallbacks more reliably
-	RecoverFromGameClose(formationFavouriteKey:="Q") ;Normally called from g_SF.SafetyCheck() with g_SF.GameStartFormation as parameter
+	;Override to make it MASH KEYS FASTER, in an attempt to avoid fallbacks more reliably, and to use inputManager
+	RecoverFromGameClose(KEY_Formation)
     {
         StartTime := A_TickCount
         ElapsedTime := 0
         timeout := 10000
         if(this.Memory.ReadCurrentZone() == 1)
 			return
-        spam := "{" . formationFavouriteKey  . "}" ;TODO: Move to InputManager
-        formationFavorite := g_BrivGemFarm.levelManager.GetFormation(formationFavouriteKey)
+        formationFavorite := g_IBM.levelManager.GetFormation(formationFavouriteKey)
         ElapsedTime := 0
 		isCurrentFormation:=this.IsCurrentFormation(formationFavorite)
         while(!isCurrentFormation AND ElapsedTime < timeout AND !this.Memory.ReadNumAttackingMonstersReached())
         {
-			this.DirectedInput(,, spam )
-            Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST ;Using _FAST not _INPUT as we do want to mash this to get it in before an enemy spawns
+			KEY_Formation.KeyPress()
+            g_IBM.IBM_Sleep(15) ;Fast as we do want to mash this to get it in before an enemy spawns
 			isCurrentFormation:=this.IsCurrentFormation(formationFavorite)
 			ElapsedTime := A_TickCount - StartTime
         }
@@ -202,12 +187,12 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
         {
             ElapsedTime := A_TickCount - StartTime
             this.FallBackFromZone()
-            this.DirectedInput(,, spam )
-            g_BrivGemFarm.RouteMaster.ToggleAutoProgress(1, true)
+            KEY_Formation.KeyPress()
+            g_IBM.RouteMaster.ToggleAutoProgress(1, true)
             isCurrentFormation := this.IsCurrentFormation(formationFavorite)
         }
 		Critical Off ;Turned On previously via WaitForGameReady() calling WaitForFinalStatUpdates()
-        g_SharedData.LoopString := "Loading game finished."
+        g_SharedData.IBM_UpdateOutbound("LoopString","Loading game finished")
     }
 	
 	IBM_SuspendProcess(PID,doSuspend:=True)
@@ -225,41 +210,41 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 	IBM_WaitForUserLogin() ;Waits for the user platform login, then suspends the IC process until a defined time has past since the game closed
 	{
 		;Wait for user login, and ensure enough time has elapsed to trigger offline progress
-		targetTime:=g_BrivUserSettingsFromAddons["IBM_OffLine_Delay_Time"] ;Amount of time we'd like to elapse before passing platform login
-		if (g_SF.Memory.IBM_ReadIsGameUserLoaded()!=1 AND (A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime < targetTime))
+		targetTime:=g_IBM_Settings["IBM_OffLine_Delay_Time"] ;Amount of time we'd like to elapse before passing platform login
+		if (g_SF.Memory.IBM_ReadIsGameUserLoaded()!=1 AND (A_TickCount - g_IBM.routeMaster.offlineSaveTime < targetTime))
 		{
-			g_SharedData.LoopString := "Waiting for platform login..."
-			;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() wait for platform login")
-			ElapsedTime:=A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime
+			g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for platform login...")
+			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() wait for platform login")
+			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			Critical On ;We need to catch the platform login completing before the game progresses to the userdata request
 			While (g_SF.Memory.IBM_ReadIsGameUserLoaded()!=1 AND ElapsedTime < targetTime) ;Wait for user loaded or we run out of time, then stop IC
 			{
 				Sleep 0 ;Need to be fast to catch this
-				ElapsedTime:=A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime
+				ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			}
 			Critical Off
-			;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() platform login done - suspending process")
-			ElapsedTime:=A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime
+			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() platform login done - suspending process")
+			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			if (ElapsedTime >= targetTime) ;Don't suspend if we ran out of time waiting
 			{
-				;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() time ran out whilst waiting for user load")
+				;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() time ran out whilst waiting for user load")
 				return
 			}
 			this.IBM_SuspendProcess(g_SF.PID,True) 
-			;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() suspended process - waiting for target time")
-			ElapsedTime:=A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime
+			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() suspended process - waiting for target time")
+			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			While (ElapsedTime < targetTime)
 			{
-				;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() waiting - elapsed:" . ElapsedTime . " target:" . targetTime)
-				Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
-				ElapsedTime:=A_TickCount - g_BrivGemFarm.routeMaster.offlineSaveTime
+				;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() waiting - elapsed:" . ElapsedTime . " target:" . targetTime)
+				g_IBM.IBM_Sleep(15)
+				ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			}
-			;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() reactivating process")
+			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() reactivating process")
 			this.IBM_SuspendProcess(g_SF.PID,False)
 		}
 		else
 		{
-			;g_BrivGemFarm.routeMaster.DebugTick("IBM_WaitForUserLogin() not waiting for platform login")
+			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() not waiting for platform login")
 		}
 	}
 	
@@ -267,25 +252,25 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 	; Waits for the game to be in a ready state
     WaitForGameReady( timeout := 90000)
     {
-        ;g_BrivGemFarm.routeMaster.DebugTick("WaitForGameReady() start")
-		if (!g_BrivGemFarm.routeMaster.HybridBlankOffline AND g_BrivGemFarm.routeMaster.offlineSaveTime>=0) ;If this is set by stack restart
+        ;g_IBM.routeMaster.DebugTick("WaitForGameReady() start")
+		if (!g_IBM.routeMaster.HybridBlankOffline AND g_IBM.routeMaster.offlineSaveTime>=0) ;If this is set by stack restart
 			this.IBM_WaitForUserLogin()
 		timeoutTimerStart := A_TickCount
         ElapsedTime := 0	
         ; wait for game to start
-        g_SharedData.LoopString := "Waiting for game started..."
+        g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for game started...")
         gameStarted := 0
 		lastInput:=-250 ;Input limiter for the escape key presses
 		while( ElapsedTime < timeout AND !gameStarted)
         {	
             if (A_TickCount > lastInput+250 AND this.Memory.IBM_IsSplashVideoActive())
 			{
-				g_BrivGemFarm.KEY_ESC.KeyPress()
+				g_IBM.KEY_ESC.KeyPress()
 				lastInput:=A_TickCount
-				sleep 15 ;Short sleep as we've spent time on input already
+				g_IBM.IBM_Sleep(15) ;Short sleep as we've spent time on input already
 			}
 			else ;Longer sleep if not sending input
-				Sleep 45
+				g_IBM.IBM_Sleep(45)
 			gameStarted := this.Memory.ReadGameStarted()
             ElapsedTime := A_TickCount - timeoutTimerStart
         }
@@ -296,18 +281,18 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 			return true ; No offline progress to calculate, game started
 		}
         ; wait for offline progress to finish
-        g_SharedData.LoopString := "Waiting for offline progress..."
+        g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for offline progress...")
         offlineDone := 0
 		while( ElapsedTime < timeout AND !offlineDone)
         {
-            Sleep 100
+            g_IBM.IBM_Sleep(50)
             offlineDone := this.Memory.ReadOfflineDone()
 			ElapsedTime := A_TickCount - timeoutTimerStart
         }
         ; finished before timeout
         if(offlineDone)
         {
-			this.WaitForFinalStatUpdates(this.GameStartFormation)
+			this.WaitForFinalStatUpdates(this.KEY_GameStartFormation)
 			g_PreviousZoneStartTime := A_TickCount
             return true
         }
@@ -317,27 +302,26 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 	
 	;Override to send formation switch
 	; Waits until stats are finished updating from offline progress calculations.
-    WaitForFinalStatUpdates(startFormationKey:="q")
+    WaitForFinalStatUpdates(KEY_Formation)
     {
-		;g_BrivGemFarm.routeMaster.DebugTick("WaitForFinalStatUpdates() start")
-		g_SharedData.LoopString := "Waiting for offline progress (Area Active)..."
+		;g_IBM.routeMaster.DebugTick("WaitForFinalStatUpdates() start")
+		g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for offline progress (Area Active)...")
         ElapsedTime := 0
         ; Starts as 1, turns to 0, back to 1 when active again.
         StartTime := A_TickCount
         while(this.Memory.ReadAreaActive() AND ElapsedTime < 5000) ;This was 1736ms, which it seems can be exceeded causing things to go wierd, better to wait here a little longer
         {
             ElapsedTime := A_TickCount - StartTime
-            Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+            g_IBM.IBM_Sleep(15)
         }
-		;g_BrivGemFarm.routeMaster.DebugTick("WaitForFinalStatUpdates() Area Active")
+		;g_IBM.routeMaster.DebugTick("WaitForFinalStatUpdates() Area Active")
 		formationActive:=False
-        KEY:=g_BrivGemFarm.inputManager.getKey(startFormationKey)
 		Critical On ;From here to the zone becoming active timing is important to maximise our chances of getting to the proper formation before something spawns and blocks us. This is not turned off by this function intentionally
 		while(!this.Memory.ReadAreaActive() AND ElapsedTime < 7000) ;2000ms beyond the initial loop
         {
             if (!formationActive)
 			{
-				Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST ;Only sleep whilst the formation is inactive, we want to react as fast as possible once the area is active
+				g_IBM.IBM_Sleep(15) ;Only sleep whilst the formation is inactive, we want to react as fast as possible once the area is active
 				if (!this.Memory.IBM_IsCurrentFormationEmpty()) ;IRISIRI - Once champions start being placed we will try sending input. Was trying to make this mode responsive once the zone becomes available but that seems too early to be useful
 				{
 					formationActive:=True
@@ -345,7 +329,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 			}
 			ElapsedTime := A_TickCount - StartTime
         }
-		KEY.KeyPress()
+		KEY_Formation.KeyPress()
     }
 
 	;Override to use sleep, not sure why this spins the wheels in loops like this, but the base script does it a LOT
@@ -357,17 +341,17 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
         while(this.Memory.ReadCurrentZone() == -1 AND ElapsedTime < maxLoopTime)
         {
             CurrentZone := this.Memory.ReadCurrentZone()
-			Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST
+			g_IBM.IBM_Sleep(15)
 			ElapsedTime := A_TickCount - StartTime
         }
         CurrentZone := this.Memory.ReadCurrentZone()
         StartTime := A_TickCount
         ElapsedTime:=0
-        g_SharedData.LoopString := "Falling back from zone.."
+        g_SharedData.IBM_UpdateOutbound("LoopString","Falling back from zone...")
         while(!this.Memory.ReadTransitioning() AND ElapsedTime < maxLoopTime)
         {
             this.DirectedInput(,, "{Left}" )
-			Sleep IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_INPUT ;INPUT for this one as we don't want to go back multiple zones
+			g_IBM.IBM_Sleep(15) ;Sleep for this one as we don't want to go back multiple zones
 			ElapsedTime := A_TickCount - StartTime
         }
         this.WaitForTransition()
@@ -384,7 +368,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
         StartTime := A_TickCount
         ElapsedTime := 0
 		levelTypeChampions:=true ;Alternate levelling types to cover both without taking too long in each loop
-		g_SharedData.LoopString := "Rush Wait"
+		g_SharedData.IBM_UpdateOutbound("LoopString","Rush Wait")
 		while (!(this.Memory.ReadCurrentZone() > 1 OR this.Memory.IBM_ThelloraTriggered()) AND ElapsedTime < 8000)
         {
 			;OutputDebug % A_TickCount ":DoRushWait() - loop`n"
@@ -392,14 +376,14 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 			{
 				if (this.Memory.ReadHighestZone() > 1)
 				{
-					g_BrivGemFarm.RouteMaster.ToggleAutoProgress(0)
+					g_IBM.RouteMaster.ToggleAutoProgress(0)
 					stopProgress:=false ;No need to keep checking, and allows for levelling
 				}
 			}
 			if (levelTypeChampions)
-				g_BrivGemFarm.levelManager.LevelWorklist() ;Level current worklist
+				g_IBM.levelManager.LevelWorklist() ;Level current worklist
 			else
-				g_BrivGemFarm.levelManager.LevelClickDamage(0) ;Level click damage
+				g_IBM.levelManager.LevelClickDamage(0) ;Level click damage
             levelTypeChampions:=!levelTypeChampions
 			ElapsedTime := A_TickCount - StartTime
         }
@@ -414,11 +398,11 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 	; Attemps to open IC. Game should be closed before running this function or multiple copies could open
     OpenIC(message:="")
     {
-		waitForReadyTimeout:=45000 ;TODO: Make this a setting - varies by system and platform (Steam tends to be faster than EGS)
-		timeoutVal := 32000 + waitForReadyTimeout
+		waitForReadyTimeout:=10000*g_IBM_Settings["IBM_OffLine_Timeout"] ;Default is 5, so 50s
+		timeoutVal := 5000*g_IBM_Settings["IBM_OffLine_Timeout"] + waitForReadyTimeout ;Default is 5, so 25s + the 50s above=75s
         loadingDone := false
-        g_SharedData.LoopString := "Starting Game" . (message ? " " . message : "")
-		g_BrivGemFarm.Logger.AddMessage("Starting Game" . (message ? " " . message : ""))
+        g_SharedData.IBM_UpdateOutbound("LoopString","Starting Game" . (message ? " " . message : ""))
+		g_IBM.Logger.AddMessage("Starting Game" . (message ? " " . message : ""))
         WinGet, savedActive,, A ;Changed to the handle, multiple windows could have the same name
         this.SavedActiveWindow := savedActive
         StartTime := A_TickCount
@@ -429,7 +413,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
             if(ElapsedTime < timeoutVal)
 			{
 				this.OpenProcessAndSetPID(timeoutVal - ElapsedTime)
-				Process, Priority, % this.PID, Realtime ;Irisiri
+				Process, Priority, % this.PID, Realtime
 			}
             ElapsedTime := A_TickCount - StartTime
             if(ElapsedTime < timeoutVal)
@@ -444,7 +428,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
             if(loadingZone)
                 this.ResetServerCall()
 			else
-				Sleep, 62 ;Moved this to an Else, otherwise it delays code progression when loading is sucessful. This is also oddly specific
+				g_IBM.IBM_Sleep(50) ;Moved this to an Else, otherwise it delays code progression when loading is sucessful
             ElapsedTime := A_TickCount - StartTime
         }
         if(ElapsedTime >= timeoutVal)
@@ -454,8 +438,8 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
 		}
         else
         {
-			g_BrivGemFarm.routeMaster.ResetCycleCount() ;Whatever the reason, we've gone offline and therefore don't need to restart the game again
-			g_BrivGemFarm.DialogSwatter_Start()
+			g_IBM.routeMaster.ResetCycleCount() ;Whatever the reason, we've gone offline and therefore don't need to restart the game again
+			g_IBM.DialogSwatter_Start()
 			return 0
 		}
     }
@@ -466,13 +450,83 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
     {
         StartTime := A_TickCount
         ; Process exists, wait for the window:
-        while(!(this.Hwnd := WinExist( "ahk_exe " . g_userSettings[ "ExeName"] )) AND ElapsedTime < timeoutLeft)
+        while(!(this.Hwnd := WinExist( "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])) AND ElapsedTime < timeoutLeft)
         {
             WinGet, savedActive,, A ;Changed to the handle, multiple windows could have the same name
             this.SavedActiveWindow := savedActive
             ElapsedTime := A_TickCount - StartTime
-            Sleep, 62
+            g_IBM.IBM_Sleep(50)
         }
+    }
+	
+	;Removed creation of data to return for JSON export, as it never appeared to get used after output by ResetServerCall
+	; Store important user data [UserID, Hash, InstanceID, Briv Stacks, Gems, Chests]
+    SetUserCredentials()
+    {
+        this.UserID := this.Memory.ReadUserID()
+        this.UserHash := this.Memory.ReadUserHash()
+        this.InstanceID := this.Memory.ReadInstanceID()
+        this.TotalGems := this.Memory.ReadGems()
+        this.Memory.ReadChestCountByID(1)
+        this.Memory.ReadChestCountByID(2)
+        this.TotalSilverChests := (silverChests != "") ? silverChests : this.TotalSilverChests
+        this.TotalGoldChests := (goldChests != "") ? goldChests : this.TotalGoldChests
+        this.sprint := this.Memory.ReadHasteStacks()
+        this.steelbones := Floor(this.Memory.ReadSBStacks() * g_IBM.RouteMaster.stackConversionRate)
+    }
+	
+	;Removed saving of Servercall information to a JSON file, which never appeared to get used
+	; sets the user information used in server calls such as user_id, hash, active modron, etc.
+    ResetServerCall()
+    {
+        this.SetUserCredentials()
+        g_ServerCall := new IC_BrivMaster_ServerCall_Class( this.UserID, this.UserHash, this.InstanceID )
+        version := this.Memory.ReadBaseGameVersion()
+        if (version != "")
+            g_ServerCall.clientVersion := version
+        this.GetWebRoot()            
+        g_ServerCall.networkID := this.Memory.ReadPlatform() ? this.Memory.ReadPlatform() : g_ServerCall.networkID
+        g_ServerCall.activeModronID := this.Memory.ReadActiveGameInstance() ? this.Memory.ReadActiveGameInstance() : 1 ; 1, 2, 3 for modron cores 1, 2, 3
+        g_ServerCall.activePatronID := this.PatronID ;this.Memory.ReadPatronID() == "" ? g_ServerCall.activePatronID : this.Memory.ReadPatronID() ; 0 = no patron
+        g_ServerCall.UpdateDummyData()
+    }
+	
+	;Copied unaltered from BrivGemFarm TODO: Update to use IBM_Sleep()
+	WaitForModronReset(timeout := 60000)
+    {
+        StartTime := A_TickCount
+        ElapsedTime := 0
+        g_SharedData.IBM_UpdateOutbound("LoopString","Modron Resetting...")
+		g_SharedData.LoopString := 
+        this.SetUserCredentials()
+        if (this.sprint != "" AND this.steelbones != "" AND (this.sprint + this.steelbones) < 190000) ;TODO: Not sure this is needed in all cases...
+            response := g_serverCall.CallPreventStackFail( this.sprint + this.steelbones, true)
+        while (this.Memory.ReadResetting() AND ElapsedTime < timeout)
+        {
+            g_IBM.IBM_Sleep(20)
+            ElapsedTime := A_TickCount - StartTime
+        }
+        g_SharedData.IBM_UpdateOutbound("LoopString", "Loading z1...")
+        g_IBM.IBM_Sleep(20)
+        while(!this.Memory.ReadUserIsInited() AND g_SF.Memory.ReadCurrentZone() < 1 AND ElapsedTime < timeout)
+        {
+            g_IBM.IBM_Sleep(20)
+            ElapsedTime := A_TickCount - StartTime
+        }
+        if (ElapsedTime >= timeout)
+        {
+            return false
+        }
+        return true
+    }
+	
+	;Copied unaltered from BrivGemFarm
+	GetWebRoot()
+    {
+        tempWebRoot := this.Memory.ReadWebRoot()
+        httpString := StrSplit(tempWebRoot,":")[1]
+        isWebRootValid := httpString == "http" or httpString == "https"
+        g_ServerCall.webroot := isWebRootValid ? tempWebRoot : g_ServerCall.webroot
     }
 	
 	;Override to use IBM option
@@ -480,7 +534,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
     {
         if (!g_SharedData.IBM_RestoreWindow_Enabled)
             return
-        Sleep, 100 ; extra wait for window to load
+        g_IBM.IBM_Sleep(80)
         hwnd := this.Hwnd
         WinActivate, ahk_id %hwnd% ; Idle Champions likes to be activated before it can be deactivated Irisiri: Testing if this is true
         savedActive:="ahk_id " . this.SavedActiveWindow
@@ -497,108 +551,95 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_BrivSharedFunctions_Class
         StartTime := A_TickCount
         while (!this.PID AND ElapsedTime < timeoutLeft )
         {
-            g_SharedData.LoopString := "Opening IC.."
-            programLoc := g_UserSettings[ "InstallPath" ]
+            g_SharedData.IBM_UpdateOutbound("LoopString","Opening IC...")
+            programLoc := g_IBM_Settings["IBM_Game_Launch"]
             try
             {
-                Run, %programLoc% ;TODO: Take the PID from this if the EXE matches the game one; no need for the loop. Consider if later timers might be impacted, however
+                if (g_IBM_Settings["IBM_Game_Hide_Launcher"])
+					Run, %programLoc%,,Hide ;TODO: Take the PID from this if the EXE matches the game one; no need for the loop. Consider if later timers might be impacted, however
+				else
+					Run, %programLoc% ;TODO: Take the PID from this if the EXE matches the game one; no need for the loop. Consider if later timers might be impacted, however
             }
             catch
             {
                 MsgBox, 48, Unable to launch game, `nVerify the game location is set properly by enabling the Game Location Settings addon, clicking Change Game Location on the Briv Gem Farm tab, and ensuring the launch command is set properly.
                 ExitApp
             }
-			Sleep, 15
+			g_IBM.IBM_Sleep(15)
             ; Add 10s (default) to ElapsedTime so each exe waiting loop will take at least 10s before trying to run a new instance of hte game
             timeoutForPID := ElapsedTime + processWaitingTimeout 
             while(!this.PID AND ElapsedTime < timeoutForPID AND ElapsedTime < timeoutLeft)
             {
-                existingProcessID := g_userSettings[ "ExeName"]
-                Process, Exist, %existingProcessID%
+                exeName := g_IBM_Settings["IBM_Game_Exe"]
+                Process, Exist, %exeName%
                 this.PID := ErrorLevel
-                Sleep, 50
+                g_IBM.IBM_Sleep(50)
                 ElapsedTime := A_TickCount - StartTime
             }
             ElapsedTime := A_TickCount - StartTime
-            Sleep, 50
+            g_IBM.IBM_Sleep(50)
         }
     }
 	
 	;Overridden to reduce check loop sleep time
 	;A function that closes IC. If IC takes longer than 60 seconds to save and close then the script will force it closed.
-    CloseIC( string := "",usePID:=false)
+    CloseIC(string := "",usePID:=false)
     {
-		g_SharedData.LastCloseReason := string
+		g_SharedData.IBM_UpdateOutbound("LastCloseReason",string)
         ; check that server call object is updated before closing IC in case any server calls need to be made
         ; by the script before the game restarts
         this.ResetServerCall()
         if ( string != "" )
             string := ": " . string
-        g_SharedData.LoopString := "Closing IC" . string
+        g_SharedData.IBM_UpdateOutbound("LoopString","Closing IC" . string)
         if (usePID)
-			sendMessageString := "ahk_pid " . this.PID ;TODO: When using PID we need to fall back to closing by exe name at some point, which will obviously ruin a relay, but it's possible we end up with the game and this.PID not being aligned
+			sendMessageString := "ahk_pid " . this.PID ;TODO: When using PID we need to fall back to closing by exe name at some point, which will obviously ruin a relay, but it's possible we end up with the game and this.PID not being aligned. Maybe the standard CheckifStuck() logic will be enough?
 		else
-			sendMessageString := "ahk_exe " . g_userSettings[ "ExeName"]
+			sendMessageString := "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"]
 		if WinExist(sendMessageString)
             SendMessage, 0x112, 0xF060,,, %sendMessageString%,,,, 10000 ; WinClose
+		timeout:=1000*g_IBM_Settings["IBM_OffLine_Timeout"] ;Default is 5, so 5s
 		StartTime := A_TickCount
 		saveCompleteTime := -1 ;Unset
-		while ( WinExist( sendMessageString) AND A_TickCount - StartTime < 5000 )
+		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout )
         {
-            Sleep, IC_BrivMaster_BrivGemFarm_Class.IRI_LOOP_WAIT_FAST ;Reduced from 200ms, we want to get into chest opening and the sleep timer with maximum consistency
+            g_IBM.IBM_Sleep(15) ;Reduced from 200ms, we want to get into chest opening and the sleep timer with maximum consistency
 			if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
 			{
 				saveCompleteTime :=A_TickCount
-				g_BrivGemFarm.routeMaster.CheckRelayRelease()
+				g_IBM.routeMaster.CheckRelayRelease()
 			}
         }
         StartTime := A_TickCount
-		while ( WinExist( sendMessageString ) AND A_TickCount - StartTime < 5000 ) ; Kill after 5 seconds.
+		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Kill after 5 seconds.
         {
 			if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
 			{
-				saveCompleteTime :=A_TickCount
-				g_BrivGemFarm.routeMaster.CheckRelayRelease()
+				saveCompleteTime:=A_TickCount
+				g_IBM.routeMaster.CheckRelayRelease()
 			}
-			g_BrivGemFarm.Logger.AddMessage("IC failed to close cleanly: sending WinKill")
+			g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill")
 			WinKill, sendMessageString
-			sleep 200 ;Let WinKill do its thing
+			sleep 200 ;Let WinKill do its thing. Might as well use standard sleep for this
 		}
-		if WinExist( sendMessageString )
+        StartTime := A_TickCount
+		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Outright murder after 5 more seconds
 		{
 			hProcess := DllCall("Kernel32.dll\OpenProcess", "UInt", 0x0001, "Int", false, "UInt", g_SF.PID, "Ptr")
 			if(hProcess)
 			{
 				DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
 				DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
-				g_BrivGemFarm.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess")
+				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess")
+				sleep 200 ;Might as well use standard sleep for this
 			} else
-				g_BrivGemFarm.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess")
+				g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess")
 		}
 		if (saveCompleteTime==-1) ;Failed to detect, going to have to go with current time
 		{
 			saveCompleteTime:=A_TickCount
 		}
         return saveCompleteTime
-    }
-
-	/*
-	IBM_DeepClone(obj) ;Clone an object, including its first level children. Was used by the levelManager
-	{
-		nobj := obj.Clone()
-		for k,v in nobj
-			if IsObject(v)
-				nobj[k] := this.IBM_DeepClone(v)
-		return nobj
-	}
-	*/
-
-	InjectAddon()
-    {
-        splitStr := StrSplit(A_LineFile, "\")
-        addonDirLoc := splitStr[(splitStr.Count()-1)]
-        addonLoc := "#include *i %A_LineFile%\..\..\" . addonDirLoc . "\IC_BrivMaster_Addon.ahk`n"
-        FileAppend, %addonLoc%, %g_BrivFarmModLoc%
     }
 
 	IBM_ConvertBinaryArrayToBase64(value) ;Converts an array of 0/1 values to base 64. Note this is NOT proper base64url as we've no interest in making it byte compatible
