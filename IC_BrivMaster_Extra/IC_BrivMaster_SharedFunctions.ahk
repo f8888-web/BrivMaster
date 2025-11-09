@@ -166,7 +166,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
     }
 	
 	;Override to make it MASH KEYS FASTER, in an attempt to avoid fallbacks more reliably, and to use inputManager
-	RecoverFromGameClose()
+	RecoverFromGameClose() ;TODO: Read the zone and use the appropriate formation, and only fall back to the saved one if the read is not available
     {
         StartTime := A_TickCount
         ElapsedTime := 0

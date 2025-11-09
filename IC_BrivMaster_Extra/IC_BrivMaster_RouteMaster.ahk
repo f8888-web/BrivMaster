@@ -399,7 +399,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		}
 	}
 
-	BlankRestart() ;Restart without stacking
+	BlankRestart() ;Restart without stacking TODO: We need an option to stop progress here for potatoes
     {
 		startStacks:=g_SF.Memory.ReadSBStacks()
 		offlineStartTime:=A_TickCount
