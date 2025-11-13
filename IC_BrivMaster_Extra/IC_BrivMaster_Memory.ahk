@@ -213,7 +213,7 @@ class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
 	;Overridden to remove weird fallbacks to reads with no imports
 	ReadChampLvlByID(ChampID:= 0)
     {
-        return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].level.Read()
+		return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.HeroHandler.heroes[this.GetHeroHandlerIndexByChampID(ChampID)].level.Read()
     }
 
 	IBM_ReadChampLvlByIndex(heroIndex:=0)
