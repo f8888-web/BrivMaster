@@ -1,3 +1,5 @@
+# Introduction
+
 Briv Master is a consolidated Idle Champions addon for Script Hub. It aims to provide comprehensive Briv-based gem farming without needing multiple additional addons.
 
 Requires ScriptHub by MikeBaldi and Antilectual (the latter being the current author), which can be found at https://github.com/antilectual/Idle-Champions, which also hosts the BrivGemFarm addon on which BrivMaster is based.  This was formerly hosted at https://github.com/mikebaldi/Idle-Champions. This addon replaces the functionality of 3 of ImpEGamer's addons from https://github.com/imp444/IC_Addons: HybridTurboStacking and LevelUp, which are full replacements, and RNGWaitingRoom on which the 'Casino' in BrivMaster is heavily based.
@@ -27,12 +29,12 @@ Without feat swapping:
 
 With feat swapping:
 	
-	With feat swapping Briv must have feats saved in each formation, to ensure that changes are applied consistently. When using Thunder Step this feat will be sufficent
-	
 	Q: The farming team with Briv in the higher jump configuration (e.g. 12 for 12/11J)
 	W: The stacking team, with Briv at the front, possibly only Briv. When online stacking the relevant supporting champions must be included as well. When using Ultra stacking (below) Briv must be configured to match the jump value associated with the stack zones selected
 	E: The farming team with Briv in the lower jump configuration  (e.g. 11 for 12/11J)
 	M: The team to start the run with. Only champions in this formation can have specialisation choices taken. Regardless of using feat swap, a different jump value can be used in the Modron formation to control the start of the route, allowing bosses to be avoided. For example, a 12/11J route could have 9J in M.
+	
+	With feat swapping Briv must have feats saved in each formation, to ensure that changes are applied consistently. When using Thunder Step this feat will be sufficent
 
 # Settings
 
@@ -42,17 +44,17 @@ BrivMaster presents itself in 3 ScriptHub tabs. The following details the conten
 
 This is the 'home' tab of the addon, and is intended to be the one shown during general use - the other two contain settings that will not need to be reviewed regularly
 
-Buttons:
+Buttons:  
 	Start the gem farm script
 	Stop the gem farm script
 	Reconnect the hub with the script (e.g. when restarting the hub without restarting the script)
 	Save settings - this saves settings from all 3 tabs
 	Reset Stats
 
-Cycle display:
+Cycle display:  
 	Mostly relevant when running hybrid stacking (which is the mid to end game method of stacking), this displays progression towards the next offline restart / stack, e.g. with an 'Offline every: x runs' setting of 40, this will initially display '1/40', and a restart will normally occur on Run '40/40'. When forcing an offline (see below) this will show 'FO' after the cycle numbers.
 
-Run Control:
+Run Control:  
 	Offline stacking: Controls whether game restarts are allowed (stacking or otherwise). Normally on, shown by a green indicator. These can be disabled whilst the script is running by pressing 'Pause', which will be shown by a red indicator. The button will change to 'Resume' which can be used to allow restarts again
 	Queue: Queue an offline restart for the next run, regardless of the above general setting. A red indicator is normal operation, with a green one showing that a restart is queued. Once the restart run starts, this will clear (since it specifically reflects the next run). The forced offline will show in the Cycle display above.
 	
@@ -75,10 +77,10 @@ Run Control:
 	
 	Current SB / Haste Stacks: Briv's current Steelbones and Haste stacks
 	
-Run Stats:
+Run Stats:  
 	This group shows statistics based on the runs completed, with timings and rewards received
 	
-Chests & Daily Platinum:
+Chests & Daily Platinum:  
 	Briv Master can buy and open chests, and claim daily login rewards. The log displays the last action, and can be expanded using the button beside it.
 	Click the cog icon for the settings for this tool:
 	Gold to buy per call: Number of gold chests to buy per server call. Should generally be left at 250 as buying chests is a fast operation
@@ -99,7 +101,7 @@ Chests & Daily Platinum:
 	
 	> Author's Note: The first check of daily rewards will not be made for a minute after starting, to avoid spamming the server when testing and restarting the hub a lot. After that the check will be made every 8h, or at the reported reset time. This feature is based on Emmote's ClaimDailyPlatinum addon available at https://github.com/Emmotes/IC_Addons.
 	
-Game Settings:
+Game Settings:  
 	Game settings are important to farming; settings like the framerate cap can slow down a farm, and the Modifer key based levelling requires that the appropriate key binds are set. Briv Master allows 2 profiles to be defined, and they can be swapped between using the radio buttons. The selected profile saves with the rest of the settings. Briv Master will never automatically modify game settings, but checks periodically that they match the selected profile so that corrective action can be taken if needed. This is generally the case after modifying settings in-game.
 	
 	> Author's Note 1: I use one profile for farming (which is the one I save as the default) which is set to the resolution I use for farming, and another for other activities which is set to a higher resolution.
@@ -135,7 +137,7 @@ Game Settings:
 	
 	Swap x25 and x100: By default IC uses CTRL as the shortcut for x100 levelling, and CTRL+SHIFT for x25. As we're using x100 as standard we do not need a shortcut for it, and swapping them allows x25 which we do want to use to have a single modifer key instead of two - this means less key presses are required , and thus less chances for things to go wrong. Should be Enabled.
 	
-Ellywick Non-Gemfarm Re-roll Tool:
+Ellywick Non-Gemfarm Re-roll Tool:  
 	As the name suggests, this tool is not for use whilst farming, but leverages the logic for Ellywick to allow re-rolling in other situations; most likely when gold farming which is reflected in the default card selection. DM will be used automatically if present.
 	
 	Min:Max: The target number of each card can be entered. The default of 4:5 Moon and 0:1 Fates means that any combination of 4 Moon and 1 Fate, or 5 Moon are accepted outcomes.
@@ -150,7 +152,7 @@ Ellywick Non-Gemfarm Re-roll Tool:
 
 This tab focuses mostly on routing of the run
 
-Starting Strategy:
+Starting Strategy:  
 	Combine Thellora and Briv: There are two primary ways for a run to start.
 		1) Non-combining. Thellora jumps without Briv, landing on Favour+1, e.g. at 300 favour she jumps to zone 301. In this scenario Thellora is NOT saved into the Modron formation and the Casino (Ellywick card draw) is performed in zone 1
 		2) Combining. Thellora and Briv jump together, landing on Favour+Briv Jump+1, e.g. at 300 favour and 9J Briv they land on 310. Note this is not the same as if they jumped seperately, where it would be Thellora to 301 (favour+1) then Briv to 311 (9+1) as the 'normal' next zone is only factored in once. In this scenario Thellora is NOT saved into the Modron formation and the Casino (Ellywick card draw) is performed after Thellora's jump
@@ -160,7 +162,8 @@ Starting Strategy:
 
 	Avoid Bosses: When configuring a route landing on a boss is to be avoided, during recovery however Thellora may not have enough charges to make the usual jump, and will land elsewhere. If she would land on a boss zone this option when enabled will break the combine if doing so would cause her to no longer land on a boss zone. This should be enabled on any adventure with armoured / hit based bosses, and is likely a good idea for any adventure.
 	
-Route: This grid serves two purposes,
+Route:  
+	This grid serves two purposes,
 	1) Defining the route, which is the zones that the script will proceed on the Q formation and therefore also which will use the E formation. This should be taken from Emmote's routes site at https://emmotes.github.io/ic_scripting_routes/#gemTab. Highlighting the triangle for the zone green means that the Q formation (which is with Briv, or the higher jump for Feat Swap) will be used for that zone, and corresponds to the zone being ticked in the web tool.
 	2) Defining the zones that online stacking will be performed on. Different zones have different enemy compositions that can be more or less favourable for stacking. For Tall Tales, the ranged enemies attack much faster than the melee ones (3s vs 5s between attacks), so a ranged only zone gives the highest stacking rate, then mixed zones, and then melee only. The projectiles from ranged enemies can have signficant impact on framerate however, which might result in a lower total stack rate and therefore the appropriate zone for your PC can only be determined by testing. Highlighting the 'stack' icon red means that stacking is allowed on that zone.
 	
@@ -178,12 +181,13 @@ Route: This grid serves two purposes,
 		14/9J					{t_Hvn___w,AAAIYxgGg}
 		14/9J Ultra stacking	{t_Hvn___w,FrCtChrWg}
 
-Briv Jumps: The Briv jump value for each formation. The formations are described in more detail earlier in this document.
+Briv Jumps:  
+	The Briv jump value for each formation. The formations are described in more detail earlier in this document.
 	1) Q will be Briv's standard jump (e.g. 9 for, well, 9J, 12 for 12/11J)
 	2) E will be 0 for non-feat swap, or the lower jump for feat swap (e.g. 11 for 12/11J)
 	3) M will reflect the jump Briv will have in the Modron formation
 	
-Stacking Zones:
+Stacking Zones:  
 	Offline: Offline stacking or blank restarts will be performed on or after this zone during normal operation. When flames-based stacking is enabled this will be used for 0 flames cards. If offline stacking, set this based on the stacks needed.
 	
 	Minimum stack zone: The minimum zone Briv can farm stacks on; that is the lowest zone that the W formation does not kill enemies. Used for recovery
@@ -202,7 +206,7 @@ Stacking Zones:
 	
 	> Author's Note: In my testing Ultra stacking is superior to normal stacking, but your mileage may vary. Particularly at lower general levels of items accross the farm team, blessings, etc, your BUD may not be high enough for it to activate very often
 	
-Offline Settings:
+Offline Settings:  
 	Platform Login: When a stacking restart is needed BrivMaster will restart the game early and hold it after platform login, in order to be as consistent as possible. IC requires 15s to elapse between the save when closing and the game login when restarting to trigger offline progress, therefore the upper bound for this value is 15000ms. As some time elapses between platform login and game login it should be possible to reduce this somewhat; slower PCs will be able to reduce it further to compensate.
 	
 	> Author's Note: My relatively fast PC (13900KS) got consistent results with 13750ms.
@@ -227,7 +231,7 @@ Offline Settings:
 	
 	Relay start offset: The number of zones prior to the Offline zone that the relay will start. If stacking with Melf and the online stacking zone is within the Relay window, this will be be offset from that stacking zone instead. In any case the relay will not start until after Thellora's landing zone
 	
-Ellywick's Casino:
+Ellywick's Casino:  
 	Ellywick's Gem cards provide an immense boost to our gem income. Briv Master allows for re-rolling using her ultimate, including a second use via Dungeon Master(DM)'s ultimate to increase the average number of gem cards. Options in this section control this.
 	
 	> Author's Note: For early farms doing short runs (perhaps to z500 or less) the use of DM to get a second re-roll is not likely worth the large relative increase in run time.
@@ -244,7 +248,7 @@ Ellywick's Casino:
 	
 	> Author's Note: This is a legacy setting, which was more relevant before the Gem feat. With DM's ultimate being used for a 2nd re-roll where necessary in the Casino for a standard setup, it doesn't serve much purpose. When using the mixed 3/1 base 3/2 Melf setup described in the previous note, this allows for Elly's second ultimate to be used in-flight. Note that in-flight re-rolls have a significant risk of a game save occuring whilst holding few  / no gem cards, which would be rather determinental.
 	
-Window Options:
+Window Options:  
 	These options control the appearance of the farm script window.
 	
 	Screen Position (x,y), the x (horizonal) and y (vertical) location of the gem farm window when the script starts, measured from the top left of the screen in pixels.
@@ -256,7 +260,7 @@ Window Options:
 ## BM Levels
 	This tab focuses mostly on champion levelling. After a little side quest, anyway.
 	
-Game Location:
+Game Location:  
 	This section specifies where the game is and how it is launched. It can be populated automatically whilst pressing the 'Copy from IC' button. If using the EGS launcher, select the EGS tickbox first.
 	
 	Executable: The name of the game executable, normally IdleDragons.exe. This shoulld not need to be changed.
@@ -271,7 +275,7 @@ Game Location:
 	
 	EGS & Copy from IC: Described in the introduction to this group.
 	
-Levelling Options:
+Levelling Options:  
 	Max sequential F-keys: The maximum number of levelling commands that will be send in a batch. A higher number increases the likelyhood of drifting whilst levelling, a lower number means more overhead in the script and may delay levelling of important champions at the start of the run.
 	
 	Default level: If a champion is saved a formation but no level is specified in the Level Manager section below, this option determines if it is considered to be set to level 0 (i.e. not levelled) or level 1, and will thus be placed.
@@ -296,7 +300,7 @@ Levelling Options:
 	
 	Ghost Level: During the Casino, level champions that are not part of the formation so long as they will not be placed, either due to all slots being full or only slots at the front being available and the formation being under attack. This option makes it more likely all speed effects will be ready for the first normal zone. Only applied when combining, and should normally be enabled.
 	
-Level Manager:
+Level Manager:  
 	This section allows the levelling of champions to be configured. The formations should already be set up in game before reviewing it.
 	
 	Refresh Formations: Updates the list of champions from the saved formations in-game.
