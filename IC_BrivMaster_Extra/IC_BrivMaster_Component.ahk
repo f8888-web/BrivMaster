@@ -178,7 +178,6 @@ Class IC_IriBrivMaster_Component
     GetNewSettings()
     {
         settings := {}
-        settings.IBM_Chest_UseSmart := true
         settings.IBM_Chests_TimePercent := 90
         settings.IBM_Offline_Stack_Zone:=500
 		settings.IBM_Offline_Stack_Min:=300
@@ -1159,7 +1158,7 @@ Class IC_IriBrivMaster_Component
 		return championData
 	}
 
-	IBM_GetGUIFormationData_ProcessFormation(championData,index,formation)
+	IBM_GetGUIFormationData_ProcessFormation(championData,index,formation) ;TODO: This needs to deal with the seat/name reads failing. Probably via trying to restart memory reader initially, then giving up and not returning any champs with some kind of feedback message
 	{
 		for _, champId in formation
 		{
