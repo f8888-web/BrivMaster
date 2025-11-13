@@ -103,7 +103,7 @@ Claim Daily Rewards: Enables claiming of daily rewards. The log will report the 
 ### Game Settings
 Game settings are important to farming; settings like the framerate cap can slow down a farm, and the Modifer key based levelling requires that the appropriate key binds are set. Briv Master allows 2 profiles to be defined, and they can be swapped between using the radio buttons. The selected profile saves with the rest of the settings. Briv Master will never automatically modify game settings, but checks periodically that they match the selected profile so that corrective action can be taken if needed. This is generally the case after modifying settings in-game.
 	
-> Author's Note 1: I use one profile for farming (which is the one I save as the default) which is set to the resolution I use for farming, and another for other activities which is set to a higher resolution.
+> Author's Note 1: I use one profile for farming (which is the one I save as the default) which is set to the resolution I use for farming, and another for other activities which is set to a higher resolution.  
 > Author's Note 2: This feature is based on Emmote's GameSettingsFix addon available at https://github.com/Emmotes/IC_Addons.
 	
 Set Now: Applies the current settings profile; the game must be closed. The result of the check will be reported.
@@ -124,7 +124,7 @@ Cap FPS in BG: Cap the game's framerate when in the background. This needs to be
 
 Save Feats: Whether feats should be included in new formation saves by default. Highly recommended to turn this off.
 
-> Author's Note: Overwriting a save does not use this option - instead it will by default save feats if the existing formation has any saved.
+> Author's Note: Overwriting a saved formation does not use this option - instead it will by default save feats if the existing formation has any saved.
 
 Level Amount: I am not even going to let you screw this up.
 
@@ -153,9 +153,9 @@ This tab focuses mostly on routing of the run
 
 ### Starting Strategy
 Combine Thellora and Briv: There are two primary ways for a run to start.
-1. Non-combining. Thellora jumps without Briv, landing on Favour+1, e.g. at 300 favour she jumps to zone 301. In this scenario Thellora is NOT saved into the Modron formation and the Casino (Ellywick card draw) is performed in zone 1
-2. Combining. Thellora and Briv jump together, landing on Favour+Briv Jump+1, e.g. at 300 favour and 9J Briv they land on 310. Note this is not the same as if they jumped seperately, where it would be Thellora to 301 (favour+1) then Briv to 311 (9+1) as the 'normal' next zone is only factored in once. In this scenario Thellora is NOT saved into the Modron formation and the Casino (Ellywick card draw) is performed after Thellora's jump
-	Generally combining is better, as it removes a transition, but some routes and favours may not work well with it, e.g. if they land on a boss as a result.
+1. Non-combining. Thellora jumps without Briv, landing on Favour+1, e.g. at 300 favour she jumps to zone 301. In this scenario Thellora is **not** saved into the Modron formation and the Casino (Ellywick card draw) is performed in zone 1
+2. Combining. Thellora and Briv jump together, landing on Favour+Briv Jump+1, e.g. at 300 favour and 9J Briv they land on 310. Note this is not the same as if they jumped seperately, where it would be Thellora to 301 (favour+1) then Briv to 311 (9+1) as the 'normal' next zone is only factored in once. In this scenario Thellora is saved into the Modron formation and the Casino (Ellywick card draw) is performed after Thellora's jump
+Generally combining is better, as it removes a transition, but some routes and favours may not work well with it, e.g. if they land on a boss as a result.
 	
 > Author's Note: The level settings (below) are saved independently for combining / non-combining.
 
@@ -170,15 +170,17 @@ This grid serves two purposes,
 > Author's Note 2: The UI allows boss zones to be selected for stacking, but these will be ignored.
 	
 Import/Export: As these settings are time consuming to enter (90 selections!) they can be exported to a short string to share, or imported from a string. The strings contain two parts ordered as above; leaving one part blank will result in only the other being changed, e.g. {3zXoa17wA,} will set a 9J route for Tall Tales without changing the stacking settings. Some samples are provided below for Tall Tales; please review these, particularly the stacking selections, if you wish to use them.  
-	
-|4J Offline|{973oe9D3g,________w}|
-|6/4J Offline|{2xZxxK3rQ,________w}|
-|9J Melee stacking|{3zXoa17wA,x4DjGAbxA}|
-|11|{-p-hvk_gw,MB0MY8gGg}|
-|12/11J|{BeR7QfAfg,MB0MY8gGg}|
-|14J|{hSFIV5CEA,AAAMY9gGg}|
-|14/9J|{t_Hvn___w,AAAIYxgGg}|
-|14/9J Ultra stacking|{t_Hvn___w,FrCtChrWg}|
+
+| Set Up | Import Code |
+| ----------- | ----------- |
+| 4J Offline | {973oe9D3g,________w} |
+| 6/4J Offline | {2xZxxK3rQ,________w} |
+| 9J Melee stacking | {3zXoa17wA,x4DjGAbxA} |
+| 11 | {-p-hvk_gw,MB0MY8gGg} |
+| 12/11J | {BeR7QfAfg,MB0MY8gGg} |
+| 14J | {hSFIV5CEA,AAAMY9gGg} |
+| 14/9J | {t_Hvn___w,AAAIYxgGg} |
+| 14/9J Ultra stacking | {t_Hvn___w,FrCtChrWg} |
 
 ### Briv Jumps
 The Briv jump value for each formation. The formations are described in more detail earlier in this document.
@@ -203,7 +205,7 @@ Min/Max: The range that online stacking can be performed in. This should be as w
 	
 Ultra Stack: Normally with online stacking the party arrives, swaps to whichever of Q or E is appropriate, completes the zone, and then swaps to W. Any champions not already levelled are then levelled as stacking begins. This has some drawbacks - the first kill in the zone is wasted, and if levelling of important champions scuh as Melf is required it can delay their effects. It's also possible for an unfortunately timed attack to block the placement of a champion that was not yet levelled at all. 'Ultra' stacking is a different approach whereby the formation swap happens when exiting the previous zone, any levelling needed starts during the transition and the zone is completed once done via Briv's ultimate attack. This does therefore require sufficent BUD to clear the zone; when this option is selected BrivMaster will automatically select between Ultra and normal online stacking based on BUD and the stack zone for that run. Important: All allowed stack zones, configured in the Route grid described above, must use the same Briv configuration (i.e. all be Q 'Jump' zones, or all be E zones, and for feat swap the relevant feat must be saved on Briv in the W formation. Due to switching whilst in the previous zone, Diana should be included in the W formation.
 	
-> Author's Note: In my testing Ultra stacking is superior to normal stacking, but your mileage may vary. Particularly at lower general levels of items accross the farm team, blessings, etc, your BUD may not be high enough for it to activate very often
+> Author's Note: In my testing Ultra stacking is superior to normal stacking, but your mileage may vary. Particularly at lower general levels of items across the farm team, blessings, etc, your BUD may not be high enough for it to activate very often
 	
 ### Offline Settings 
 Platform Login: When a stacking restart is needed BrivMaster will restart the game early and hold it after platform login, in order to be as consistent as possible. IC requires 15s to elapse between the save when closing and the game login when restarting to trigger offline progress, therefore the upper bound for this value is 15000ms. As some time elapses between platform login and game login it should be possible to reduce this somewhat; slower PCs will be able to reduce it further to compensate.
@@ -315,20 +317,22 @@ Champion List: Each champion is displayed with their seat and name, along with t
 Formations: This grid displays the formations that each champion is in, as an aid to configuration and also to aid in sharing your setup. Champion levels should always be rounded up to the next 100 unless the use of modifier levelling is specifically desired; remember that an x10/x25 level-up requires double the key actions as an x100, and is less reliable.
 		
 The following provide the Author's current setup, which is an end-game farm using Dynahier (rather than a BBEG) and Baldric. The #scripting channel in the IC discord is a good place to ask for help for other setups.  
-		
-- Thellora: 1/0/1 - she is normally placed automatically by the game without the script's intervention, but this will place her otherwise, normally if she is not present when the farm is started.
-- Widdle: 300/0/300
-- Dynaheir: 100/0/100
-- Briv: 200/3/200 - this example is based on a fast PC that can combine reliably with Briv being the third and fourth level-ups performed. When starting out it's best to have him as the highest priority if combining.
-- Dungeon Master: 200/2/200
-- Minsc: 100/0/100
-- Hew Maan: 220/0/220 - this example has Tatyana in M, so Hew Maan cannot have a spec saved. This avoids his spec pop-up which would appear if 300 was used.
-- Tatyana: 100/4/100 - see comment on Briv.
-- Diana: 100/2/100
-- Ellywick: 200/4↓100/200 - see priority description above for the reason this is benefical, and also the comment on Briv.
-- Imoen: 50/0/50 - Imoen gains the ability we need at level 40, and an ability of non-trivial complexity at level 60 (Perseverance, counting Favoured Foe kills). As Imoen is not important at the start of the run, she can use modifier levelling with much impact to avoid that ability.
-- Melf: 70/2/70 - this example has Baldric in M, so MElf cannot have a spec saved. This avoids his spec pop-up which would appear if 100 was used.
-- Baldric: 200/2/200
+
+| Champion | Start | Priority | Normal | Comment |
+| ------ | ----- | ----- | ----- | ----- |
+| Thellora | 1 | 0 | 1  | She is normally placed automatically by the game without the script's intervention, but this will place her otherwise, normally if she is not present when the farm is started.
+| Widdle | 300 | 0 | 300
+| Dynaheir | 100 | 0 | 100
+| Briv | 200 | 3 | 200 | This example is based on a fast PC that can combine reliably with Briv being the third and fourth level-ups performed. When starting out it's best to have him as the highest priority if combining.
+| Dungeon Master | 200 | 2 | 200
+| Minsc | 100 | 0 | 100
+| Hew Maan | 220 | 0 | 220  | This example has Tatyana in M, so Hew Maan cannot have a spec saved. This avoids his spec pop-up which would appear if 300 was used.
+| Tatyana | 100  | 4  | 100 | See comment on Briv.
+| Diana | 100 | 2 | 100
+| Ellywick | 200 | 4↓100 | 200 | See priority description above for the reason this is benefical, and also the comment on Briv.
+| Imoen | 50 | 0 | 50 | Imoen gains the ability we need at level 40, and an ability of non-trivial complexity at level 60 (Perseverance, counting Favoured Foe kills). As Imoen is not important at the start of the run, she can use modifier levelling with much impact to avoid that ability.
+| Melf | 70 | 2 | 70 | This example has Baldric in M, so MElf cannot have a spec saved. This avoids his spec pop-up which would appear if 100 was used.
+| Baldric | 200 | 2 | 200
 		
 > Author's Note: When saving Briv Master's settings, level settings will be ignored if no champions are displayed at all. Take care if tweaking options whilst doing something else in-game, as it is a little bit too easy to overwrite your settings. Once you have things configured to your satisfaction making a backup of IC_BrivMaster_Settings.json might be sensible.
 
