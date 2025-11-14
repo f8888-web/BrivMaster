@@ -602,7 +602,18 @@ class IC_BrivMaster_GemFarm_Class
         }
         if (ErrorMsg := g_SF.FormationFamiliarCheckByFavorite(favorite := 3, True))
             MsgBox, %ErrorMsg%
-
+		modronEnabledF:=g_SF.Memory.ReadModronAutoFormation()==1
+		modronEnabledR:=g_SF.Memory.ReadModronAutoReset()==1
+		modronEnabledB:=g_SF.Memory.ReadModronAutoBuffs()==1
+		if (!modronEnabledF OR !modronEnabledR OR !modronEnabledB) ;If any of the Modron core functions are not set TODO: Should buffs (potions) be optional? Not like you can't turn it on with nothing added...
+		{	
+			ErrorMsg:="All 3 Mordon Core automation functions must be enabled before starting the gem farm. Current status:`n"
+			ErrorMsg.="Set Formation: " . (modronEnabledF ? "Enabled" : "Disabled") . "`n"
+			ErrorMsg.="Set Area Goal: " . (modronEnabledR ? "Enabled" : "Disabled") . "`n"
+			ErrorMsg.="Set Buffs: " . (modronEnabledB ? "Enabled" : "Disabled") . "`n"
+			Msgbox, %ErrorMsg%
+			return -1
+		}
         return 0
     }
 
