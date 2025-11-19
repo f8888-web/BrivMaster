@@ -1260,7 +1260,6 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 	InitZone()
     {
         g_IBM.levelManager.LevelClickDamage()
-        ;this.KEY_RIGHT.KeyPress() ;TODO: Why is this needed if autoprogress is on, and will be toggled on again should we fall back?
         this.StartAutoProgressSoft(1)
         g_PreviousZoneStartTime:=A_TickCount
     }
