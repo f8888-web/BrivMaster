@@ -63,25 +63,12 @@ Class IC_IriBrivMaster_Component
             this.GemFarmGUID := guid := GuidCreate.Guid
             Run, %A_AhkPath% "%scriptLocation%" "%guid%"
         }
-        this.TestGameVersion()
+        g_IriBrivMaster_GUI.RefreshImportWarning()
     }
 
     UpdateGUIDFromLast()
     {
         this.GemFarmGUID := g_SF.LoadObjectFromJSON(A_LineFile . "\..\LastGUID_IBM_GemFarm.json")
-    }
-
-    TestGameVersion()
-    {
-        gameVersion := g_SF.Memory.ReadGameVersion()
-        importsVersion := _MemoryManager.is64bit ? g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64 : g_ImportsGameVersion32 . g_ImportsGameVersionPostFix32
-        GuiControl, ICScriptHub: +cF18500, IBM_Import_Warning,
-        if (gameVersion == "")
-            GuiControl, ICScriptHub:, IBM_Import_Warning, % "⚠ Warning: Memory Read Failure. Check for updated Imports."
-        else if( gameVersion > 100 AND gameVersion <= 999 AND gameVersion != importsVersion )
-            GuiControl, ICScriptHub:, IBM_Import_Warning, % "⚠ Warning: Game version (" . gameVersion . ") does not match Imports version (" . importsVersion . ")."
-        else
-            GuiControl, ICScriptHub:, IBM_Import_Warning, % ""
     }
 
     Stop_Clicked()
@@ -491,7 +478,6 @@ Class IC_IriBrivMaster_Component
 					silverString:=this.Chests.CurrentSilver - this.Stats.Chests.SilverStart + this.Chests.OpenedSilver - this.Chests.PurchasedSilver . " / " . this.Chests.PurchasedSilver . " / " . this.Chests.OpenedSilver ; Start + Purchased + Dropped - Opened
 					goldString:=this.Chests.CurrentGold - this.Stats.Chests.GoldStart + this.Chests.OpenedGold - this.Chests.PurchasedGold . " / " . this.Chests.PurchasedGold . " / " . this.Chests.OpenedGold
 					GuiControl, ICScriptHub:, IBM_Stats_Chests, % "Silver: " . silverString . " Gold: " . goldString
-
 					this.Stats.BossKills+=FLOOR(LogData.Run.LastZone / 5)
 					bph:=(this.Stats.BossKills / totalTime) * 3600000
 					GuiControl, ICScriptHub:, IBM_Stats_BPH, % "BPH: " . ROUND(bph,2) ;Includes the prefix so it can be properly centered

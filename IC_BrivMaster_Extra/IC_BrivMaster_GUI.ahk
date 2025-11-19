@@ -119,7 +119,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, x+10, Bonus:
 		Gui, ICScriptHub:Add, Text, x+3 w50 vIBM_Stats_Gem_Bonus, -
 		Gui, ICScriptHub:Add, Text, xs+10 y+5, Chests (Dropped/Bought/Opened)
-		Gui, ICScriptHub:Add, Text, x+3 w250 vIBM_Stats_Chests, Gold: - / - / - Silver: - / - / -
+		Gui, ICScriptHub:Add, Text, x+3 w295 vIBM_Stats_Chests, Gold: - / - / - Silver: - / - / -
 		Gui, ICScriptHub:Add, Text, xs+10 y+5 w75, BSC iLevels/h:
 		Gui, ICScriptHub:Add, Text, x+3 w350 vIBM_Stats_BSC_Reward, -
 		Gui, ICScriptHub:Add, Text, xs+10 y+0 w75, Total iLevels/h:
@@ -888,9 +888,21 @@ class IC_IriBrivMaster_GUI
 		DllCall("ReleaseDC", "ptr", 0, "ptr", hdc)
 		return dpi / 96
 	}
+	
+	RefreshImportWarning()
+	{
+		gameVersion := g_SF.Memory.ReadGameVersion()
+		importsVersion := _MemoryManager.is64bit ? g_ImportsGameVersion64 . g_ImportsGameVersionPostFix64 : g_ImportsGameVersion32 . g_ImportsGameVersionPostFix32
+		GuiControl, ICScriptHub: +cF18500, IBM_Import_Warning,
+		if (gameVersion == "")
+			GuiControl, ICScriptHub:, IBM_Import_Warning, % "⚠ Warning: Memory Read Failure. Check for updated Imports."
+		else if( gameVersion > 100 AND gameVersion <= 999 AND gameVersion != importsVersion )
+			GuiControl, ICScriptHub:, IBM_Import_Warning, % "⚠ Warning: Game version (" . gameVersion . ") does not match Imports version (" . importsVersion . ")."
+		else
+			GuiControl, ICScriptHub:, IBM_Import_Warning, % ""
+	}
 
 }
-
 
 IBM_Level_Diana_Cheese()
 {
