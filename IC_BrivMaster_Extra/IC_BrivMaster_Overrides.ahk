@@ -38,7 +38,7 @@ class IC_BrivMaster_SharedData_Class extends IC_SharedData_Class
     {
         if (g_SF.Memory.ReadCurrentZone() == "") ; Invalid game state
             ExitApp
-        g_SF.WaitForTransition()
+        g_IBM.RouteMaster.WaitForTransition()
         g_SF.FallBackFromZone()
         g_IBM.RouteMaster.ToggleAutoProgress(false, false, true)
         ExitApp
