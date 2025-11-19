@@ -19,6 +19,7 @@ class IC_IriBrivMaster_GUI
 	Init()
 	{
 		global ;required for control variables
+		GUIFunctions.UseThemeTextColor()
 		GuiControl, ICScriptHub: +gIBM_Launch_Override, LaunchClickButton ;Override the main launch button to use IBM settings
 		groupWidth:=480
 		g_TabControlWidth:=520 ;Widen script hub
@@ -306,7 +307,7 @@ class IC_IriBrivMaster_GUI
 		this.RefreshRouteStackBoxes()
 		Gui, ICScriptHub:Add, Button, w185 xs+10 y+3 vIBM_Route_Import_Button gIBM_Route_Import_Button, Import
 		Gui, ICScriptHub:Add, Button, w185 x+5  vIBM_Route_Export_Button gIBM_Route_Export_Button, Export
-		GUIFunctions.UseThemeTextColor() ;The route grid appears to mess with themes, so reset here
+		GUIFunctions.UseThemeTextColor() ;The route grid appears to mess with themes (due to the use of GUI Font?), so reset here
 		;>Jump sidebar
 		sideBarOffset:=mainWidth+10
 		Gui, ICScriptHub:Font, w700

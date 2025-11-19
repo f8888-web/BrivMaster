@@ -16,7 +16,10 @@ global g_IriBrivMaster_ModLoc := A_LineFile . "\..\IC_BrivMaster_Mods.ahk"
 global g_IriBrivMaster_StartFunctions := {}
 global g_IriBrivMaster_StopFunctions := {}
 
+scriptHubFontSize:=g_GlobalFontSize ;SH gained a font size setting with a default of 9, which is larger than the 8 that the BM UI was designed for. This needs a more elegant solution
+g_GlobalFontSize:=8
 g_IriBrivMaster.Init()
+g_GlobalFontSize:=scriptHubFontSize ;Restore default
 g_IriBrivMaster.ResetModFile()
 
 ClearButtonStatusMessage()
