@@ -277,7 +277,7 @@ Hide launcher: Selecting this option will hide the window created by invoking th
 EGS & Copy from IC: Described in the introduction to this group.
 	
 ### Levelling Options  
-Max sequential F-keys: The maximum number of levelling commands that will be send in a batch. A higher number increases the likelyhood of drifting whilst levelling, a lower number means more overhead in the script and may delay levelling of important champions at the start of the run.
+Max sequential keys: The maximum number of levelling commands that will be send in a batch. A higher number increases the likelyhood of drifting whilst levelling, a lower number means more overhead in the script and may delay levelling of important champions at the start of the run. This setting has a minimum of 2 to allow modifier keys to be used along with an F-key.
 	
 Default level: If a champion is saved a formation but no level is specified in the Level Manager section below, this option determines if it is considered to be set to level 0 (i.e. not levelled) or level 1, and will thus be placed.
 	

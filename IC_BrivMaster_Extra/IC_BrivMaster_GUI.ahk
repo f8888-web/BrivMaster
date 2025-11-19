@@ -431,8 +431,9 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+7 w%groupWidth% h102, Levelling Options
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Max sequential F-keys
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Max sequential keys
 		Gui, ICScriptHub:Add, Edit, +cBlack  w40 x+5 Number w20 Limit2 vIBM_Level_Options_Input_Max gIBM_Level_Options_Input_Max
+		GUIFunctions.AddToolTip( "IBM_Level_Options_Input_Max", "The maximum number of key presses to be send to the game in a batch during levelling. Minimum of 2.")
 		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Default level
 		Gui, ICScriptHub:Add, Radio, x+5 h18 vIBM_Level_Options_Default_Min_0 gIBM_Level_Options_Default_Min, 0
 		Gui, ICScriptHub:Add, Radio, x+0 h18 vIBM_Level_Options_Default_Min_1 gIBM_Level_Options_Default_Min, 1
@@ -1277,6 +1278,8 @@ IBM_Level_Options_Default_Min()
 IBM_Level_Options_Input_Max()
 {
 	GuiControlGet, value,, IBM_Level_Options_Input_Max
+	if (value < 2)
+		value:=2 ;Due to potential use of modifier keys this must be at least 2
 	g_IriBrivMaster.UpdateSetting("IBM_LevelManager_Input_Max",value)
 }
 
