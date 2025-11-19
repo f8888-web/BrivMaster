@@ -73,11 +73,13 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
     {
 		startTime:=A_TickCount
 		clickTarget:=this.GetClickDamageTargetLevel()
+		Critical On ;Prevent multiple inputs
 		while (g_SF.Memory.IBM_ReadClickLevel() < clickTarget AND g_SF.Memory.IBM_ReadClickLevelUpAllowed() > 0 AND A_TickCount - startTime < timeout)
 		{
 			this.KEY_ClickDmg.KeyPress() ;No value in trying to build this to be able to use _Bulk() as it will mostly only be one press at a time
 			g_IBM.IBM_Sleep(10)
 		}
+		Critical Off
     }
 
 	SetupFailedConversion()
@@ -408,15 +410,19 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 		{
 			waitForGold:=!this.WaitForFirstGold(keyList100.Count()>0 ? keyList100[1].tag : keyList10[1].tag)
 		}
+		Critical On ;We do not want timers trying to also press keys whilst we are levelling, given 629+ issues with multiple keys, and the possible use of modifer keys
 		for _, key in keyList100
 			key.KeyPress_Bulk()
 		if (keyList10.Count()>0) ;Check this one so modifier key is not used unnecessarily
 		{
+			
 			this.parent.SetModifierKey(true)
 			for _, key in keyList10
 				key.KeyPress_Bulk()
 			this.parent.SetModifierKey(false)
+			
 		}
+		Critical Off
 		this.UpdateLevels()
 	}
 
