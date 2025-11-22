@@ -578,15 +578,15 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 				g_SF.FallBackFromZone()
 			}
 		}
-        if (ElapsedTime >= maxOnlineStackTime)
+        Critical Off
+		if (ElapsedTime >= maxOnlineStackTime)
         {
-            g_SF.RestartAdventure( "Ultra@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
+			g_SF.RestartAdventure( "Ultra@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
             g_SF.SafetyCheck()
             g_PreviousZoneStartTime:=A_TickCount
             return
         }
         g_PreviousZoneStartTime:=A_TickCount
- 		Critical Off
 		generatedStacks:=stacks - startStacks
 		g_SharedData.IBM_UpdateOutbound("IBM_RunControl_StackString","Stacking: Completed online Ultra at z" . highZone . " generating " . generatedStacks . " stacks in " . Round(ElapsedTime/ 1000,2) . "s")
 		g_IBM.Logger.AddMessage("Ultra{M=" . this.MelfManager.GetCurrentMelfEffect() . " z" . highZone . " Tar=" . targetStacks . "}," . generatedStacks . "," . ElapsedTime)
@@ -685,7 +685,8 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		this.KEY_autoProgress.KeyPress_Bulk() ;Enable autoprogress as fast as we can. If we're stuck the following will handle it. Using _Bulk for this reason-game focus is set when precision is turned on
         if (ElapsedTime >= maxOnlineStackTime)
         {
-            g_SF.RestartAdventure( "Normal@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
+            Critical Off
+			g_SF.RestartAdventure( "Normal@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
             g_SF.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
             return
