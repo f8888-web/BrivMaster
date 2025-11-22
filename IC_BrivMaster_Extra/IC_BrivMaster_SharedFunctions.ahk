@@ -619,6 +619,11 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 				DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
 				DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
 				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess")
+				if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
+				{
+					saveCompleteTime:=A_TickCount
+					g_IBM.routeMaster.CheckRelayRelease()
+				}
 				sleep 200 ;Might as well use standard sleep for this
 			}
 			else
