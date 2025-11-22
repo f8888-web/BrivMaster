@@ -487,8 +487,11 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         ElapsedTime := 0
         g_SharedData.IBM_UpdateOutbound("LoopString","Modron Resetting...")
         this.SetUserCredentials()
-        if (this.sprint != "" AND this.steelbones != "" AND (this.sprint + this.steelbones) < 190000) ;TODO: Not sure this is needed in all cases...
-            response := g_serverCall.CallPreventStackFail( this.sprint + this.steelbones, true)
+		if (this.steelbones != "" AND this.steelbones > 0 AND this.sprint != "" AND (this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) < 190000)) ;Only try and manually save if it hasn't already happened - (steelbones > 0). TODO: Determine if this ever triggers, or was just a duplicate call being made in the hopes one went through?
+        {
+			g_IBM.Logger.AddMessage("Manual stack conversion: Converted Haste=[" . this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) . "] from Haste=[" . this.sprint . "] and Steelbones=[" . this.steelbones . "] with stackConversionRate=[" . Round(g_IBM.RouteMaster.stackConversionRate,1) . "]")
+			response:=g_serverCall.CallPreventStackFail(this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate), true)
+		}	
         while (this.Memory.ReadResetting() AND ElapsedTime < timeout)
         {
             g_IBM.IBM_Sleep(20)
