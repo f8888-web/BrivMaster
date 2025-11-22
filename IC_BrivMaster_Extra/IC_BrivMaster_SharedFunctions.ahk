@@ -455,20 +455,14 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         }
     }
 	
-	;Removed creation of data to return for JSON export, as it never appeared to get used after output by ResetServerCall
-	; Store important user data [UserID, Hash, InstanceID, Briv Stacks, Gems, Chests]
+	;Removed creation of data to return for JSON export, as it never appeared to get used after output by ResetServerCall. Removed gem and chest data as those are fully handled by the hub side
     SetUserCredentials()
     {
-        this.UserID := this.Memory.ReadUserID()
-        this.UserHash := this.Memory.ReadUserHash()
-        this.InstanceID := this.Memory.ReadInstanceID()
-        this.TotalGems := this.Memory.ReadGems()
-        this.Memory.ReadChestCountByID(1)
-        this.Memory.ReadChestCountByID(2)
-        this.TotalSilverChests := (silverChests != "") ? silverChests : this.TotalSilverChests
-        this.TotalGoldChests := (goldChests != "") ? goldChests : this.TotalGoldChests
-        this.sprint := this.Memory.ReadHasteStacks()
-        this.steelbones := Floor(this.Memory.ReadSBStacks() * g_IBM.RouteMaster.stackConversionRate)
+        this.UserID:=this.Memory.ReadUserID()
+        this.UserHash:=this.Memory.ReadUserHash()
+        this.InstanceID:=this.Memory.ReadInstanceID()
+        this.sprint:=this.Memory.ReadHasteStacks() ;TODO: Calling Haste 'Sprint' here is confusing; need to check throughout IC_Core if replacing it however
+        this.steelbones:=this.Memory.ReadSBStacks()
     }
 	
 	;Removed saving of Servercall information to a JSON file, which never appeared to get used
@@ -487,7 +481,6 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         g_ServerCall.UpdateDummyData()
     }
 	
-	;Copied unaltered from BrivGemFarm TODO: Update to use IBM_Sleep()
 	WaitForModronReset(timeout := 60000)
     {
         StartTime := A_TickCount
@@ -598,10 +591,10 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 		saveCompleteTime := -1 ;Unset
 		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout )
         {
-            g_IBM.IBM_Sleep(15) ;Reduced from 200ms, we want to get into chest opening and the sleep timer with maximum consistency
+            g_IBM.IBM_Sleep(15)
 			if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
 			{
-				saveCompleteTime :=A_TickCount
+				saveCompleteTime:=A_TickCount
 				g_IBM.routeMaster.CheckRelayRelease()
 			}
         }

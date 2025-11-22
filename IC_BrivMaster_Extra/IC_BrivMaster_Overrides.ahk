@@ -2,7 +2,7 @@ class IC_BrivMaster_ServerCall_Class extends IC_ServerCalls_Class
 {
 	; Copied from an older (mid-2025) verison of BrivGemFarmPerformance, as we're not using the separate servercalls script for everything
 	; forces an attempt for the server to remember stacks
-    CallPreventStackFail(stacks, launchScript:=false)
+    CallPreventStackFail(stacks, launchScript:=false) ;TODO: This could possibly do the Thunder Step multiplier directly? If so needs removing from both the RestartAdventure() and WaitForModronReset() calls
     {
         response:= ""
         stacks:= g_SaveHelper.GetEstimatedStackValue(stacks)
