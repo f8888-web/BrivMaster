@@ -603,6 +603,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 			}
         }
         StartTime := A_TickCount
+		NextCloseAttempt:=A_TickCount
 		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Kill
         {
 			if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
@@ -610,31 +611,40 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 				saveCompleteTime:=A_TickCount
 				g_IBM.routeMaster.CheckRelayRelease()
 			}
-			g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill")
-			WinKill, sendMessageString
-			sleep 200 ;Let WinKill do its thing. Might as well use standard sleep for this
+			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
+			{
+				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill")
+				WinKill, sendMessageString
+				NextCloseAttempt:=A_TickCount+500
+			}
+			g_IBM.IBM_Sleep(15)
 		}
         StartTime := A_TickCount
+		NextCloseAttempt:=A_TickCount
 		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Outright murder
 		{
-			hProcess := DllCall("Kernel32.dll\OpenProcess", "UInt", 0x0001, "Int", false, "UInt", g_SF.PID, "Ptr")
-			if(hProcess)
+			if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
 			{
-				DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
-				DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
-				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess")
-				if (saveCompleteTime==-1 AND !g_SF.Memory.IBM_ReadIsInstanceDirty())
+				saveCompleteTime:=A_TickCount
+				g_IBM.routeMaster.CheckRelayRelease()
+			}
+			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
+			{
+				hProcess := DllCall("Kernel32.dll\OpenProcess", "UInt", 0x0001, "Int", false, "UInt", g_SF.PID, "Ptr")
+				if(hProcess)
 				{
-					saveCompleteTime:=A_TickCount
-					g_IBM.routeMaster.CheckRelayRelease()
+					g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess")
+					DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
+					DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
 				}
-				sleep 200 ;Might as well use standard sleep for this
+				else
+				{
+					g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess")
+					Break ;If we can't get the handle for the process trying again isn't going to help
+				}
+				NextCloseAttempt:=A_TickCount+500
 			}
-			else
-			{
-				g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess")
-				Break ;If we can't get the handle for the process trying again isn't going to help
-			}
+			g_IBM.IBM_Sleep(15)
 		}
 		if (saveCompleteTime==-1) ;Failed to detect, going to have to go with current time
 		{
