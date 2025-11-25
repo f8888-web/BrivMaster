@@ -420,23 +420,26 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			g_SF.GameStartFormation:=g_IBM.levelManager.GetFormation("Q")
 		}
 		g_SF.CloseIC("BlankRestart",this.RelayBlankOffline) ;2nd arg is to use PID only, so we don't close the relay copy of the game when in that mode
-		if (g_IBM_Settings["IBM_OffLine_Sleep_Time"])
-		{
-			g_SharedData.IBM_UpdateOutbound("LoopString","BlankRestart: Sleep")
-			ElapsedTime := 0
-			while ( ElapsedTime < g_IBM_Settings["IBM_OffLine_Sleep_Time"] )
-			{
-				g_SharedData.IBM_UpdateOutbound("LoopString","BlankRestart Sleep: " . g_IBM_Settings["IBM_OffLine_Sleep_Time"] - ElapsedTime)
-				g_IBM.IBM_Sleep(15)
-				ElapsedTime := A_TickCount
-			}
-		}
 		if (this.RelayBlankOffline)
 		{
 			g_IBM.Logger.AddMessage("BlankRestart() returning game in Relay mode")
 			this.RelayData.Release()
 			g_IBM.routeMaster.ResetCycleCount() ;TODO: Do these make sense here? Might need to be after picked up
 			g_IBM.DialogSwatter_Start() ;This seems a bit low-priority to happen this early, can we make it check later?
+		}
+		else ;The sleep is to allow launcher like EGS to detect the game has closed, but that is not applicable to relay (which can't use the EGS launcher)
+		{
+			if (g_IBM_Settings["IBM_OffLine_Sleep_Time"])
+			{
+				g_SharedData.IBM_UpdateOutbound("LoopString","BlankRestart: Sleep")
+				ElapsedTime := 0
+				while ( ElapsedTime < g_IBM_Settings["IBM_OffLine_Sleep_Time"] )
+				{
+					g_SharedData.IBM_UpdateOutbound("LoopString","BlankRestart Sleep: " . g_IBM_Settings["IBM_OffLine_Sleep_Time"] - ElapsedTime)
+					g_IBM.IBM_Sleep(15)
+					ElapsedTime := A_TickCount
+				}
+			}
 		}
 		g_SF.SafetyCheck() ;TODO: Does this do more harm than good during Blank offlines? It can potentially swap the process back to the wrong one if the window is still in existance? Need to roll our own for the blank codepath? Possibly needs to be changed for all runs
 		totalTime:=A_TickCount-offlineStartTime
