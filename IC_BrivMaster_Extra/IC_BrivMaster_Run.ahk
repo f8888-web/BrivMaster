@@ -196,7 +196,7 @@ class IC_BrivMaster_GemFarm_Class
 				this.TriggerStart:=false
 				DllCall("QueryPerformanceCounter", "Int64*", lastLoopEndTime) ;Set for the first loop
 				g_SharedData.IBM_UpdateOutbound("LoopString","Main Loop")
-                previousZone:=currentZone ;Update these as we may have progressed during first-zone logic
+                this.previousZone:=currentZone ;Update these as we may have progressed during first-zone logic. Previous zone is an object variable so it can be reset if a fallback is detected
 				currentZone:=g_SF.Memory.ReadCurrentZone()
             }
 			g_SharedData.IBM_UpdateOutbound("LoopString",offRamp ? "Off Ramp" : "Main Loop")
@@ -225,10 +225,10 @@ class IC_BrivMaster_GemFarm_Class
 					if (currentZone>1)
 						this.levelManager.LevelFormation("Q", "min", 0) ;TODO: Should this call on Q? We might be on E and it's technically possible E has champs Q doesn't (although that would be odd). Probably need a union of Q and E
 				}
-				if(currentZone > previousZone) ;Things to be done every new zone
+				if(currentZone > this.previousZone) ;Things to be done every new zone
 				{
 					this.Logger.UpdateZone(currentZone)
-					previousZone:=CurrentZone
+					this.previousZone:=CurrentZone
 					this.RouteMaster.InitZone()
 					if ((!Mod( g_SF.Memory.ReadCurrentZone(), 5 )) AND (!Mod( g_SF.Memory.ReadHighestZone(), 5)))
 					{
