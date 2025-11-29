@@ -2,7 +2,7 @@
 
 class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
 {
-	IBM_GetWebRootFriendly() ;Handle failures in user-facing reads (mainly the log) - webRoot uses the EngineSettings pointer that moves a lot
+	IBM_GetWebRootFriendly() ;Handle failures for user-facing reads (mainly the log). WebRoot uses the EngineSettings pointer that moves a lot
 	{
 		webRoot:=g_SF.Memory.ReadWebRoot()
 		if(!webRoot)
