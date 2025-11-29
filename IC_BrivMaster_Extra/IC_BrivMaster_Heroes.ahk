@@ -53,7 +53,7 @@ class IC_BrivMaster_Hero_Class ;Represents a single hero. Can be extended for he
 		this.ID:=heroID
 		this.HeroIndex:=heroIndex
 		this.Seat:=this.ReadChampSeat()
-		this.Key:=g_IBM.inputManager.getKey("F" . this.Seat) ;So we don't have to re-calc this constantly
+		this.Key:=g_InputManager.getKey("F" . this.Seat) ;So we don't have to re-calc this constantly
 		this.Key.Tag:=this.Seat ;Use the tag to track the seat. TODO: If levelling is encapsulated properly this might not be needed
 		this.lastUpgradeLevel:=this.GetLastUpgradeLevel()
 		this.Master:={} ;Unmodified levelling data
