@@ -149,7 +149,7 @@ class IC_BrivMaster_Logger_Class ;A class for recording run logs
 		this.LogEntries.Run.Start:=startTime
 		FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
 		this.LogEntries.Run.StartRealTime:=formattedDateTime
-		this.LogEntries.Run.ResetNumber:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.StatHandler.Resets.Read() ;TODO: Move this to .Memory and use that both here and in Melf Manager?
+		this.LogEntries.Run.ResetNumber:=g_SF.Memory.ReadResetsTotal()
 		this.LogEntries.Run.GHActive:=g_SF.Memory.IBM_IsBuffActive("Potion of the Gem Hunter") ;Does this break in non-English clients?
 		this.LogEntries.Run.LastZone:=0
 		this.LogEntries.Run.Fail:=false

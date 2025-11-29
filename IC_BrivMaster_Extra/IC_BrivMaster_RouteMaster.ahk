@@ -1716,7 +1716,7 @@ class IC_BrivMaster_MelfMaster_Class ;A class for tracking Melf's buffs
 
 	Reset(minZone,maxZone,lookahead) ;To be called once per run at the start, this deletes old patterns and handles possible changes of settings
 	{
-		curReset:=this.ReadResets()
+		curReset:=g_SF.Memory.ReadResetsTotal()
 		removeAll:=(minZone!=this.minZone OR maxZone!=this.maxZone) ;if either change the NextSpawnMore segment field needs to be recalculated. We only need to do that part so removing everything is overkill, but we shouldn't be changing these mid-run with any frequency
 		this.minZone:=minZone
 		this.maxZone:=maxZone
@@ -1734,7 +1734,7 @@ class IC_BrivMaster_MelfMaster_Class ;A class for tracking Melf's buffs
 	Update(curReset:="") ;Generates patterns
 	{
 		if (curReset=="")
-			curReset:=this.ReadResets()
+			curReset:=g_SF.Memory.ReadResetsTotal()
 		;Calculate this and any needed future value
 		loop, % this.lookahead + 1
 		{
@@ -1788,16 +1788,11 @@ class IC_BrivMaster_MelfMaster_Class ;A class for tracking Melf's buffs
 			this.Update(reset)
 	}
 
-	ReadResets()
-    {
-        return g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.StatHandler.Resets.Read()
-    }
-
 	GetCurrentMelfEffect(zone:="") ;0 is spawn amount, 1 is spawn speed, 2 is quest drops
 	{
 		if (zone=="")
 			zone:=g_SF.Memory.ReadCurrentZone()
-		reset:=this.ReadResets()
+		reset:=g_SF.Memory.ReadResetsTotal()
 		this.CheckReset(reset) ;Ensure we have data for the current reset
 		return this.Patterns[reset,this.ZoneToSegment(zone)]
 	}
@@ -1827,7 +1822,7 @@ class IC_BrivMaster_MelfMaster_Class ;A class for tracking Melf's buffs
 
 	GetFirstMelfSpawnMoreSegment(curZone:="") ;If a zone is supplied, the segment at or after that will be returned instead of the minimum
 	{
-		reset:=this.ReadResets()
+		reset:=g_SF.Memory.ReadResetsTotal()
 		this.CheckReset(reset) ;Ensure we have data for the current reset
 		if (curZone=="")
 			startZone:=this.minZone
@@ -1839,7 +1834,7 @@ class IC_BrivMaster_MelfMaster_Class ;A class for tracking Melf's buffs
 
 	GetFirstMelfSpawnFasterSegment(curZone:="") ;If a zone is supplied, the segment at or after that will be returned instead of the minimum
 	{
-		reset:=this.ReadResets()
+		reset:=g_SF.Memory.ReadResetsTotal()
 		this.CheckReset(reset) ;Ensure we have data for the current reset
 		if (curZone=="")
 			startZone:=this.minZone
