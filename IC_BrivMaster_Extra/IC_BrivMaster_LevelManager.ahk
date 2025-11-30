@@ -109,9 +109,9 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		this.levelingDone["A"]:={"min":false,"z1":false}
 	}
 
-	IsChampInFormation(champID, index)
+	IsChampInFormation(heroID, index) ;TODO: The order of parameters here is backwards vs the actual collection, probably best to be consistent
 	{
-		return this.savedFormationChamps[index,champID]
+		return this.savedFormationChamps[index].HasKey(heroID)
 	}
 
 	IsChampInAnyFormation(champID, index) ;index can be multiple, eg "QE" would return true if champID is in either Q or E
