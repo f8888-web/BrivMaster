@@ -587,7 +587,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 		timeout:=baseTimeout
 		if WinExist(sendMessageString)
         {
-			g_IBM.Logger.AddMessage("CloseIC() Pre-WinClose - LastSave=[" . this.Memory.IBM_ReadLastSave() . "] Dirty=[" . this.Memory.IBM_ReadIsInstanceDirty() . "]")
+			g_IBM.Logger.AddMessage("CloseIC() Pre-WinClose - " . this.CloseIC_DEBUG_STRING())
 			SendMessage, 0x112, 0xF060,,, %sendMessageString%,,,, %timeout% ; WinClose
 		}
 		StartTime := A_TickCount
@@ -598,7 +598,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty())
 			{
 				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() Standard Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
+				g_IBM.Logger.AddMessage("CloseIC() Standard Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
 				g_IBM.routeMaster.CheckRelayRelease()
 				timeout:=MAX(1000,baseTimeout//4) ;Quarter the timeout post-save. Allow 1s even if this new timer would be elapsed TODO: This puts a floor on the baseTimeout value of 4000ms, which is a factor of 2, and is probably okay, but these numbers are all rather made up and need some structure. We might be better off seperating pre- and post-save. Possibly only do the reduction for relay mode (add a return value to CheckRelayRelease()?)
 			}
@@ -610,13 +610,13 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty())
 			{
 				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() WinKill Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
+				g_IBM.Logger.AddMessage("CloseIC() WinKill Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
 				g_IBM.routeMaster.CheckRelayRelease()
 				timeout:=baseTimeout//4 ;Quarter the timeout post-save
 			}
 			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
 			{
-				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "]")
+				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
 				WinKill, sendMessageString
 				NextCloseAttempt:=A_TickCount+500
 			}
@@ -630,7 +630,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty()) ;Not reducing the timeout here, for the same reason it is reset prior to this
 			{
 				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() TerminateProcess Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
+				g_IBM.Logger.AddMessage("CloseIC() TerminateProcess Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
 				g_IBM.routeMaster.CheckRelayRelease()
 			}
 			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
@@ -638,13 +638,13 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 				hProcess := DllCall("Kernel32.dll\OpenProcess", "UInt", 0x0001, "Int", false, "UInt", g_SF.PID, "Ptr")
 				if(hProcess)
 				{
-					g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "]")
+					g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
 					DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
 					DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
 				}
 				else
 				{
-					g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] LastSave=[" . this.Memory.IBM_ReadLastSave() . "]")
+					g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
 					Break ;If we can't get the handle for the process trying again isn't going to help
 				}
 				NextCloseAttempt:=A_TickCount+500
@@ -657,6 +657,15 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 		}
         return saveCompleteTime
     }
+	
+	CloseIC_DEBUG_STRING() ;TODO: Remove once no longer needed (or perhaps adjust to give only the information that is acted upon) - added to avoid having endless spaghetti in the actual CloseIC() function
+	{
+		DEBUG_STRING:="LastSave=[" . this.Memory.IBM_ReadLastSave() . "] "
+		DEBUG_STRING.="Dirty=[" . this.Memory.IBM_ReadIsInstanceDirty() . "] "
+		DEBUG_STRING.="CurrentSave=[" . this.Memory.GameManager.game.gameInstances[0].Controller.userData.SaveHandler.currentSave.Read() . "] "
+		DEBUG_STRING.="CurrentSaveCallID=[" . this.Memory.GameManager.game.gameInstances[0].Controller.userData.SaveHandler.currentSaveCallId.Read() . "] "
+		return DEBUG_STRING
+	}
 
 	IBM_ConvertBinaryArrayToBase64(value) ;Converts an array of 0/1 values to base 64. Note this is NOT proper base64url as we've no interest in making it byte compatible
 	{
