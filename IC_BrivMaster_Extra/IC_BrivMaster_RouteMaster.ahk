@@ -1024,7 +1024,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		if (!fastCheck)
 			trustRecent:=false ;Reset to false for all normal calls
 		isEZone:=this.ShouldWalk(g_SF.Memory.ReadCurrentZone()) ;TODO: Any reason this doesn't use this.ShouldWalk()? Seems to be duplicating the Thellora recovery option from there in the bench/unbench code
-		Critical On ;Here to handle the animation skip, maybe isn't needed for feat swap as a result?
+		Thread, NoTimers ;Here to handle the animation skip, maybe isn't needed for feat swap as a result?
 		benchReturn:=this.BenchBrivConditions(isEZone) ;check to bench briv
 		lastFormation:=g_SF.Memory.ReadMostRecentFormationFavorite() ;New Sep25 read, used in all cases as it is part of the bad formation check
         if (benchReturn AND lastFormation!=3) ;New Sep25 read. Formation 3 is E
@@ -1045,11 +1045,11 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 					this.KEY_Q.KeyPress_Bulk() ;_Bulk as follows the E.KeyPress()
 				}
 			}
-			Critical Off
+			Thread, NoTimers, False
             return
         }
 		else
-			Critical Off
+			Thread, NoTimers, False
 		;check to unbench briv
         if (this.UnBenchBrivConditions(isEZone) AND lastFormation!=1) ;Formation 1 is Q
         {
