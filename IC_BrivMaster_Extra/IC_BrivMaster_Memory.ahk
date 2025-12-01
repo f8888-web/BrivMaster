@@ -214,6 +214,11 @@ class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
 	{
 		return this.GameManager.game.gameInstances[this.GameInstance].isDirty.Read()
 	}
+	
+	IBM_ReadCurrentSave() ;Pointer to the current save, 0 if there isn't one active, so we can test if it's 0 or not. Non-zero whilst the game is saving
+	{
+		return this.GameManager.game.gameInstances[this.GameInstance].Controller.userData.SaveHandler.currentSave.Read()
+	}
 
 	IBM_ReadIsGameUserLoaded()
 	{

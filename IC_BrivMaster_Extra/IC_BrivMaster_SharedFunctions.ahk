@@ -569,82 +569,54 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         }
     }
 	
-	;A function that closes IC
-    CloseIC(string := "",usePID:=false)
+    CloseIC(string:="",usePID:=false)
     {
 		g_SharedData.IBM_UpdateOutbound("LastCloseReason",string)
-        ; check that server call object is updated before closing IC in case any server calls need to be made
-        ; by the script before the game restarts
-        this.ResetServerCall()
-        if ( string != "" )
-            string := ": " . string
+        this.ResetServerCall() ;Check that server call object is updated before closing IC in case any server calls need to be made by the script before the game restarts TODO: Consider the scenarios where this matters that might follow from this function
+        if (string!="")
+            string:=": " . string
         g_SharedData.IBM_UpdateOutbound("LoopString","Closing IC" . string)
         if (usePID)
-			sendMessageString := "ahk_pid " . this.PID ;TODO: When using PID we need to fall back to closing by exe name at some point, which will obviously ruin a relay, but it's possible we end up with the game and this.PID not being aligned. Maybe the standard CheckifStuck() logic will be enough?
+			sendMessageString := "ahk_pid " . this.PID
 		else
 			sendMessageString := "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"]
-		baseTimeout:=2000*g_IBM_Settings["IBM_OffLine_Timeout"] ;Default is 5, so 10s. This is an initial value that is reduced once a save is detected
-		timeout:=baseTimeout
+		timeout:=2000*g_IBM_Settings["IBM_OffLine_Timeout"] ;Default is 5, so 10s
 		if WinExist(sendMessageString)
-        {
-			g_IBM.Logger.AddMessage("CloseIC() Pre-WinClose - " . this.CloseIC_DEBUG_STRING())
 			SendMessage, 0x112, 0xF060,,, %sendMessageString%,,,, %timeout% ; WinClose
-		}
-		StartTime := A_TickCount
-		saveCompleteTime := -1 ;Unset
-		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout )
+		StartTime:=A_TickCount
+		saveCompleteTime:=-1 ;Unset
+		while (WinExist(sendMessageString) AND A_TickCount - StartTime < timeout)
         {
             g_IBM.IBM_Sleep(15)
-			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty())
+			if (saveCompleteTime==-1 AND saveStatus:=this.CloseIC_SaveCheck()) ;If saveStatus==2 then the game appears to have closed and we did not confirm the saved actually happened, but there's no value in doing a full wait when there is nothing to check so it is treated the same - either it saved and we missed it, or it won't ever save and there's no point waiting
 			{
 				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() Standard Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
 				g_IBM.routeMaster.CheckRelayRelease()
-				timeout:=MAX(1000,baseTimeout//4) ;Quarter the timeout post-save. Allow 1s even if this new timer would be elapsed TODO: This puts a floor on the baseTimeout value of 4000ms, which is a factor of 2, and is probably okay, but these numbers are all rather made up and need some structure. We might be better off seperating pre- and post-save. Possibly only do the reduction for relay mode (add a return value to CheckRelayRelease()?)
+				g_IBM.Logger.AddMessage("CloseIC() Standard Loop "  . (saveStatus==1 ? "Save" : "Reads Invalid") . " - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
 			}
         }
-        StartTime := A_TickCount
-		NextCloseAttempt:=A_TickCount
-		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Kill
-        {
-			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty())
-			{
-				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() WinKill Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
-				g_IBM.routeMaster.CheckRelayRelease()
-				timeout:=baseTimeout//4 ;Quarter the timeout post-save
-			}
-			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
-			{
-				g_IBM.Logger.AddMessage("IC failed to close cleanly: sending WinKill saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
-				WinKill, sendMessageString
-				NextCloseAttempt:=A_TickCount+500
-			}
-			g_IBM.IBM_Sleep(15)
-		}
-        StartTime := A_TickCount
-		NextCloseAttempt:=A_TickCount
-		timeout:=baseTimeout ;Reset the timeout, as we need to force the game closed if it doesn't want to close normally - continuing with old instances running will cause problems eventually
-		while ( WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Outright murder
+        StartTime:=A_TickCount
+		NextCloseAttempt:=A_TickCount ;Throttle input whilst continuing to check rapidly for game save and window closure
+		while (WinExist(sendMessageString) AND A_TickCount - StartTime < timeout ) ; Outright murder
 		{
-			if (saveCompleteTime==-1 AND !this.Memory.IBM_ReadIsInstanceDirty()) ;Not reducing the timeout here, for the same reason it is reset prior to this
+			if (saveCompleteTime==-1 AND saveStatus:=this.CloseIC_SaveCheck())
 			{
 				saveCompleteTime:=A_TickCount
-				g_IBM.Logger.AddMessage("CloseIC() TerminateProcess Loop Save Detected - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "] " . this.CloseIC_DEBUG_STRING())
 				g_IBM.routeMaster.CheckRelayRelease()
+				g_IBM.Logger.AddMessage("CloseIC() TerminateProgress Loop " . (saveStatus==1 ? "Save" : "Reads Invalid") . " - saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
 			}
-			if (A_TickCount >= NextCloseAttempt) ;Throttle input whilst continuing to check rapidly for game save and window closure
+			if (A_TickCount >= NextCloseAttempt) 
 			{
 				hProcess := DllCall("Kernel32.dll\OpenProcess", "UInt", 0x0001, "Int", false, "UInt", g_SF.PID, "Ptr")
 				if(hProcess)
 				{
-					g_IBM.Logger.AddMessage("IC failed to close cleanly: sending TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
+					g_IBM.Logger.AddMessage("CloseIC() failed to close cleanly: sending TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
 					DllCall("Kernel32.dll\TerminateProcess", "Ptr", hProcess, "UInt", 0)
 					DllCall("Kernel32.dll\CloseHandle", "Ptr", hProcess)
 				}
 				else
 				{
-					g_IBM.Logger.AddMessage("IC failed to close cleanly: failed to get process handle for TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] " . this.CloseIC_DEBUG_STRING())
+					g_IBM.Logger.AddMessage("CloseIC() failed to close cleanly: failed to get process handle for TerminateProcess saveCompleteTime=[" . saveCompleteTime . "] Timeout=[" . A_TickCount - StartTime . "/" . timeout . "]")
 					Break ;If we can't get the handle for the process trying again isn't going to help
 				}
 				NextCloseAttempt:=A_TickCount+500
@@ -652,21 +624,19 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 			g_IBM.IBM_Sleep(15)
 		}
 		if (saveCompleteTime==-1) ;Failed to detect, going to have to go with current time
-		{
 			saveCompleteTime:=A_TickCount
-		}
         return saveCompleteTime
     }
 	
-	CloseIC_DEBUG_STRING() ;TODO: Remove once no longer needed (or perhaps adjust to give only the information that is acted upon) - added to avoid having endless spaghetti in the actual CloseIC() function
+	CloseIC_SaveCheck() ;Returns 2 if either of memory reads are invalid, 1 if the game is active and has saved and 0 otherwise
 	{
-		DEBUG_STRING:="LastSave=[" . this.Memory.IBM_ReadLastSave() . "] "
-		DEBUG_STRING.="Dirty=[" . this.Memory.IBM_ReadIsInstanceDirty() . "] "
-		DEBUG_STRING.="CurrentSave=[" . this.Memory.GameManager.game.gameInstances[0].Controller.userData.SaveHandler.currentSave.Read() . "] "
-		DEBUG_STRING.="CurrentSaveCallID=[" . this.Memory.GameManager.game.gameInstances[0].Controller.userData.SaveHandler.currentSaveCallId.Read() . "] "
-		return DEBUG_STRING
+		if(this.Memory.IBM_ReadIsInstanceDirty()=="" OR this.Memory.IBM_ReadCurrentSave()=="") ;Memory reads are gone, so game has proceeded to close. This also seems to happen if the relay fails to stop the game and the current copy has the 'Instance invalid' error
+			return 2
+		else if (this.Memory.IBM_ReadIsInstanceDirty()==0 AND this.Memory.IBM_ReadCurrentSave()==0) ;Save complete. Dirty appears to get set to 0 before the save instance in some cases, so best to check both
+			return 1
+		return 0
 	}
-
+	
 	IBM_ConvertBinaryArrayToBase64(value) ;Converts an array of 0/1 values to base 64. Note this is NOT proper base64url as we've no interest in making it byte compatible
 	{
 		charIndex:=1
