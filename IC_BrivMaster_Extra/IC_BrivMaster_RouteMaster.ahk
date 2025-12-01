@@ -1029,20 +1029,21 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		lastFormation:=g_SF.Memory.ReadMostRecentFormationFavorite() ;New Sep25 read, used in all cases as it is part of the bad formation check
         if (benchReturn AND lastFormation!=3) ;New Sep25 read. Formation 3 is E
         {
-			;OutputDebug % A_TickCount . "@z" . g_SF.Memory.ReadCurrentZone() . ": Swap to E`n"
 			this.KEY_E.KeyPress()
-			;OutputDebug % A_TickCount . " z" . g_SF.Memory.ReadCurrentZone() . " SetFormation() - STD E - fastCheck=[" . fastCheck . "] trustRecent=[" . DEBUG_INITIAL_TRUST_RECENT . ">>" . trustRecent . "] lastFormation=[" . lastFormation . "]`n"
 			If (benchReturn==2)
 			{
 				if (this.zones[g_SF.Memory.ReadHighestZone()].jumpZone) ;Only put Briv back in urgently if we need to jump right away. Note this does not have to consider featswap because we'll never enter this block with Briv in E, as we can't animation skip in that case
 				{
 					startTime:=A_TickCount
-					while (g_SF.Memory.ReadFormationTransitionDir() == 4 and (A_TickCount-startTime)<5000)
+					while (g_SF.Memory.ReadFormationTransitionDir()==4 AND !g_Heroes[58].ReadBenched() AND (A_TickCount-startTime)<1000) ;Whilst we're in the transition and Briv is still on the field. Using .ReadBenched() as it's a simple read, whereas ReadFielded() has to loop the formation
 					{
 						g_IBM.IBM_Sleep(15)
 					}
-					;OutputDebug % A_TickCount . "@z" . g_SF.Memory.ReadCurrentZone() . ": Swap to Q - Fast Return`n"
 					this.KEY_Q.KeyPress_Bulk() ;_Bulk as follows the E.KeyPress()
+					while (g_SF.Memory.ReadFormationTransitionDir()==4 AND (A_TickCount-startTime)<1000) ;Having gone back to Q, wait for the transition to end (so we don't swap Briv straight back out again) TODO: We could block via a static variable or something instead of sleeping here? Not that transitions take overly long
+					{
+						g_IBM.IBM_Sleep(15)
+					}
 				}
 			}
 			Thread, NoTimers, False

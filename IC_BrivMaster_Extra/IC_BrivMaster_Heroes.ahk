@@ -71,6 +71,11 @@ class IC_BrivMaster_Hero_Class ;Represents a single hero. Can be extended for he
 	;---Hero related memory reads
 	;--------------------------------------------------------------------------------------
 
+	ReadBenched()
+	{
+		return g_SF.Memory.GameManager.game.gameInstances[0].Controller.userData.HeroHandler.heroes[this.heroIndex].Benched.Read()
+	}
+	
 	ReadChampSeat()
     {
         return g_SF.Memory.GameManager.game.gameInstances[0].Controller.userData.HeroHandler.heroes[this.heroIndex].def.SeatID.Read()
