@@ -37,7 +37,7 @@ Class IC_IriBrivMaster_Component
 	Settings := ""
 	TimerFunction := ObjBindMethod(this, "UpdateStatus")
 	SharedRunData:=""
-	CONSTANT_serverRateOpen:=1000 ;For chests TODO: Make a table of this stuff?
+	CONSTANT_serverRateOpen:=1000 ;For chests TODO: Make a table of this stuff? Note the GUI file does use them
 	CONSTANT_serverRateBuy:=250
 	ServerCallFailCount:=0 ;Track the number of failed calls, so we can refresh the user data / servercall, but avoid doing so because one call happened to fail (e.g. at 20:00 UK the new game day starting tends to result in fails)
 	MemoryReadFailCount:=0 ;Separate tracker for memory reads, as these are expected to fail during resets etc (TODO: We could combine and just add different numbers, e.g. 5 for a call fail or 1 for a memory read fail?)

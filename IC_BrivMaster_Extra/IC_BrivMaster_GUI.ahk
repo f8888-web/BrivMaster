@@ -158,22 +158,23 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Button, x+5 w20 vIBM_ChestsSnatcher_Status_Resize gIBM_ChestsSnatcher_Status_Resize, % IC_IriBrivMaster_GUI.IBM_SYMBOL_UI_DOWN
 		Gui, ICScriptHub:Add, Button, x+5 w20 vIBM_ChestsSnatcher_Options gIBM_ChestsSnatcher_Options, % IC_IriBrivMaster_GUI.IBM_SYMBOL_UI_CONFIG
 		;>Chest options
-		Gui, IBM_ChestSnatcher_Options:New , , Chest Options
+		Gui, IBM_ChestSnatcher_Options:New , , Chest Options ;Note this window uses an OK button to accept changes, so that the script does not execute based on partial entry (e.g. with poor timing it could buy chests whilst you were typing 123 into the box)
 		Gui, IBM_ChestSnatcher_Options:-Resize -MaximizeBox +HwndOpt_Hwnd
 		this.IBM_ChestSnatcher_Opt_Hwnd:=Opt_Hwnd ;Save handle to the options window
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit3 vIBM_ChestSnatcher_Options_Min_Buy gIBM_ChestSnatcher_Options_Min_Buy
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit3 vIBM_ChestSnatcher_Options_Min_Buy
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Gold to buy per call (0 to disable)
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Gold gIBM_ChestSnatcher_Options_Open_Gold
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Gold
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Gold to open per call (0 to disable)
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Silver gIBM_ChestSnatcher_Options_Open_Silver
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit4 vIBM_ChestSnatcher_Options_Open_Silver
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Silver to open per call (0 to disable)
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gem gIBM_ChestSnatcher_Options_Min_Gem
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gem
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Gems
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gold gIBM_ChestSnatcher_Options_Min_Gold
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Gold
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Gold
-		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Silver gIBM_ChestSnatcher_Options_Min_Silver
+		Gui, IBM_ChestSnatcher_Options:Add, Edit, xm+10 w50 Number Limit8 vIBM_ChestSnatcher_Options_Min_Silver
 		Gui, IBM_ChestSnatcher_Options:Add, Text, x+10 w170 h18 0x200, Reserve Silver
-		Gui, IBM_ChestSnatcher_Options:Add, CheckBox, xm+10 h18 0x200 vIBM_ChestSnatcher_Options_Claim gIBM_ChestSnatcher_Options_Claim, Claim Daily Rewards
+		Gui, IBM_ChestSnatcher_Options:Add, CheckBox, xm+10 h18 0x200 vIBM_ChestSnatcher_Options_Claim, Claim Daily Rewards
+		gui, IBM_ChestSnatcher_Options:Add, Button, xm+100 w50 gIBM_ChestSnatcher_Options_OK_Button, Accept
 		;Game Settings
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+12 w%groupWidth% h50 vIBM_Game_Settings_Group, % "Game Settings" ;Group has a variable so we can check its location for the
@@ -553,14 +554,8 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Key, % data.IBM_Level_Options_Mod_Key
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Value, % data.IBM_Level_Options_Mod_Value
 		GuiControl, ICScriptHub:, IBM_Level_Diana_Cheese, % data.IBM_Level_Diana_Cheese
-		;Chest Options
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Claim, % data.IBM_DailyRewardClaim_Enable
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gem, % data.IBM_ChestSnatcher_Options_Min_Gem
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gold, % data.IBM_ChestSnatcher_Options_Min_Gold
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Silver, % data.IBM_ChestSnatcher_Options_Min_Silver
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Buy, % data.IBM_ChestSnatcher_Options_Min_Buy
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Gold, % data.IBM_ChestSnatcher_Options_Open_Gold
-		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Silver, % data.IBM_ChestSnatcher_Options_Open_Silver
+		;Chests
+		this.UpdateChestSnatcherOptions(data)
 		;Game settings
 		profile:=data.IBM_Game_Settings_Option_Profile
 		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_1, % profile==1
@@ -600,6 +595,17 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Game_Launch, % data.IBM_Game_Launch
 		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % data.IBM_Game_Hide_Launcher
     }
+	
+	UpdateChestSnatcherOptions(data) ;ChestSnatcher options in a separate function so that the window can be updated when opened to overwrite unaccepted changes
+	{
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Claim, % data.IBM_DailyRewardClaim_Enable
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gem, % data.IBM_ChestSnatcher_Options_Min_Gem
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Gold, % data.IBM_ChestSnatcher_Options_Min_Gold
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Silver, % data.IBM_ChestSnatcher_Options_Min_Silver
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Min_Buy, % data.IBM_ChestSnatcher_Options_Min_Buy
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Gold, % data.IBM_ChestSnatcher_Options_Open_Gold
+		GuiControl, IBM_ChestSnatcher_Options:, IBM_ChestSnatcher_Options_Open_Silver, % data.IBM_ChestSnatcher_Options_Open_Silver
+	}
 
 	CreateLevelRow(index)
 	{
@@ -1071,6 +1077,7 @@ IBM_ChestsSnatcher_Options()
 	}
 	else
 	{
+		g_IriBrivMaster_GUI.UpdateChestSnatcherOptions(g_IriBrivMaster.settings) ;TODO: Get this neater access to the settings?
 		GuiControlGet, StatusList, Hwnd, IBM_ChestsSnatcher_Status
 		WinGetPos, StatusListX, StatusListY,StatusListW,StatusListH, % "ahk_id " . StatusList
 		targetX:=StatusListX+StatusListW//2
@@ -1079,52 +1086,34 @@ IBM_ChestsSnatcher_Options()
 	}
 }
 
-IBM_ChestSnatcher_Options_Open_Gold()
-{
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Gold
-	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
-		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Gold",value)
-}
-
-IBM_ChestSnatcher_Options_Open_Silver()
-{
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Silver
-	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
-		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Silver",value)
-}
-
-IBM_ChestSnatcher_Options_Min_Gem()
-{
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gem
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gem",value)
-}
-
-IBM_ChestSnatcher_Options_Min_Gold()
-{
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gold
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gold",value)
-}
-
-IBM_ChestSnatcher_Options_Min_Silver()
-{
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Silver
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Silver",value)
-}
-
-IBM_ChestSnatcher_Options_Min_Buy()
+IBM_ChestSnatcher_Options_OK_Button() ;Applies all the the ChestSnatcher options
 {
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Buy
 	if (value>g_IriBrivMaster.CONSTANT_serverRateBuy) ;Can't buy more than 250 chests at a time
 		value:=g_IriBrivMaster.CONSTANT_serverRateBuy
 	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Buy",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Gold
+	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
+		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Gold",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Silver
+	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
+		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Silver",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gem
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gem",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gold
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gold",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Silver
+	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Silver",value)
+	GuiControlGet, value,, IBM_ChestSnatcher_Options_Claim
+	g_IriBrivMaster.UpdateSetting("IBM_DailyRewardClaim_Enable",value)
+	Gui, IBM_ChestSnatcher_Options:Hide
 }
 
 IBM_ChestSnatcher_Options_Claim()
 {
-	GuiControlGet, value,, IBM_ChestSnatcher_Options_Claim
-	g_IriBrivMaster.UpdateSetting("IBM_DailyRewardClaim_Enable",value)
+
 }
 
 IBM_OffLine_Blank()
