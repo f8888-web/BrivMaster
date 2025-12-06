@@ -235,14 +235,18 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 	SetModifierKey(useModifier)
 	{
 		if (useModifier)
-			this.KEY_Modifier.Press_Bulk()
-		else
-			this.KEY_Modifier.Release_Bulk()
-		startTime:=A_TickCount
-		;TODO: This uses champ 1 as should always be present. It might make sense to swap to click damage though?
-		while (g_SF.Memory.IBM_LevellingOverRideActive(1)!=useModifier AND A_TickCount - startTime < 100) ;Allow 100ms for the keypress to apply at maximum to avoid getting stuck. On a fast PC it only took AHK tick (15ms) extra when needed
 		{
-			g_IBM.IBM_Sleep(1)
+			this.KEY_Modifier.Press_Bulk()
+			startTime:=A_TickCount
+			while (g_SF.Memory.IBM_ClickDamageLevelAmount()!=this.modifierLevelUpAmount AND A_TickCount - startTime < 100) ;Allow 100ms for the keypress to apply at maximum to avoid getting stuck. On a fast PC it only took 1 AHK tick (15ms) extra when needed
+				g_IBM.IBM_Sleep(1)
+		}
+		else
+		{
+			this.KEY_Modifier.Release_Bulk()
+			startTime:=A_TickCount
+			while (g_SF.Memory.IBM_ClickDamageLevelAmount()==this.modifierLevelUpAmount AND A_TickCount - startTime < 100)
+				g_IBM.IBM_Sleep(1)
 		}
 	}
 }
@@ -263,7 +267,6 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 		keyList100:=[]
 		keyList10:=[] ;Note this is the modifier list, which might no longer be x10...
 		this.GetKeyList(maxKeyPresses,keyList100,keyList10,forcePriority)
-		;OutputDebug % A_TickCount . ":levelManager.Level(), x100 count=[" . keyList100.Count() . "] x10 count=[" . keyList10.Count() . "]`n"
 		if (keyList100.Count()==0 AND keyList10.Count()==0) ;Due to z1c restrictions, it is possible that .Done() is false but there is nothing to do this iteration
 			return
 		g_InputManager.gameFocus() ;This might be a bit early when waitforgold is needed. Possibly checking adventure gold, then calling gameFocus(), then checking hero gold might be better for the first run
@@ -276,12 +279,10 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 			key.KeyPress_Bulk()
 		if (keyList10.Count()>0) ;Check this one so modifier key is not used unnecessarily
 		{
-
 			this.parent.SetModifierKey(true)
 			for _, key in keyList10
 				key.KeyPress_Bulk()
 			this.parent.SetModifierKey(false)
-
 		}
 		Critical Off
 		this.UpdateLevels()
@@ -359,7 +360,6 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 							{
 								champList.Remove(champID)
 							}
-							;OutputDebug % ">" . champID . ":LevelsRequired:" . levelsRequired[champID] . ","
 							if (keyList10.Count()+k100Count >= maxKeyPresses AND (!forcePriority OR curPriority<=0))
 								Break ;Breaks out of the For loop. The while loop will handle itself
 						}
@@ -367,7 +367,6 @@ class IC_BrivMaster_LevelManager_WorkList_Class ;A class to manage the processin
 						{
 							keyList10.push(Champion.Key)
 							Champion.Current.PendingLevels+=this.parent.modifierLevelUpAmount
-							;OutputDebug % "=" . champID . ":LevelsRequired:" . levelsRequired[champID] . ","
 							champList.Remove(champID)
 							if (keyList10.Count()+k100Count >= maxKeyPresses AND (!forcePriority OR curPriority<=0))
 								Break ;Breaks out of the For loop. The while loop will handle itself
