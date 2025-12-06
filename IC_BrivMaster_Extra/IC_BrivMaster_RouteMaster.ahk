@@ -534,7 +534,6 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		TYPE_SB:=MEMORY_SB_STAT.ValueType
 		startStacks:= stacks := _MemoryManager.instance.read(ADDRESS_SB,TYPE_SB)
 		targetStacks:=this.GetTargetStacks(,true) ;Force recalculation of remaining haste stacks
-        if (this.ShouldAvoidRestack(stacks, targetStacks))
 			return
 		StartTime := A_TickCount
 		this.UltraStackFarmSetup()
