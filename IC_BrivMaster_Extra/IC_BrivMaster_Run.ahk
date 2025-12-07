@@ -591,9 +591,62 @@ class IC_BrivMaster_GemFarm_Class
 			this.PreFlightErrorMessage("Hero Manager",ErrorMsg)
 			return false
 		}
+		;Check Feat Guard
+		levelSettings:=g_IBM_Settings["IBM_LevelManager_Levels",this.RouteMaster.combining] ;Currently the feat data is not being loaded into the hero objects, as it's only relevant to the pre-flight check
+		for heroID, _ in this.LevelManager.savedFormationChamps["A"] ;A is a meta-formation that is the union of the other 4 TODO: Should have levelManager return this via a function?
+		{
+			if(levelSettings.hasKey(heroID) AND levelSettings[heroID].hasKey("Feat_List") AND levelSettings[heroID].hasKey("Feat_Exclusive")) ;Data available
+			{
+				HERO_FEATS:=g_SF.Memory.GameManager.game.gameInstances[0].Controller.userData.FeatHandler.heroFeatSlots[heroID].List
+				size:=HERO_FEATS.size.Read()
+				if (size<0 or size>6) ;Allow an expansion of the number of feat slots in the future
+				{
+					this.PreFlightErrorMessage("Feat Guard","Unable to read equipped feats for heroID: " . heroID . "`n" . this.PreFlightCheck_GenericMessage())
+					return false
+				}
+				extraFeats:={}
+				checkList:=levelSettings[heroID,"Feat_List"].Clone() ;A copy is made so that found feats can be removed from it, leaving only those that are missing
+				loop, %size%
+				{
+					id:=HERO_FEATS[A_Index - 1].ID.Read()
+					name:=HERO_FEATS[A_Index - 1].Name.Read()
+					if(id) ;heroFeatSlots always has the 4 slots
+					{
+						if (checkList.hasKey(id))
+							checklist.Delete(id)
+						else if (levelSettings[heroID,"Feat_Exclusive"]) ;In exclusive mode, track extra feats
+						{
+							extraFeats[id]:=name
+						}
+					}
+				}
+				if (checkList.Count()>0 OR extraFeats.Count()>0) ;Any fail
+				{
+					errorMsg:="Feat Guard found inconsistencies with the equipped feats of " . g_Heroes[heroID].ReadName() . " (" . heroID . ").`n"
+					if (checkList.Count()>0)
+					{
+						errorMsg.="`nNot all of the required feats are present:`n"
+						for featID, featName in levelSettings[heroID,"Feat_List"]
+						{
+							errorMsg.="	" . featName . " (" . featID . ") - " . (checkList.hasKey(featID) ? "Missing" : "Present") . "`n"
+						}
+					}
+					if (extraFeats.Count()>0)
+					{
+						errorMsg.="`nExclusive mode is enabled and the following extra feats were found:`n"
+						for featID, featName in extraFeats
+						{
+							errorMsg.="	" . featName . " (" . featID . ")`n"
+						}
+					}
+					this.PreFlightErrorMessage("Feat Guard",errorMsg)
+					return false
+				}
+			}
+		}
         return true
     }
-	
+
 	PreFlightCheck_GenericMessage() ;Generic error text for PreFlightCheck() errors that might relate to reading from the game
 	{
         genericMsg:="`nOther potential solutions:`n"
@@ -604,7 +657,7 @@ class IC_BrivMaster_GemFarm_Class
             genericMsg.="4. Check AHK is 64-bit. (Currently " . (A_PtrSize = 4 ? 32 : 64) . "-bit)"
 		return genericMsg
 	}
-	
+
 	PreFlightErrorMessage(failingStep,message,options:=16) ;16 is Stop/Error icon, the default of just an OK button (option 0) is used as standard
 	{
 		title:="Briv Master Startup: " . failingStep
@@ -690,13 +743,13 @@ class IC_BrivMaster_GemFarm_Class
         g_PreviousZoneStartTime := A_TickCount
 		this.TriggerStart := true
     }
-	
+
 	;GEM FARM WINDOW
 	CreateWindow()
 	{
 		global
 		try
-		{		
+		{
 			if (g_IBM_Settings["IBM_Window_Dark_Icon"])
 			Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_D.ico
 			else
@@ -717,9 +770,9 @@ class IC_BrivMaster_GemFarm_Class
 		if(!g_IBM_Settings["IBM_Window_Hide"])
 		{
 			Gui, IBM_GemFarm:Show,% "x" . g_IBM_Settings["IBM_Window_X"] . " y" . g_IBM_Settings["IBM_Window_Y"], Briv Master
-		}			
+		}
 	}
-	
+
 	RefreshGemFarmWindow() ;Updates the time settings were updated
 	{
 	   FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss

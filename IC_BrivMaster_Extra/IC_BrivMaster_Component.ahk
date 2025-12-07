@@ -1139,12 +1139,16 @@ Class IC_IriBrivMaster_Component
 			return
         slots:=["Q","W","E"]
 		loop 3
+			this.IBM_GetGUIFormationData_ProcessFormation(championData,slots[A_Index],g_SF.Memory.GetFormationByFavorite(A_Index))
+		this.IBM_GetGUIFormationData_ProcessFormation(championData,"M",g_SF.Memory.GetActiveModronFormation())
+		listIndex:=1
+		for _, seatMembers in championData ;The listIndex has to be assigned after all formations are processed, as they are assigned seat by seat
 		{
-			formation:=g_SF.Memory.GetFormationByFavorite(A_Index)
-			this.IBM_GetGUIFormationData_ProcessFormation(championData,slots[A_Index],formation)
+			for _, champData in seatMembers
+			{
+				champData["ListIndex"]:=listIndex++
+			}
 		}
-		formation:=g_SF.Memory.GetActiveModronFormation()
-		this.IBM_GetGUIFormationData_ProcessFormation(championData,"M",formation)
 		return championData
 	}
 

@@ -189,7 +189,7 @@ class IC_BrivMaster_Hero_Class ;Represents a single hero. Can be extended for he
 		return this.ID==g_SF.Memory.GameManager.game.gameInstances[0].Screen.uiController.bottomBar.heroPanel.activeBoxes[this.Seat - 1].hero.def.ID.read()
 	}
 
-    ReadName() ;Not stored as the main script doesn't need to know the names
+    ReadName() ;Not stored as the main script doesn't need to know the names outside of the pre-flight check
 	{
         return g_SF.Memory.GameManager.game.gameInstances[0].Controller.userData.HeroHandler.heroes[this.heroIndex].def.name.Read()
     }
