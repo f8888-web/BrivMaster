@@ -665,10 +665,10 @@ class IC_BrivMaster_GemFarm_Class
 
     ModronResetCheck() 	;Waits for modron to reset. Closes IC if it fails.
     {
-        if (!g_SF.WaitForModronReset(50000)) ;TODO: Should this use the timeout factor?
-            g_SF.CheckifStuck(True)
-        g_PreviousZoneStartTime := A_TickCount
-		this.TriggerStart := true
+        if (!g_SF.WaitForModronReset(6000*g_IBM_Settings["IBM_OffLine_Timeout"])) ;Default is 5, so 30s. Note that BrivGemFarm used a fixed 50s here, which seemed rather high
+            g_SF.CheckifStuck(true)
+        g_PreviousZoneStartTime:=A_TickCount
+		this.TriggerStart:=true
     }
 
 	;GEM FARM WINDOW
