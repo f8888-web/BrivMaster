@@ -466,7 +466,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, w40 h20 x+1 0x200, Normal
 		Gui, ICScriptHub:Add, Text, w83 x+5 0x200 h20 Center 0x200, Formations
 		Gui, ICScriptHub:Add, Text, w62 x+5 0x200 h20 Center 0x200, Feats
-		Gui, ICScriptHub:Add, Button, w45 x+15 vIBM_LevelManager_Refresh gIBM_LevelManager_Refresh, Refresh
+		Gui, ICScriptHub:Add, Button, w50 x+10 vIBM_LevelManager_Refresh gIBM_LevelManager_Refresh, Refresh
 		;Level manager - create the maximum of 40 rows (4 formations x 10 champions), we will hide what we don't need when populating TODO: Decide if we really need 40 here, it's a complete solution...but also pointlessly overkill. 12 is relatively high (as of 23Aug25)
 		this.LevelRow_Priority_Value:=[5,4,3,2,1,0,-1,-2,-3,-4,-5,5,4,3,2,1,5,4,3,2,1]
 		this.LevelRow_Priority_Limit:=["","","","","","","","","","","",100,100,100,100,100,200,200,200,200,200]
