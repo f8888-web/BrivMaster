@@ -45,9 +45,7 @@ SH_UpdateClass.UpdateClassFunctions(g_SharedData, IC_BrivMaster_SharedData_Class
 SH_UpdateClass.AddClassFunctions(GameObjectStructure, IC_BrivMaster_GameObjectStructure_Add)
 SH_UpdateClass.UpdateClassFunctions(_MemoryManager, IBM_Memory_Manager)
 
-g_SharedData.IBM_Init() ;Loads settings so must be prior to the icon set and Window:Show
-
-
+g_SharedData.IBM_Init() ;Loads settings so must be prior to the icon set and Window:Show in CreateWindow()
 g_IBM.CreateWindow()
 
 if(A_Args[1])
@@ -514,9 +512,8 @@ class IC_BrivMaster_GemFarm_Class
 	}
 
 	;START PRE-FLIGHT CHECK
-	;TODO: Review all this against current script hub (PreFlightCheck() is quite an old override, the associated functions are newer), and make use of LevelManager formation data
 
-    PreFlightCheck() ;TODO: Add an optional way of checking for feats on champions here, e.g. to make sure Elly has 'Gem' & 'Astaria's Love', Thellora has 'Thin Their Ranks'
+    PreFlightCheck()
     {
 		;Check Briv is saved in the expected formations
 		brivInM:=this.LevelManager.IsChampInFormation(58,"M")
@@ -664,79 +661,9 @@ class IC_BrivMaster_GemFarm_Class
 		Msgbox, % options, %title%, %message%
 	}
 
-	; Test that favorite exists
-    TestFormationSlotByFavorite(favorite := "", txtCheck := "")
-    {
-        if (!favorite)
-            return ""
-        testFunc := ObjBindMethod(g_SF.Memory, "GetSavedFormationSlotByFavorite", favorite)
-        errMsg := "Please confirm a formation is saved in formation favorite slot " . favorite . ". " . txtCheck
-        formationSlot := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := -1, shouldBeEqual := False)
-        if (formationSlot == -1)
-            return -1
-        return formationSlot
-    }
-
-    ; Test that formation has champions
-    TestFormationFavorite( formationSlot := "", favorite := "", txtCheck := "")
-    {
-        if (!formationSlot)
-            return ""
-        team := {1:"Speed", 2:"Stack Farm", 3:"Speed No Briv"}
-        testFunc := ObjBindMethod(g_SF.Memory, "GetFormationSaveBySlot", formationSlot, 0) ; don't ignore empty
-        errMsg := "Please confirm your " . team[favorite] . " team is saved in formation favorite slot " . favorite . ". " . txtCheck
-        formation := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := 0, shouldBeEqual := False, testSize := True)
-        if (formation == -1)
-            return -1
-        return formation
-    }
-
-    ; Test that formation has champions
-    TestChampInFormation( champID := "", formation := "", includeChampion := True, favorite := 1, txtCheck := "")
-    {
-        if (!champID)
-            return ""
-        team := {1:"Speed", 2:"Stack Farm", 3:"Speed No Briv"}
-        testFunc := ObjBindMethod(g_SF, "IsChampInFavoriteFormation", champID, favorite ) ; don't ignore empty
-        foundChampName := g_SF.Memory.ReadChampNameByID(champID)
-
-        errMsg := "Please confirm " . foundChampName . stateText . (includeChampion ? " is" : " is NOT") .  " saved in formation favorite slot " . favorite . ". " . txtCheck
-        formation := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := True, shouldBeEqual := includeChampion)
-        if (formation == -1)
-            return -1
-        return formation
-    }
-
-    ; Test Modron Reset Automation is enabled
-    TestModronResetAutomationEnabled()
-    {
-        testFunc := ObjBindMethod(g_SF.Memory, "ReadModronAutoReset")
-        foundModronResetStatus := g_SF.Memory.ReadModronAutoReset()
-
-        errMsg := "Please confirm that Modron Reset Automation is enabled."
-        modronAutomationStatus := g_SF.RetryTestOnError(errMsg, testFunc, expectedVal := True, shouldBeEqual := True)
-        return modronAutomationStatus
-    }
-
-	; Run tests to check if favorite formations are saved, they have champions, and that the expected champion is/isn't included
-    RunChampionInFormationTests(champion, favorite, includeChampion, txtCheck)
-    {
-        formationSlot := this.TestFormationSlotByFavorite( favorite , txtcheck)
-        if (formationSlot == -1)
-            return -1
-        formation := this.TestFormationFavorite(formationSlot, favorite, txtcheck)
-        if (formation == -1)
-            return -1
-        isChampInFormation := this.TestChampInFormation(champion, formation, includeChampion, favorite, txtcheck)
-        if (isChampInFormation == -1)
-            return -1
-    }
-
 	;END PRE-FLIGHT CHECK
 
-	;Overidden to set TriggerStart for new run check
-	;Waits for modron to reset. Closes IC if it fails.
-    ModronResetCheck()
+    ModronResetCheck() 	;Waits for modron to reset. Closes IC if it fails.
     {
         if (!g_SF.WaitForModronReset(50000)) ;TODO: Should this use the timeout factor?
             g_SF.CheckifStuck(True)
@@ -751,9 +678,9 @@ class IC_BrivMaster_GemFarm_Class
 		try
 		{
 			if (g_IBM_Settings["IBM_Window_Dark_Icon"])
-			Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_D.ico
+				Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_D.ico
 			else
-			Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_L.ico
+				Menu Tray, Icon, %A_LineFile%\..\Resources\IBM_L.ico
 		}
 
 		Gui, IBM_GemFarm:New, -Resize -MaximizeBox
