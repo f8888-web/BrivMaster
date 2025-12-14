@@ -51,9 +51,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			OnExit(revokeFunc)
 		}
 		this.UltraStacking:=g_IBM_Settings["IBM_Online_Ultra_Enabled"]
-		PH_OPTION_USE_FARIDEH_ULT_FOR_STACK_NORMAL:=false
-		this.useFaridehUlt:=PH_OPTION_USE_FARIDEH_ULT_FOR_STACK_NORMAL
-		if (this.UltraStacking OR this.useFaridehUlt) ;Both need to check BUD
+		if (this.UltraStacking)
 		{
 			this.BUDTracker:= new IC_BrivMaster_BUD_Tracker_Class()
 		}
@@ -629,8 +627,6 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		}
 		else
 			fastMelf:=0
-		if (this.useFaridehUlt AND g_IBM.LevelManager.savedFormationChamps["W"].HasKey(33)) ;Set Farideh's level - currently ignoring BUD here as it can drop
-			this.levelManager.OverrideLevelByIDRaiseToMin(33,"min",125)
 		this.WaitForZoneCompleted() ;Complete the current zone
 		this.OnlineStackFarmSetup(fastMelf, g_IBM.LevelManager.Champions[59].Key)
         ElapsedTime := 0
@@ -640,17 +636,11 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			this.BrivBoost.Apply()
 		g_IBM.levelManager.LevelFormation("W", "min") ;Ensures we're levelled, and applies any changes made based by Briv Boost if used
 		maxOnlineStackTime/=g_SF.Memory.IBM_ReadBaseGameSpeed() ;Factor timescale into the timeout, leaving 30000ms @ x10
-		fariUltUsed:=false
 		precisionMode:=false
 		precisionTrigger:=Floor(targetStacks * 0.90) ;At a steady-state stack rate of 240/s, for 600 stacks this is 60 => ~250ms - which is plenty of time to activate precision mode. Note that because attacks can get synced we can't get too tight with this
 		currentZone:=g_SF.Memory.ReadCurrentZone() ;Used to report the stack zone, here as it is recorded before we toggle progress back on
 		while (stacks < targetStacks AND ElapsedTime < maxOnlineStackTime )
         {
-			if (this.useFaridehUlt AND !fariUltUsed AND g_SF.Memory.ReadActiveMonstersCount()>=100 AND this.BUDTracker.ReadBUD(0)<g_SF.Memory.IBM_ReadCurrentZoneMonsterHealthExponent())
-			{
-				g_Heroes[33].UseUltimate(,true) ;Using ExitOnceQueued so we don't stay waiting for the activation and potentially overstack	
-				fariUltUsed:=true 
-			}
 			if (precisionMode)
 			{
 				Sleep, 0 ;Fast sleep
