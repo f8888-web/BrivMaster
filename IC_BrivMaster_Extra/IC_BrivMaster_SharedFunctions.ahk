@@ -96,45 +96,6 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         return false
     }
 	
-	;Used to monitor IC's memory usage
-	/*
-    IBM_GetWorkingSetPrivateSize(processID)
-	{
-	   static SYSTEM_INFORMATION_CLASS := 0x5
-	   if (DllCall("Ntdll\NtQuerySystemInformation", "UInt", SYSTEM_INFORMATION_CLASS, "Ptr", 0, "UInt", 0, "UInt*", Size, "Int") != 0)
-	   {
-		  VarSetCapacity(SYSTEM_PROCESS_INFORMATION, Size), Offset := 0
-		  if (DllCall("Ntdll\NtQuerySystemInformation", "UInt", SYSTEM_INFORMATION_CLASS, "Ptr", &SYSTEM_PROCESS_INFORMATION, "UInt", Size, "UInt*", 0, "Int") = 0)
-		  {
-			 Loop
-			 {
-				WorkingSetPrivateSize := NumGet(SYSTEM_PROCESS_INFORMATION, Offset + 8, "Int64")
-				UniqueProcessId := NumGet(SYSTEM_PROCESS_INFORMATION, Offset + 56 + 3 * A_PtrSize, "Ptr")
-				if (UniqueProcessId = processID)
-				   return WorkingSetPrivateSize
-				NextEntryOffset := NumGet(SYSTEM_PROCESS_INFORMATION, Offset, "UInt")
-				Offset += NextEntryOffset
-			 } Until !NextEntryOffset
-		  }
-	   }
-	}
-	*/
-	/*
-	IBM_GetWorkingSetPrivateSize(processID) ;This version is not the private set - looks like commit charge? Which might be the relevant one for memory crashes
-	{
-		static PMC_EX, size := NumPut(VarSetCapacity(PMC_EX, 8 + A_PtrSize * 9, 0), PMC_EX, "uint")
-		if (hProcess := DllCall("OpenProcess", "uint", 0x1000, "int", 0, "uint", processID))
-		{
-			if !(DllCall("GetProcessMemoryInfo", "ptr", hProcess, "ptr", &PMC_EX, "uint", size))
-				if !(DllCall("psapi\GetProcessMemoryInfo", "ptr", hProcess, "ptr", &PMC_EX, "uint", size))
-					return (ErrorLevel := 2) & 0, DllCall("CloseHandle", "ptr", hProcess)
-			DllCall("CloseHandle", "ptr", hProcess)
-			return NumGet(PMC_EX, 8 + A_PtrSize * 8, "uptr")
-		}
-		return (ErrorLevel := 1) & 0
-	}
-	*/
-	
 	;Overridden to add logging for debugging problems and to handle effects that change Briv's stack conversion
 	;Uses server calls to test for being on world map, and if so, start an adventure (CurrentObjID). If force is declared, will use server calls to stop/start adventure.
 	RestartAdventure( reason := "" )
@@ -217,7 +178,6 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 		if (this.Memory.IBM_ReadIsGameUserLoaded()!=1 AND (A_TickCount - g_IBM.routeMaster.offlineSaveTime < targetTime))
 		{
 			g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for platform login...")
-			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() wait for platform login")
 			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			Critical On ;We need to catch the platform login completing before the game progresses to the userdata request
 			while (this.Memory.IBM_ReadIsGameUserLoaded()!=1 AND ElapsedTime < targetTime) ;Wait for user loaded or we run out of time, then stop IC
@@ -226,28 +186,19 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 				ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			}
 			Critical Off
-			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() platform login done - suspending process")
 			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			if (ElapsedTime >= targetTime) ;Don't suspend if we ran out of time waiting
 			{
-				;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() time ran out whilst waiting for user load")
 				return
 			}
 			this.IBM_SuspendProcess(g_SF.PID,True) 
-			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() suspended process - waiting for target time")
 			ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			While (ElapsedTime < targetTime)
 			{
-				;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() waiting - elapsed:" . ElapsedTime . " target:" . targetTime)
 				g_IBM.IBM_Sleep(15)
 				ElapsedTime:=A_TickCount - g_IBM.routeMaster.offlineSaveTime
 			}
-			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() reactivating process")
 			this.IBM_SuspendProcess(g_SF.PID,False)
-		}
-		else
-		{
-			;g_IBM.routeMaster.DebugTick("IBM_WaitForUserLogin() not waiting for platform login")
 		}
 	}
 	
@@ -448,7 +399,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
     {
         StartTime := A_TickCount
         ; Process exists, wait for the window:
-        while(!(this.Hwnd := WinExist( "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])) AND ElapsedTime < timeoutLeft)
+        while(!(this.Hwnd:=WinExist( "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])) AND ElapsedTime < timeoutLeft)
         {
             WinGet, savedActive,, A ;Changed to the handle, multiple windows could have the same name
             this.SavedActiveWindow := savedActive
@@ -489,7 +440,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         ElapsedTime := 0
         g_SharedData.IBM_UpdateOutbound("LoopString","Modron Resetting...")
         this.SetUserCredentials()
-		if (this.steelbones != "" AND this.steelbones > 0 AND this.sprint != "" AND (this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) <= 176046)) ;Only try and manually save if it hasn't already happened - (steelbones > 0). TODO: Determine if this ever triggers, or was just a duplicate call being made in the hopes one went through?
+		if (this.steelbones != "" AND this.steelbones > 0 AND this.sprint != "" AND (this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) <= 176046)) ;Only try and manually save if it hasn't already happened - (steelbones > 0)
         {
 			g_IBM.Logger.AddMessage("Manual stack conversion: Converted Haste=[" . this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate) . "] from Haste=[" . this.sprint . "] and Steelbones=[" . this.steelbones . "] with stackConversionRate=[" . Round(g_IBM.RouteMaster.stackConversionRate,1) . "]")
 			response:=g_serverCall.CallPreventStackFail(this.sprint + FLOOR(this.steelbones * g_IBM.RouteMaster.stackConversionRate), true)
@@ -538,10 +489,10 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 	; Runs the process and set this.PID once it is found running. 
     OpenProcessAndSetPID(timeoutLeft := 32000)
     {
-        this.PID := 0
-        processWaitingTimeout := 10000 ;10s
-        ElapsedTime := 0
-        StartTime := A_TickCount
+        this.PID:=0
+        processWaitingTimeout:=10000 ;10s
+        ElapsedTime:=0
+        StartTime:=A_TickCount
         while (!this.PID AND ElapsedTime < timeoutLeft )
         {
             g_SharedData.IBM_UpdateOutbound("LoopString","Opening IC...")

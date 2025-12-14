@@ -4,7 +4,7 @@ class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
 {
 	IBM_GetWebRootFriendly() ;Handle failures for user-facing reads (mainly the log). WebRoot uses the EngineSettings pointer that moves a lot
 	{
-		webRoot:=g_SF.Memory.ReadWebRoot()
+		webRoot:=this.ReadWebRoot()
 		if(!webRoot)
 			webRoot:="Unable to read WebRoot"
 		return webRoot
@@ -75,7 +75,7 @@ class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
     }
 
 	/*
-	IBM_GetTotalBrivSkipZones() ;Uses direct reads instead of a handler. This one is probably a bad idea...but is also not being used
+	IBM_GetTotalBrivSkipZones() ;Uses direct reads instead of a handler. This one is probably a bad idea...but is also not being used. Note memory reads for this have been removed
 	{
 		;Briv jumps a base amount + a chance for another zone. At an exact jump that chance is normally 1, so 9 amount + 1 = 10 Zones, aka 9J
 		;Accurate Acrobatics does reduce the chance to 0, so 12 + 0 = 12 Zones, aka 11J (given iLevels for 11.9998)
@@ -165,7 +165,7 @@ class IC_BrivMaster_MemoryFunctions_Class extends IC_MemoryFunctions_Class
         size := this.GameManager.game.gameInstances[this.GameInstance].Controller.formation.slots.size.Read()
 		loop %size%
         {
-            if (this.GameManager.game.gameInstances[this.GameInstance].Controller.formation.slots[A_index - 1].hero.def.ID.Read()="")
+            if (this.GameManager.game.gameInstances[this.GameInstance].Controller.formation.slots[A_index - 1].hero.def.ID.Read()=="")
 				return false
         }
         return true

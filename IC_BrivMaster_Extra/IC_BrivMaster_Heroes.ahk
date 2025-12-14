@@ -380,7 +380,7 @@ class IC_BrivMaster_Thellora_Class extends IC_BrivMaster_Hero_Class
 			{
 				g_IBM.Logger.AddMessage("ReadRushAreaCharges() CACHE MISS cachedIndex=[" . cachedIndex . "] index=[" . index . "] please report this message") ;As the default may change we want to be informed
 				cachedIndex:=index
-				return:=MEMORY_SERVERSTATS["value", cachedIndex].Read()
+				return MEMORY_SERVERSTATS["value", cachedIndex].Read()
 			}
 		}
 		index:=cachedIndex ;Secondly search backwards from the index, as if a stat has been removed it's probably just a few

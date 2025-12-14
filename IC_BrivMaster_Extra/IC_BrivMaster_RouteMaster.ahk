@@ -1003,9 +1003,6 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 	SetFormation(fastCheck:=false) ;To be called with FastCheck during straightforward progression, e.g. not after stacking, falling back, other fun things
     {
 		static trustRecent:=false ;Do we believe that the ReadMostRecentFormationFavorite() is respresentative? Needed as it changes even if the formation swap fails
-
-		;DEBUG_INITIAL_TRUST_RECENT:=trustRecent ;DEBUG!
-
 		if (!fastCheck)
 			trustRecent:=false ;Reset to false for all normal calls
 		isEZone:=this.ShouldWalk(g_SF.Memory.ReadCurrentZone()) ;TODO: Any reason this doesn't use this.ShouldWalk()? Seems to be duplicating the Thellora recovery option from there in the bench/unbench code
@@ -1021,7 +1018,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 				{
 					g_IBM.IBM_Sleep(15) ;Avoid swapping back instantly, given issues with multiple key presses
 					startTime:=A_TickCount
-					while (g_SF.Memory.ReadFormationTransitionDir()==4 AND !g_Heroes[58].ReadBenched() AND (A_TickCount-startTime)<1000) ;Whilst we're in the transition and Briv is still on the field. Using .ReadBenched() as it's a simple read, whereas ReadFielded() has to loop the formation
+					while (g_SF.Memory.ReadFormationTransitionDir()==4 AND !g_Heroes[58].ReadBenched() AND (A_TickCount-startTime)<1000) ;Whilst we're in the transition and Briv is still on the field
 					{
 						g_IBM.IBM_Sleep(15)
 					}

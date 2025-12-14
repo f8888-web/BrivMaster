@@ -43,7 +43,7 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 		}
 	}
 
-	CreateWorklist(formationIndex,mode,surpressByID,waitForGold) 	;Formation - "Q", if not supplied uses current, mode - "min", supressByID - array of champion IDs to not include in levelling
+	CreateWorklist(formationIndex,mode,surpressByID,waitForGold) ;Formation - "Q", if not supplied uses current, mode - "min", supressByID - array of champion IDs to not include in levelling
 	{
 		if(formationIndex=="") ;Get current
 			championIDs:=g_SF.Memory.IBM_GetCurrentFormationChampions()
