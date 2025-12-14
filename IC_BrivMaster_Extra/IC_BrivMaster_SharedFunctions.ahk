@@ -30,7 +30,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
             if(this.Memory.ReadResetting() AND this.Memory.ReadCurrentZone() <= 1 AND this.Memory.ReadCurrentObjID() == "")
                 this.WorldMapRestart()
             this.RecoverFromGameClose()
-            this.BadSaveTest() ;TODO: Replace this call, we're not making use of the zone variables in g_SF
+            this.BadSaveTest()
             return false
         }
         else if ( this.Memory.ReadCurrentZone() == "" )  ; game loaded but can't read zone? failed to load proper on last load? (Tests if game started without script starting it)
@@ -47,7 +47,14 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         return true
     }
 	
-	;Overridden for memory usage check and formation set on fallback
+	BadSaveTest() ;TODO: Given this is 4 lines of code, is there a need for it to be a separate function?
+    {
+        if(g_IBM.currentZone != "" and g_IBM.currentZone - 1 > g_SF.Memory.ReadCurrentZone())
+            g_SharedData.IBM_UpdateOutbound_Increment("TotalRollBacks")
+        else if (g_IBM.currentZone != "" and g_IBM.currentZone < g_SF.Memory.ReadCurrentZone())
+			g_SharedData.IBM_UpdateOutbound_Increment("BadAutoProgress")
+    }
+	
 	;A test if stuck on current area. After 35s, toggles autoprogress every 5s. After 45s, attempts falling back up to 2 times. After 65s, restarts level.
     CheckifStuck(isStuck:=false)
     {
