@@ -347,7 +347,7 @@ class IC_BrivMaster_GemFarm_Class
 					{
 						this.routeMaster.SetFormation() ;Move to standard formation after waiting for the Casino if necessary
 						swapAttempts++
-					} until (brivShouldBeinEConfig == !g_SF.IsChampInFormation(58, g_SF.Memory.GetCurrentFormation()) OR swapAttempts > 10)
+					} until (brivShouldBeinEConfig==g_Heroes[58].ReadBenched() OR swapAttempts > 10)
 				}
 				this.routeMaster.StartAutoProgressSoft() ;Start moving ASAP
 				if (this.routeMaster.IsFeatSwap()) ;Swap formation here as we can't be blocked in the transition
@@ -415,11 +415,7 @@ class IC_BrivMaster_GemFarm_Class
 				{
 					this.routeMaster.SetFormation() ;Move to z1 formation after waiting for the Casino if necessary
 					swapAttempts++
-				} until (g_SF.IsChampInFormation(139, g_SF.Memory.GetCurrentFormation()) OR (swapAttempts > 10)) ;139 is Thellora
-				;if (swapAttempts > 1)
-					;OutputDebug % "IBM_FirstZone: Done loading z1 Formation. Required attempts: " . swapAttempts . "`n"
-				;this.IBM_Sleep(15) ;sleep to allow the change to actually apply - Do we need to verify this?
-				;TODO: Is using Min here appropriate?
+				} until (!g_Heroes[139].ReadBenched() OR (swapAttempts > 10)) ;139 is Thellora
 				this.levelManager.LevelFormation("Q","min",0) ;One tap of levelling after the change so that BBEG->Dyna swap or such happens
 				if (g_Heroes[139].inQ OR g_Heroes[139].inE)
 				{
