@@ -2,7 +2,6 @@
 #include %A_LineFile%\..\IC_BrivMaster_Overrides.ahk
 #include %A_LineFile%\..\IC_BrivMaster_GUI.ahk
 #include %A_LineFile%\..\IC_BrivMaster_Memory.ahk
-#include %A_LineFile%\..\IC_BrivMaster_SharedFunctions.ahk ;Needed for import/export string functions TODO: Maybe bring them over? They are not relevant to the gem farm
 #include %A_LineFile%\..\IC_BrivMaster_Heroes.ahk
 
 SH_UpdateClass.AddClassFunctions(GameObjectStructure, IC_BrivMaster_GameObjectStructure_Add) ;Required so that the Ellywick tool can work in the same way as the main script
