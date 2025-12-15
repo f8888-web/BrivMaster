@@ -18,6 +18,7 @@ class IC_IriBrivMaster_GUI
 	static IBM_SYMBOL_UI_CLEAR:="○"
 
 	levelDataSet:={}
+	controlLock:=false
 
 	Init()
 	{
@@ -526,7 +527,8 @@ class IC_IriBrivMaster_GUI
 
 	UpdateGUISettings(data)
     {
-        ;Stacking Zone group
+        this.controlLock:=true ;Prevent control g-labels messing things up whilst populating. This is particularly import when one label processes multiple controls, as it can read values out of yet-to-be-populated controls and thus blank that setting
+		;Stacking Zone group
 		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Zone_Edit, % data.IBM_Offline_Stack_Zone
 		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Min_Edit, % data.IBM_Offline_Stack_Min
 		GuiControl, ICScriptHub:, IBM_OffLine_Flames_Use, % data.IBM_OffLine_Flames_Use
@@ -599,6 +601,8 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Game_Path, % data.IBM_Game_Path
 		GuiControl, ICScriptHub:, IBM_Game_Launch, % data.IBM_Game_Launch
 		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % data.IBM_Game_Hide_Launcher
+		this.UpdateNonGemFarmEllySettings(data.IBM_Ellywick_NonGemFarm_Cards)
+		this.controlLock:=false
     }
 
 	UpdateChestSnatcherOptions(data) ;ChestSnatcher options in a separate function so that the window can be updated when opened to overwrite unaccepted changes
@@ -1043,6 +1047,8 @@ IBM_Level_Diana_Cheese()
 
 IBM_Window_Settings()
 {
+	if (g_IriBrivMaster_GUI.controlLock)
+		return
 	GuiControlGet, value,, IBM_Window_X
 	g_IriBrivMaster.UpdateSetting("IBM_Window_X",value)
 	GuiControlGet, value,, IBM_Window_Y
@@ -1141,6 +1147,8 @@ IBM_Game_Copy_From_Game_Location_Helper(processName)
 
 IBM_Game_Location_Settings()
 {
+	if (g_IriBrivMaster_GUI.controlLock)
+		return
 	GuiControlGet, value,, IBM_Game_Exe
 	g_IriBrivMaster.UpdateSetting("IBM_Game_Exe",value)
 	GuiControlGet, value,, IBM_Game_Path
@@ -1188,6 +1196,8 @@ IBM_Game_Settings_Options()
 
 IBM_Game_Settings_Option_Change() ;This just updates everything, since we shouldn't be screwing around in the game settings options screen constantly
 {
+	if (g_IriBrivMaster_GUI.controlLock)
+		return
 	loop 2 ;Two profiles
 	{
 		profileIndex:=A_Index
