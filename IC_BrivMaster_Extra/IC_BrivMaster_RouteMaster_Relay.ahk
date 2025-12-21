@@ -81,7 +81,7 @@ class IC_BrivMaster_Relay_Class
 		this.PID:=0
 		this.Hwnd:=0
 		this.Stage:=0
-		maxTime:=A_TickCount + 30000
+		maxTime:=A_TickCount + 45000 ;TODO: Should consider the timeout factor for some stages, i.e. probably a+b*factor
 		lastStage:=6
 		lastStartStage:=5 ;Last stage of starting the game up, prior to waiting for the .Loaded
 		nextReleaseCheck:=0
@@ -107,7 +107,7 @@ class IC_BrivMaster_Relay_Class
 				Case 3: this.SetLastActiveWindowWhileWaitingForGameExe(10000) ;Timeout has to be quite high as we might skip the SetPID stage if Run in OpenProcess() returns the PID TODO: Pass the timeout factor to the helper script and use it for the timers that are impacted by host performance?
 				Case 4: this.ActivateLastWindow()
 				Case 5: this.OpenProcessReader(5000)
-				Case 6: this.WaitForUserLogin(20000) ;Waits for platform login
+				Case 6: this.WaitForUserLogin(30000) ;Waits for platform login. TODO: Timeout factor should apply here
 				Default:
 						this.LogString.=A_TickCount . " RunRelay() invalid Stage:[" . this.Stage . "]`n"
 			}
