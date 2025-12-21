@@ -120,9 +120,15 @@ class IC_BrivMaster_Relay_Class
 		{
 			this.LogString.=A_TickCount . " RunRelay() timed out whilst still at stage=[" . this.Stage . "]`n"
 			if (this.Stage>lastStartStage)
+			{
 				this.UpdateState(-2)
+				this.CleanUpOverlap() ;Must call directly as the loop is done
+			}
 			else
+			{
 				this.UpdateState(-1)
+				this.CleanUpOnFailedStart() ;Must call directly as the loop is done
+			}
 		}
 		this.ExitRelay()
 	}
