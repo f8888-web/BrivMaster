@@ -218,7 +218,7 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
         ElapsedTime:=0
 		; wait for game to start
         g_SharedData.IBM_UpdateOutbound("LoopString","Waiting for game started...")
-        gameStarted:=this.Memory.ReadGameStarted()
+        gameStarted:=0 ;This can't check as we need the splash video check to run at least once, due to a bug on recent versions (up to at least 638.2) where the game can get stuck on the splash screen
 		lastInput:=-250 ;Input limiter for the escape key presses
 		while(ElapsedTime < timeout AND !gameStarted)
         {	
