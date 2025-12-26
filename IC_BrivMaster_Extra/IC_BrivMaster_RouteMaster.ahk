@@ -214,16 +214,17 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			thelloraTarget:=this.GetThelloraTarget(rushNext,this.combining)
 		else
 			thelloraTarget:=this.thelloraTarget
-		jumps:=this.zones[thelloraTarget].jumpsToFinish
-		if (this.combining) ;We need to do one jump to reach ThelloraTarget in this case
+		if (this.combining) ;We need to do one jump to reach ThelloraTarget in this case, and will leave the Casino on an M jump, not whatever fits the zone
 		{
-			jumps++
+			jumps:=this.zones[thelloraTarget + this.zonesPerJumpM].jumpsToFinish + 2 ;1 for the combine, 1 for the M-jump after the Casino 
 			if (rushNext AND this.CombineModeThelloraBossAvoidance AND this.IsFeatSwap() AND this.zonesPerJumpM > this.zonesPerJumpE) ;If Thellora won't reach her target, we have boss recovery on, we are using feat swapping and the M jump would have been larger than an E jump, we need to generate an additional jump's worth of stacks, as replacing an M with an E would result in us needing 1 more jump Note: As this is a recovery mode trying to work out if the jump being replaced is Q or E doesn't seem worthwhile (it's made complex by her erratic behaviour if not in W)
 			{
 				jumps++
 				g_IBM.Logger.AddThelloraCompensationMessage("GetTargetStacksForFullRun: Added extra jump for Thellora recovery for a total of: ",jumps)
 			}
 		}
+		else
+			jumps:=this.zones[thelloraTarget].jumpsToFinish ;Simple case
 		return this.jumpCosts[jumps]
 	}
 
