@@ -138,6 +138,7 @@ class IC_BrivMaster_GemFarm_Class
 					g_SharedData.IBM_UpdateOutbound("BossesHitThisRun",0)
 				}
 				this.Logger.NewRun()
+				g_InputManager.ReleaseAll()
 				this.currentZone:=this.IBM_WaitForZoneLoad(this.currentZone)
 				this.routeMaster.ToggleAutoProgress(this.routeMaster.combining ? 1 : 0) ;Set initial autoprogess ASAP. routeMaster.combining can't change run-to-run as loaded at script start
 				this.offRamp:=false
