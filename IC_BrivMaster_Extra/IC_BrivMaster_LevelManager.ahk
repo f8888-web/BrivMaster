@@ -85,6 +85,7 @@ class IC_BrivMaster_LevelManager_Class ;A class for managing champion levelling
 			this.OverrideMinToSoftCap()
 			this.failedConversionMode:=true
 			this.ResetLevellingDone()
+			g_IBM.Logger.AddMessage("SetupFailedConversion() Triggered")
 		}
 	}
 
