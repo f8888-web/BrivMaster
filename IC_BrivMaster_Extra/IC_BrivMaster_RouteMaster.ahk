@@ -1075,7 +1075,6 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 	 ;2 - bench for animation override
     BenchBrivConditions(isEZone)
     {
-		;ReadTransitionOverrideSize() 	| should read 1 if briv jump animation override is loaded to , 0 otherwise - REMOVED in 627
 		;ReadTransitionDirection() 		| 0 = Static (instant), 1 = Forward, 2 = Backward, 3=JumpDown, 4=FallDown
 		;ReadFormationTransitionDir() 	| 0 = OnFromLeft, 1 = OnFromRight, 2 = OnFromTop, 3 = OffToLeft, 4 = OffToRight, 5 = OffToBottom
 		;if (this.ShouldDoThelloraRecovery()) ;Irisiri - to stop Briv being used before Thell is done
@@ -1239,17 +1238,17 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 
 	BrivHasThunderStep() ;Thunder step 'Gain 20% More Sprint Stacks When Converted from Steelbones', feat 2131. TODO: This requires that the feat is saved, which you don't really want for non-featswap
 	{
-		If (g_SF.Memory.IBM_HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetSavedFormationSlotByFavorite(1)) or g_SF.Memory.IBM_HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetSavedFormationSlotByFavorite(3))) ;If there are feats saved in Q or E (which would overwrite any others in M)
+		If (g_SF.Memory.HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetSavedFormationSlotByFavorite(1)) or g_SF.Memory.IBM_HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetSavedFormationSlotByFavorite(3))) ;If there are feats saved in Q or E (which would overwrite any others in M)
 		{
-			thunderInQ:=g_SF.Memory.IBM_HeroHasFeatSavedInFormation(58, 2131, g_SF.Memory.GetSavedFormationSlotByFavorite(1))
-			thunderInE:=g_SF.Memory.IBM_HeroHasFeatSavedInFormation(58, 2131, g_SF.Memory.GetSavedFormationSlotByFavorite(3))
+			thunderInQ:=g_SF.Memory.HeroHasFeatSavedInFormation(58, 2131, g_SF.Memory.GetSavedFormationSlotByFavorite(1))
+			thunderInE:=g_SF.Memory.HeroHasFeatSavedInFormation(58, 2131, g_SF.Memory.GetSavedFormationSlotByFavorite(3))
 			return (thunderInQ OR thunderInE)
 		}
-		else if (g_SF.Memory.IBM_HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetActiveModronFormationSaveSlot())) ;Briv has feats in M
-			return g_SF.Memory.IBM_HeroHasFeatSavedInFormation(58, 2131 , g_SF.Memory.GetActiveModronFormationSaveSlot())
+		else if (g_SF.Memory.HeroHasAnyFeatsSavedInFormation(58, g_SF.Memory.GetActiveModronFormationSaveSlot())) ;Briv has feats in M
+			return g_SF.Memory.HeroHasFeatSavedInFormation(58, 2131 , g_SF.Memory.GetActiveModronFormationSaveSlot())
 		else ;Non-feat swap might not have feats saved in formations at all
 		{
-			feats := g_SF.Memory.GetHeroFeats(58)
+			feats:=g_SF.Memory.GetHeroFeats(58)
 			for k, v in feats
 				if (v == 2131)
 					return true

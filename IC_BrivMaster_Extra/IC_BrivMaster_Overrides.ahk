@@ -1,3 +1,5 @@
+#include %A_LineFile%\..\..\IC_Core\IC_SharedData_Class.ahk ;Used for the IC_BrivMaster_SharedData_Class extend
+
 class IC_BrivMaster_ServerCall_Class extends IC_ServerCalls_Class
 {
 	; Copied from an older (mid-2025) verison of BrivGemFarmPerformance, as we're not using the separate servercalls script for everything
