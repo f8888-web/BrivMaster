@@ -528,9 +528,9 @@ class IC_BrivMaster_SharedFunctions_Class extends IC_SharedFunctions_Class
 				{
 					g_IBM.IBM_Sleep(45)
 					this.PID:=this.GetNewPID(existingPIDs)
-					g_IBM.Logger.AddMessage("OpenProcessAndSetPID() set PID=[" . this.PID . "] via GetNewPID()")
 					ElapsedTimePID:=A_TickCount - StartTimePID
 				}
+				g_IBM.Logger.AddMessage("OpenProcessAndSetPID() set PID=[" . this.PID . "] via GetNewPID()")
 				ElapsedTime:=A_TickCount - StartTime
 			}
 			if(!this.PID) ;We launched a process (or at least we think we did) but never found it via window. Terminate any IC process not in the existingPIDs list to clean up 
