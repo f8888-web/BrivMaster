@@ -1673,14 +1673,14 @@ class IC_BrivMaster_BrivBoost_Class ;A class used to work out what level Briv ne
 	/*
 	DEBUG_UpgradeList()
 	{
-		heroIndex:=g_SF.Memory.GetHeroHandlerIndexByChampID(58)
+		heroIndex:=g_SF.Memory.GetHeroHandlerIndexByChampID(58) ;Legacy, this probably becomes part of the hero object?
 		;size:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[heroIndex].upgradeHandler.upgradesByUpgradeId.size.Read()
-		size := g_SF.Memory.ReadHeroUpgradesSize(58)
+		size := g_SF.Memory.ReadHeroUpgradesSize(58) ;Would need replacing as removed, probably becomes part of the hero object?
 		upgradeList:={}
 		Loop, %size%
         {
 			id:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[heroIndex].upgradeHandler.upgradesByUpgradeId["value",A_Index-1].Id.Read()
-            ;OutputDebug % "Calling g_SF.Memory.IBM_ReadHeroUpgradeRequiredLevelByIndex`n"
+            ;OutputDebug % "Calling g_SF.Memory.IBM_ReadHeroUpgradeRequiredLevelByIndex`n" ;Note - removed, take from IC Core if needed
 			level:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[heroIndex].upgradeHandler.upgradesByUpgradeId[id].RequiredLevel.Read()
 			effectString:=g_SF.Memory.GameManager.game.gameInstances[g_SF.Memory.GameInstance].Controller.userData.HeroHandler.heroes[heroIndex].upgradeHandler.upgradesByUpgradeId[id].Def.baseEffectString.Read()
 			effectSplit:=StrSplit(effectString,",")
