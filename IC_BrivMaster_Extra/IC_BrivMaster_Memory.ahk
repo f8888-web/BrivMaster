@@ -24,7 +24,7 @@ class IC_BrivMaster_MemoryFunctions_Class
         if(versionArray.Count() > 1)
             currentPointers.Version:=Round(currentPointers.Version, 1)
         this.PointerVersionString:=currentPointers.Version . (currentPointers.Platform ? (" (" currentPointers.Platform  . ") ") : "")
-        _MemoryManager.exeName := g_UserSettings[ "ExeName" ]
+        _MemoryManager.exeName:=g_IBM_Settings["ExeName"]
         _MemoryManager.Refresh()
         this.Is64bit := _MemoryManager.Is64Bit ;TODO: We need to remove 32 bit support in general
         this.GameManager := new IC_IdleGameManager_Class(currentPointers.IdleGameManager.moduleAddress, currentPointers.IdleGameManager.moduleOffset)
