@@ -8,11 +8,11 @@ SH_UpdateClass.AddClassFunctions(GameObjectStructure, IC_BrivMaster_GameObjectSt
 SH_UpdateClass.AddClassFunctions(g_SF.Memory, IC_BrivMaster_MemoryFunctions_Class) ;Make memory overrides available as well
 
 ; Naming convention in Script Hub is that simple global variables should start with ``g_`` to make it easy to know that a global variable is what is being used.
-global g_IriBrivMaster := new IC_IriBrivMaster_Component()
-global g_IriBrivMaster_GUI := new IC_IriBrivMaster_GUI() ;TODO: Can we make this g_IriBrivMaster.GUI or something instead of a separate global?
+global g_IriBrivMaster:=New IC_IriBrivMaster_Component()
+global g_IriBrivMaster_GUI:=New IC_IriBrivMaster_GUI() ;TODO: Can we make this g_IriBrivMaster.GUI or something instead of a separate global?
 global g_Heroes:={}
 global g_IBM_Settings:={}
-global g_InputManager:=new IC_BrivMaster_InputManager_Class()
+global g_InputManager:=New IC_BrivMaster_InputManager_Class()
 
 global g_IriBrivMaster_ModLoc := A_LineFile . "\..\IC_BrivMaster_Mods.ahk"
 global g_IriBrivMaster_StartFunctions := {}

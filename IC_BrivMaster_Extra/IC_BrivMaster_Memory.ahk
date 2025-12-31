@@ -261,7 +261,6 @@ class IC_BrivMaster_MemoryFunctions_Class
         return this.GameManager.game.gameInstances[0].Controller.formation.numRangedAttackingMonsters.Read()
     }
 
-	   
     ReadFormationCampaignID() ;Reads the FormationCampaignID for the FormationSaves index passed in
 	{
         return this.GameManager.game.gameInstances[0].FormationSaveHandler.FormationCampaignID.Read()
