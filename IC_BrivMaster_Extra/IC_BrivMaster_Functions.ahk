@@ -104,7 +104,6 @@ class IC_BrivMaster_DianaCheese_Class ;A class for cheesing Diana's Electrum dro
 		return val
 	}
 
-
 	HexToUShort(hex)
 	{
 		hex:=this.ReverseHexBytes(hex) ; Reverse byte order (little-endian)
@@ -261,7 +260,7 @@ class IC_BrivMaster_InputManager_Class ;A class for managing input related matte
 
 	gameFocus() ;We need a way to detect IC losing focus, as that appears to be the only case that this needs to be re-called
 	{
-		hwnd:=g_SF.Hwnd
+		hwnd:=g_IBM.GameMaster.Hwnd
 		ControlFocus,, ahk_id %hwnd%
 	}
 }
@@ -280,7 +279,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 	Press() ;Hold a key and do not release
 	{
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
 		mk:=this.mappedKey ;We have to copy the variables locally due to limitations of AHK :(
 		lD:=this.lparamDown
         ControlFocus,, ahk_id %hwnd%
@@ -289,7 +288,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 	Release() ;Release a key
 	{
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
 		mk:=this.mappedKey
 		lU:=this.lparamUp
         ControlFocus,, ahk_id %hwnd% ;As above
@@ -300,7 +299,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 	{
 		startCritical:=A_IsCritical ;Store existing state of critical
 		Critical, On
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
         mk:=this.mappedKey
 		lD:=this.lparamDown
 		lU:=this.lparamUp
@@ -313,7 +312,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 	Press_Bulk() ;The _Bulk versions do not set ControlFocus, and are intended for code that will send a lot of input together (e.g. levelling) and that code will be responsible for calling ControlFocus once
 	{
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
 		mk:=this.mappedKey ;We have to copy the variables locally due to limitations of AHK :(
 		lD:=this.lparamDown
     	SendMessage, 0x0100, %mk%, %lD%,, ahk_id %hwnd%,,,,1000
@@ -321,7 +320,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 	Release_Bulk() ;Release a key
 	{
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
 		mk:=this.mappedKey
 		lU:=this.lparamUp
 		SendMessage, 0x0101, %mk%, %lU%,, ahk_id %hwnd%,,,,1000
@@ -329,7 +328,7 @@ class IC_BrivMaster_InputManager_Key_Class ;Represents a single key. Used by IC_
 
 	KeyPress_Bulk() ;Press then release a key
 	{
-        hwnd:=g_SF.Hwnd
+        hwnd:=g_IBM.GameMaster.Hwnd
         mk:=this.mappedKey
 		lD:=this.lparamDown
 		lU:=this.lparamUp

@@ -390,7 +390,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		offlineStartTime:=A_TickCount
 		startZone:=g_SF.Memory.ReadCurrentZone() ; record current zone before saving for bad progression checks
 		g_IBM.Logger.AddMessage("BlankRestart Entry:z" . startZone)
-		g_SF.CloseIC("BlankRestart",this.RelayBlankOffline) ;2nd arg is to use PID only, so we don't close the relay copy of the game when in that mode
+		g_IBM.GameMaster.CloseIC("BlankRestart",this.RelayBlankOffline) ;2nd arg is to use PID only, so we don't close the relay copy of the game when in that mode
 		if (this.RelayBlankOffline)
 		{
 			g_IBM.Logger.AddMessage("BlankRestart() returning game in Relay mode")
@@ -412,7 +412,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 				}
 			}
 		}
-		g_SF.SafetyCheck() ;TODO: Does this do more harm than good during Blank offlines? It can potentially swap the process back to the wrong one if the window is still in existance? Need to roll our own for the blank codepath? Possibly needs to be changed for all runs
+		g_IBM.GameMaster.SafetyCheck() ;TODO: Does this do more harm than good during Blank offlines? It can potentially swap the process back to the wrong one if the window is still in existance? Need to roll our own for the blank codepath? Possibly needs to be changed for all runs
 		totalTime:=A_TickCount-offlineStartTime
 		generatedStacks:=g_SF.Memory.ReadSBStacks() - startStacks
 		returnZone:=g_SF.Memory.ReadCurrentZone()
@@ -470,7 +470,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			else
 			{
 				g_IBM.Logger.AddMessage("Out of stacks:z" . currentZone)
-				g_SF.RestartAdventure("Out of haste @ z" . currentZone . " && have SB for next")
+				g_IBM.GameMaster.RestartAdventure("Out of haste @ z" . currentZone . " && have SB for next")
 				return true
 			}
         }
@@ -565,8 +565,8 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
         Critical Off
 		if (ElapsedTime >= maxOnlineStackTime)
         {
-			g_SF.RestartAdventure( "Ultra@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
-            g_SF.SafetyCheck()
+			g_IBM.GameMaster.RestartAdventure( "Ultra@z" . g_SF.Memory.ReadCurrentZone() . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
+            g_IBM.GameMaster.SafetyCheck()
             g_PreviousZoneStartTime:=A_TickCount
             return
         }
@@ -662,8 +662,8 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		if (ElapsedTime >= maxOnlineStackTime)
         {
             Critical Off
-			g_SF.RestartAdventure( "Normal@z" . currentZone . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
-            g_SF.SafetyCheck()
+			g_IBM.GameMaster.RestartAdventure( "Normal@z" . currentZone . " took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
+            g_IBM.GameMaster.SafetyCheck()
             g_PreviousZoneStartTime := A_TickCount
             return
         }
@@ -773,7 +773,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
                 g_SharedData.IBM_UpdateOutbound("LoopString","Attempted to offline stack after modron reset - verify settings")
                 break
             }
-			this.offlineSaveTime:=g_SF.CloseIC( "StackRestart" . (this.StackFailRetryAttempt > 1 ? (" - Warning: Retry #" . this.StackFailRetryAttempt - 1 . ". Check Stack Settings."): "") )
+			this.offlineSaveTime:=g_IBM.GameMaster.CloseIC( "StackRestart" . (this.StackFailRetryAttempt > 1 ? (" - Warning: Retry #" . this.StackFailRetryAttempt - 1 . ". Check Stack Settings."): "") )
 			g_SharedData.IBM_UpdateOutbound("LoopString","Stack Sleep: ")
             ElapsedTime:=0
 			sleepStart:=A_TickCount ;Seperate to the save timer, this is the delay in restarting the game specifically
@@ -783,7 +783,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
                 g_IBM.IBM_Sleep(15)
 				ElapsedTime := A_TickCount - sleepStart
             }
-			g_SF.SafetyCheck()
+			g_IBM.GameMaster.SafetyCheck()
             stacks:=g_SF.Memory.ReadSBStacks()
             ;check if save reverted back to below stacking conditions
             if (g_SF.Memory.ReadCurrentZone() < g_IBM_Settings["IBM_Offline_Stack_Min"]) ;Irisiri - this might need to consider the offline fallback?
@@ -1383,8 +1383,8 @@ class IC_BrivMaster_Relay_SharedData_Class ;Allows for communication between thi
 			this.HelperPID:=0
 			this.RelayZone:=""
 			this.RequestRelease:=false
-			this.MainPID:=g_SF.PID
-			this.MainHwnd:=g_SF.Hwnd
+			this.MainPID:=g_IBM.GameMaster.PID
+			this.MainHwnd:=g_IBM.GameMaster.Hwnd
 			this.RestoreWindow:=g_SharedData.IBM_RestoreWindow_Enabled ;This can be changed at run time
 			scriptLocation := A_LineFile . "\..\IC_BrivMaster_RouteMaster_Relay.ahk"
 			guid:=this.GUID
@@ -1409,12 +1409,12 @@ class IC_BrivMaster_Relay_SharedData_Class ;Allows for communication between thi
 	{
 		if (this.State==5) ;Expected state, just resume process and move on
 		{
-			g_SF.IBM_SuspendProcess(this.RelayPID,False)
+			g_IBM.GameMaster.SuspendProcess(this.RelayPID,False)
 			g_IBM.Logger.AddMessage("Relay PreRelease() state 5 - resuming")
 		}
 		else if (this.State==6) ;DEBUG: Relay is in a complete state. This might be possible during relay run recovery? TODO: This can be called when a second CloseIC() is called after the relay handover, e.g. because the run gets stuck
 		{
-			g_SF.IBM_SuspendProcess(this.RelayPID,False)
+			g_IBM.GameMaster.SuspendProcess(this.RelayPID,False)
 			g_IBM.Logger.AddMessage("Relay PreRelease() state 6 - resuming - DEBUG")
 		}
 		else if (this.State>0) ;Request release
@@ -1428,7 +1428,7 @@ class IC_BrivMaster_Relay_SharedData_Class ;Allows for communication between thi
 	{
 		if (this.State==5) ;Expected state, just resume process and move on
 		{
-			g_SF.IBM_SuspendProcess(this.RelayPID,False)
+			g_IBM.GameMaster.SuspendProcess(this.RelayPID,False)
 			this.ProcessSwap()
 			g_IBM.Logger.AddMessage("Relay Release() state 5")
 			this.State:=6 ;Complete
@@ -1483,40 +1483,39 @@ class IC_BrivMaster_Relay_SharedData_Class ;Allows for communication between thi
 		g_IBM.Logger.AddMessage("Relay LogZone() at z[" . g_SF.Memory.ReadCurrentZone() . "] message=[" . message . "]")
 	}
 
-	CleanUpOnFail()
+	CleanUpOnFail() 
 	{
-		if (this.GetProcessName(this.HelperPID) == "AutoHotkey.exe") ;Kill the relay script
+		if (g_SF.GetProcessName(this.HelperPID) == "AutoHotkey.exe") ;Kill the relay script
 		{
 			g_IBM.Logger.AddMessage("CleanUpOnFail() found Relay AHK script PID=[" . this.HelperPID . "] still running - killing")
 			closeString:="ahk_pid " . this.HelperPID
-			WinKill, %closeString%
+			WinKill, %closeString% ;TODO: Should this use GameMaster.TerminateProcess?
 		}
 		WinGet, recoveryPID, PID, % "ahk_exe " . g_IBM_Settings["IBM_Game_Exe"] ;Check for IC processes
 		if (recoveryPID)
 		{
 			g_IBM.Logger.AddMessage("CleanUpOnFail() recovery PID found=[" . recoveryPID . "]")
-			g_SF.PID:=recoveryPID
-			g_SF.IBM_SuspendProcess(g_SF.PID,False) ;Ensure the process is not stuck suspended
-			g_SF.Hwnd:=WinExist("ahk_pid " . recoveryPID)
+			g_IBM.GameMaster.PID:=recoveryPID
+			g_IBM.GameMaster.SuspendProcess(g_IBM.GameMaster.PID,False) ;Ensure the process is not stuck suspended
+			g_IBM.GameMaster.Hwnd:=WinExist("ahk_pid " . recoveryPID)
 			g_SF.Memory.OpenProcessReader(recoveryPID) ;Open this PID specifically
 			g_SF.ResetServerCall()
 		}
 		else ;Otherwise open as normal
 		{
-			g_IBM.Logger.AddMessage("CleanUpOnFail() no recovery PID found - calling g_SF.OpenIC()")
-			g_SF.OpenIC()
+			g_IBM.Logger.AddMessage("CleanUpOnFail() no recovery PID found - calling OpenIC()")
+			g_IBM.GameMaster.OpenIC("CleanUpOnFail()")
 		}
 	}
 
 	ProcessSwap()
 	{
-		logText:="ProcessSwap() changing PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "] "
-		g_SF.PID:=this.RelayPID
-		g_SF.Hwnd:=this.RelayHwnd
-		logText.="to PID=[" . g_SF.PID . "] and Hwnd=[" . g_SF.Hwnd . "]"
-		g_IBM.Logger.AddMessage(logText)
-		g_SF.Memory.OpenProcessReader(g_SF.PID)
-		if (g_SF.WaitForGameReady(10000*g_IBM_Settings["IBM_OffLine_Timeout"],true)) ;Default is 5, so 50s. Call WaitForGameReady() with skipFinal:=true as we won't know where in the offline calc we are if we happen to trigger one 
+		logText:="ProcessSwap() changing PID=[" . g_IBM.GameMaster.PID . "] and Hwnd=[" . g_IBM.GameMaster.Hwnd . "] "
+		g_IBM.GameMaster.PID:=this.RelayPID
+		g_IBM.GameMaster.Hwnd:=this.RelayHwnd
+		g_IBM.Logger.AddMessage(logText . "to PID=[" . g_IBM.GameMaster.PID . "] and Hwnd=[" . g_IBM.GameMaster.Hwnd . "]")
+		g_SF.Memory.OpenProcessReader(g_IBM.GameMaster.PID)
+		if (g_IBM.GameMaster.WaitForGameReady(10000*g_IBM_Settings["IBM_OffLine_Timeout"],true)) ;Default is 5, so 50s. Call WaitForGameReady() with skipFinal:=true as we won't know where in the offline calc we are if we happen to trigger one 
 			g_IBM.Logger.AddMessage("ProcessSwap() completed switching process")
 		else
 			g_IBM.Logger.AddMessage("ProcessSwap() WaitForGameReady() call failed whilst switching process")
@@ -1524,26 +1523,9 @@ class IC_BrivMaster_Relay_SharedData_Class ;Allows for communication between thi
 		g_SharedData.IBM_UpdateOutbound("IBM_ProcessSwap",true) ;Allows the hub to react
 	}
 
-	GetProcessName(processID) ;To check without a window being present
-	{
-		if (hProcess := DllCall("OpenProcess", "uint", 0x0410, "int", 0, "uint", processID, "ptr"))
-		{
-			size := VarSetCapacity(buf, 0x0104 << 1, 0)
-			if (DllCall("psapi\GetModuleFileNameEx", "ptr", hProcess, "ptr", 0, "ptr", &buf, "uint", size))
-			{
-				SplitPath, % StrGet(&buf), processExeName
-				DllCall("CloseHandle", "ptr", hProcess)
-				return processExeName
-			}
-			DllCall("CloseHandle", "ptr", hProcess)
-		}
-		return false
-	}
-
-
 	RelayCloseMain() ;Called from the Relay script via COM to close the main IC process during recovery
 	{
-		g_SF.CloseIC("Relay failed to halt at platform login",true) ;Close via PID
+		g_IBM.GameMaster.CloseIC("Relay failed to halt at platform login",true) ;Close via PID
 		this.Release()
 	}
 

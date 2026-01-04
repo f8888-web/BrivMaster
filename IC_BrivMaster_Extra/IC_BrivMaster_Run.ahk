@@ -89,18 +89,10 @@ class IC_BrivMaster_GemFarm_Class
     {
         static lastResetCount:=0
         this.TriggerStart:=true
-		g_SF.Hwnd := WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"])
-        exeName:=g_IBM_Settings["IBM_Game_Exe"]
-        Process, Exist, %exeName%
-        g_SF.PID:=ErrorLevel
-        Process, Priority, % g_SF.PID, Realtime ;Raises IC's priority if needed. Admin is required for RealTime, but will automatically use High if not elevated
         DllCall("QueryPerformanceFrequency", "Int64*", PerformanceCounterFrequency) ;Get the performance counter frequency once TODO: I think the frequency can be changed, so this might not be safe?
 		this.CounterFrequency:=PerformanceCounterFrequency//1000 ;Convert from seconds to milliseconds as that is our main interest
-		g_SF.Memory.OpenProcessReader()
+		this.GameMaster:=New IC_BrivMaster_GameMaster_Class()
 		this.RefreshImportCheck() ;Does the initial population of the import check
-        if (g_SF.VerifyAdventureLoaded() < 0)
-            return
-        g_SF.CurrentAdventure:=g_SF.Memory.ReadCurrentObjID()
         g_ServerCall.UpdatePlayServer()
         g_SF.ResetServerCall()
         g_SF.PatronID:=g_SF.Memory.ReadPatronID()
@@ -109,7 +101,7 @@ class IC_BrivMaster_GemFarm_Class
 		this.Logger:=New IC_BrivMaster_Logger_Class(A_LineFile . "\..\Logs\")
 		this.LevelManager:=New IC_BrivMaster_LevelManager_Class(g_IBM_Settings["IBM_Route_Combine"]) ;Must be before the PreFlightCheck() call as we use the formation data the LevelManager loads
 		this.RouteMaster:=New IC_BrivMaster_RouteMaster_Class(g_IBM_Settings["IBM_Route_Combine"],this.Logger.logBase)
-		if (this.PreFlightCheck()==false) ; Did not pass pre flight check.
+		if (!this.PreFlightCheck()) ; Did not pass pre flight check.
             return false
         g_PreviousZoneStartTime := A_TickCount
 		this.offRamp:=false ;Limit the code that runs at the end of a run
@@ -122,7 +114,7 @@ class IC_BrivMaster_GemFarm_Class
         {
 			this.currentZone:=g_SF.Memory.ReadCurrentZone() ;Class level variable so it can be reset during rollbacks TODO: Move to routeMaster
 			if (this.currentZone=="")
-				g_SF.SafetyCheck()
+				g_IBM.GameMaster.SafetyCheck()
 			if (!this.TriggerStart AND this.offRamp AND this.currentZone <= this.routeMaster.thelloraTarget) ;Additional reset detection
 			{
 				this.TriggerStart:=true
@@ -471,8 +463,17 @@ class IC_BrivMaster_GemFarm_Class
 
 	;START PRE-FLIGHT CHECK
 
-    PreFlightCheck()
+    PreFlightCheck() ;TODO: Pack some of this into functions - it's getting a bit large
     {
+		;Check for active adventure
+		if(this.GameMaster.CurrentAdventure=="" OR this.GameMaster.CurrentAdventure<=0)
+		{
+			errorMsg:="Unable to read adventure data."
+			errorMsg.="`nPlease load into a valid adventure. Current adventure shows as: " . (CurrentObjID ? CurrentObjID : "-- Error --`n")
+			errorMsg.=this.PreFlightCheck_GenericMessage()
+			this.PreFlightErrorMessage("Adventure",errorMsg)
+			return false
+		}
 		;Check Briv is saved in the expected formations
 		brivInM:=g_Heroes[58].inM
         brivInQ:=g_Heroes[58].inQ
