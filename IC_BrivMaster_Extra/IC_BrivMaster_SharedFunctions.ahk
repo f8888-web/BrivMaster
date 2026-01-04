@@ -17,6 +17,22 @@ class IC_BrivMaster_SharedFunctions_Class extends SH_SharedFunctions
 		this.PatronID:=0
     }
 	
+	GetProcessName(processID) ;To check without a window being present TODO: Used in multiple places, this might make sense for SharedFunctions as a result
+	{
+		if(hProcess:=DllCall("OpenProcess", "uint", 0x0410, "int", 0, "uint", processID, "ptr"))
+		{
+			size:=VarSetCapacity(buf, 0x0104 << 1, 0)
+			if (DllCall("psapi\GetModuleFileNameEx", "ptr", hProcess, "ptr", 0, "ptr", &buf, "uint", size))
+			{
+				SplitPath, % StrGet(&buf), processExeName
+				DllCall("CloseHandle", "ptr", hProcess)
+				return processExeName
+			}
+			DllCall("CloseHandle", "ptr", hProcess)
+		}
+		return false
+	}
+	
 	ConvQuadToDouble(FirstEight, SecondEight) ;Takes input of first and second sets of eight byte int64s that make up a quad in memory. Obviously will not work if quad value exceeds double max
     {
         return (FirstEight + (2.0**63)) * (2.0**SecondEight)
