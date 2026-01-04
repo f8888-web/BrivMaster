@@ -1,3 +1,35 @@
+;This file is intended for functions used in the gem farm script, but not the hub. Partitioning is WiP
+
+class IC_BrivMaster_DialogSwatter_Class ;A class for swatting dialogs that appears at game start
+{
+	__New()
+    {
+        this.Timer:=ObjBindMethod(this, "Swat")
+		this.KEY_ESC:=g_InputManager.getKey("Esc")
+    }
+
+    Start()
+    {
+		timerFunction:=this.Timer
+		SetTimer, %timerFunction%, 100, 0
+		this.StartTime:=A_TickCount
+    }
+
+    Stop()
+    {
+        timerFunction:=this.Timer
+		SetTimer, %timerFunction%, Off
+    }
+
+    Swat()
+    {
+        if (g_SF.Memory.ReadWelcomeBackActive())
+			this.KEY_ESC.KeyPress() ;.KeyPress() applies critical itself
+		else if (A_TickCount > this.StartTime + 3000) ;3s should be enough to get the swat done
+			this.Stop() ;Stop the timer since we don't have anything to swat
+    }
+}
+
 class IC_BrivMaster_DianaCheese_Class ;A class for cheesing Diana's Electrum drops
 {
 	__new()

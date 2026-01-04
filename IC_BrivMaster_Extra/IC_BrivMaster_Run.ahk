@@ -108,6 +108,7 @@ class IC_BrivMaster_GemFarm_Class
         g_PreviousZoneStartTime := A_TickCount
 		this.offRamp:=false ;Limit the code that runs at the end of a run
 		this.EllywickCasino:=New IC_BrivMaster_EllywickDealer_Class()
+		this.DialogSwatter:=New IC_BrivMaster_DialogSwatter_Class()
 		if (g_IBM_Settings["IBM_Level_Diana_Cheese"]) ;Diana Electrum Chest Cheese things
 			this.DianaCheeseHelper:=New IC_BrivMaster_DianaCheese_Class
 		this.DialogSwatter_Setup() ;This needs to be built in a more organised way, but will do for now
@@ -722,33 +723,4 @@ class IC_BrivMaster_GemFarm_Class
 		GuiControl, IBM_GemFarm:MoveDraw,IBM_GemFarm_Version_Imports
 	}
 	;END GEM FARM WINDOW
-
-	;DIALOGSWATTER BLOCK
-	DialogSwatter_Setup()
-    {
-        this.SwatterTimer :=  ObjBindMethod(this, "DialogSwatter_Swat")
-		this.KEY_ESC:=g_InputManager.getKey("Esc")
-    }
-
-    DialogSwatter_Start()
-    {
-		timerFunction:=this.SwatterTimer
-		SetTimer, %timerFunction%, 100, 0
-		this.SwatterStartTime:=A_TickCount
-    }
-
-    DialogSwatter_Stop()
-    {
-        timerFunction:=this.SwatterTimer
-		SetTimer, %timerFunction%, Off
-    }
-
-    DialogSwatter_Swat()
-    {
-        if (g_SF.Memory.ReadWelcomeBackActive())
-			this.KEY_ESC.KeyPress() ;.KeyPress() applies critical itself
-		else if (A_TickCount > this.SwatterStartTime + 3000) ;3s should be enough to get the swat done
-			this.DialogSwatter_Stop() ;Stop the timer since we don't have anything to swat
-    }
-	;END DIALOGSWATTER BLOCK
 }

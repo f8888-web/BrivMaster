@@ -59,7 +59,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
         else
         {
 			g_IBM.routeMaster.ResetCycleCount() ;Whatever the reason, we've gone offline and therefore don't need to restart the game again
-			g_IBM.DialogSwatter_Start()
+			g_IBM.DialogSwatter.Start()
 			return 0
 		}
     }
