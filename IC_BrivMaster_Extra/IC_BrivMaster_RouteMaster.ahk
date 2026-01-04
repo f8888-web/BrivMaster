@@ -1076,8 +1076,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		}
     }
 
-	 ; True/False on whether Briv should be benched based on game conditions.
-	 ;Irisiri - as part of drift checking, return changed as follows:
+	 ;Should be benched based on game conditions. As part of drift checking, return as follows:
 	 ;0 - as false before, do not bench
 	 ;1 - as true before for most conditions, bench
 	 ;2 - bench for animation override
@@ -1085,64 +1084,27 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
     {
 		;ReadTransitionDirection() 		| 0 = Static (instant), 1 = Forward, 2 = Backward, 3=JumpDown, 4=FallDown
 		;ReadFormationTransitionDir() 	| 0 = OnFromLeft, 1 = OnFromRight, 2 = OnFromTop, 3 = OffToLeft, 4 = OffToRight, 5 = OffToBottom
-		;if (this.ShouldDoThelloraRecovery()) ;Irisiri - to stop Briv being used before Thell is done
-		;	{
-		;		return 1
-		;	}
-		;bench briv if jump animation override is added to list and it isn't a quick transition (reading ReadFormationTransitionDir makes sure QT isn't read too early). We can't do this for feat swap as every formation has Briv
 		if (this.zonesPerJumpE == 1 AND g_SF.Memory.ReadTransitionDirection() == 1 AND g_SF.Memory.ReadFormationTransitionDir() == 4 )
-            {
-				return 2
-			}
-        ;bench briv not in a preferred briv jump zone
-        if (isEZone)
-			{
-				return 1
-			}
+			return 2
+        if (isEZone) 
+			return 1
         return 0
     }
 
-    ; True/False on whether Briv should be unbenched based on game conditions.
-    UnBenchBrivConditions(isEZone)
+    UnBenchBrivConditions(isEZone) ;True/False on whether Briv should be unbenched based on game conditions.
     {
-		; do not unbench Briv if before Thellora's rush target (as per the bench condition)
-		;if (this.ShouldDoThelloraRecovery())
-		;	{
-		;	return false
-		;	}
-		; do not unbench briv if party is not on a perferred briv jump zone.
         if (isEZone)
-			{
             return false
-			}
 		if (this.zonesPerJumpE > 1) ;Don't do transition-based checks when feat swapping
 			return true ;Not a walk zone so go to Q
-        ;if transition direction is "OnFromLeft"
-		if (g_SF.Memory.ReadFormationTransitionDir() != 4)
-		{
+		if (g_SF.Memory.ReadFormationTransitionDir()!=4) ;if transition direction is not "OffToRight"
 			return true
-		}
         return false
     }
 
-	/*
-	ShouldDoThelloraRecovery() ;True if we should walk to Thellora's skip zone regardless of the zone's setting
-	{
-		return false ;Testing stack-calc based recovery as walk based can't work for feat swap TODO: Option for this? Maybe a max number of zones to walk?
-		if (this.zonesPerJumpE > 1) ;If we're feat swapping we can't recover via walking. TODO: Should this actually check for Briv in E instead of using zonesPerJumpE as a proxy? Might be worth reading his presence in at the start of the run in Reset()
-			return false
-		currentZone:=g_SF.Memory.ReadCurrentZone()
-		if (currentZone < this.thelloraTarget) ;If we're before Thellora's target area, check if we have enough stacks (ie because it's the first run and we have low Thellora charges but lots of stacks)
-		{
-			return g_SF.Memory.ReadHasteStacks()<this.zones[currentZone].stacksToFinish ;Do we have enough stacks anyway?
-		}
-		return false
-	}
-	*/
-
 	ShouldWalk(zone)
 	{
-		return this.zones[zone].jumpZone==False ; Or this.ShouldDoThelloraRecovery()
+		return this.zones[zone].jumpZone==False
 	}
 	
 	GetStandardFormationKey(zone) ;Returns the key object for Q or E as appropriate for the zone
