@@ -1,5 +1,6 @@
 ;This file is intended for functions used across both the gem farm script and the hub. Currently meeting that goal is a WiP
 #include %A_LineFile%\..\IC_BrivMaster_Memory.ahk
+#include %A_LineFile%\..\..\..\SharedFunctions\SH_KeyHelper.ahk ;Used for IC_BrivMaster_InputManager_Class
 
 global g_PreviousZoneStartTime ;TODO: Why is this in here? It is used by CheckifStuck - move elsewhere if that function moves. Or possibly move it anyway...at least into the class constructor
 
@@ -221,11 +222,11 @@ class IC_BrivMaster_SharedFunctions_Class
     }    
 }
 
-class IC_BrivMaster_InputManager_Class ;A class for managing input related matters
+class IC_BrivMaster_InputManager_Class ;A class for managing input related matters 
 {
 	keyList:={} ;Indexed by key per the script (e.g. "F1","ClickDmg"), contains the mapped Key, lParam for SendMessage for down, and lParam for SendMessage for up
 
-	__new() ;Currently it is up to code using this to add the necessary keys
+	__new() ;Currently it is up to code using this to add the necessary keys TODO: Pass the object containing the HWnd to be used byRef, so it can be used with g_IBM.GameMaster.Hwnd in main and g_SF.Hwnd in hub?
 	{
 		this.KeyMap:={}
 		this.SCKeyMap:={}
