@@ -415,20 +415,17 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 	static ULTIMATE_RESOLUTION_TIME:=300 ;Real world milliseconds. Normally seems to be 0 to 140ms
 
 	CasinoTimer := ObjBindMethod(this, "Casino")
-	GemCardsNeeded := {} ;These are pairs of base and melf mode values, eg {0:2,1:3} for 2 without melf and 3 with
-	MaxRedraws := {}
+	GemCardsNeeded:={} ;These are pairs of base and melf mode values, eg {0:2,1:3} for 2 without melf and 3 with
+	MaxRedraws:={}
 	MinCards:={}
-	GemCardsNeededInFlight:=0
-	Complete := false
-	Redraws := 0 ;Current redraws
-	UsedUlt := false ;Tracks Elly's ult being in progress, as her cards are only cleared when it ENDS, despite the visual
-	MelfMode:=false ;Is melf spawning more? Used to select the appropriate options
+	Complete:=false
+	Redraws:=0 ;Current redraws
+	UsedUlt:=false ;Tracks Elly's ult being in progress, as her cards are only cleared when it ENDS, despite the visual
 	StatusString:=" STATUS=" ;Used to return basic information on problems (eg DM fails)
 
-	Start(setMelfMode:=false)
+	Start()
 	{
-		this.MelfMode:=setMelfMode
-		timerFunction := this.CasinoTimer
+		timerFunction:=this.CasinoTimer
 		SetTimer, %timerFunction%, 20, 0
 		this.Casino() ;Is this useful here?
 	}
@@ -441,14 +438,12 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 	Reset()
 	{
 		this.ClearTimers() ;Timers must be stopped BEFORE we set any variables, as otherwise the timer functions could 'un-reset' them afterwards
-		this.Complete := false
-		this.Redraws := 0
-		this.UsedUlt := false ;This assumes Reset() will only be called after an adventure resets
-		this.MaxRedraws := {0:g_IBM_Settings["IBM_Casino_Redraws_Base"],1:g_IBM_Settings["IBM_Casino_Redraws_Melf"]}
-		this.GemCardsNeeded := {0:g_IBM_Settings["IBM_Casino_Target_Base"],1:g_IBM_Settings["IBM_Casino_Target_Melf"]}
-		this.MinCards:={0:g_IBM_Settings["IBM_Casino_MinCards_Base"],1:g_IBM_Settings["IBM_Casino_MinCards_Melf"]}
-		this.GemCardsNeededInFlight:=g_IBM_Settings["IBM_Casino_Target_InFlight"]
-		this.MelfMode:=false
+		this.Complete:=false
+		this.Redraws:=0
+		this.UsedUlt:=false ;This assumes Reset() will only be called after an adventure resets
+		this.MaxRedraws:=g_IBM_Settings["IBM_Casino_Redraws_Base"]
+		this.GemCardsNeeded:=g_IBM_Settings["IBM_Casino_Target_Base"]
+		this.MinCards:=g_IBM_Settings["IBM_Casino_MinCards_Base"]
 		this.StatusString:=""
 	}
 
@@ -470,8 +465,6 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 		{
 			if (this.RedrawsLeft() AND this.ShouldDrawMoreCards() AND this.ShouldRedraw() AND this.CanUseEllyWickUlt()) ;When we exit the waitroom early we might still need to do a re-roll
 				this.UseEllywickUlt()
-			else if (g_Heroes[83].GetNumGemCards() < this.GemCardsNeededInFlight AND this.GetNumCards() == 5 AND this.CanUseEllyWickUlt()) ;Use ultimate to redraw cards if Ellywick doesn't have GemCardsNeededInFlight (due to maxRedraws being less than the maximum possible)
-				this.UseEllywickUlt()
 		}
 		else if (this.ShouldDrawMoreCards())
 		{
@@ -480,7 +473,6 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 				 if (!this.UsedUlt AND this.ShouldRedraw())
 					this.UseEllywickUlt()
 			}
-			else if (this.GetMinCards() == 0 OR (!this.UsedUlt AND this.GetNumCards()>=this.GetMinCards())) ;If we want to release at a certain number of cards we need to wait for the ult to resolve to be able to count correctly
 				this.WaitRoomExit()
 		}
 		else
@@ -490,13 +482,7 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 	WaitRoomExit() ;Seperate so we can put some status strings in here
 	{
 		this.Complete:=true
-		if (g_Heroes[83].GetNumGemCards() >= this.GemCardsNeededInFlight) ;If we've reached our in-flight re-roll target in the waitroom there is no reason to keep the timer running
-			this.Stop()
-	}
-
-	GetMinCards()
-	{
-		return this.MinCards[this.melfMode]
+		this.Stop()
 	}
 
 	DrawsLeft()
@@ -506,24 +492,24 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 
 	RedrawsLeft()
 	{
-		return this.MaxRedraws[this.melfMode] - this.Redraws
+		return this.MaxRedraws - this.Redraws
 	}
 
 	ShouldDrawMoreCards()
 	{
-		if (this.GetNumCards() < this.GetMinCards())
+		if (this.GetNumCards() < this.MinCards)
 			return true
-		return g_Heroes[83].GetNumGemCards() < this.GemCardsNeeded[this.melfMode]
+		return g_Heroes[83].GetNumGemCards() < this.GemCardsNeeded
 	}
 
 	ShouldRedraw()
 	{
-		numCards := this.GetNumCards()
-		if (numCards == 5)
+		numCards:=this.GetNumCards()
+		if (numCards==5)
 			return true
-		else if (numCards == 0)
+		else if (numCards==0)
 			return false
-		return this.DrawsLeft() < this.GemCardsNeeded[this.melfMode] - g_Heroes[83].GetNumGemCards()
+		return this.DrawsLeft() < this.GemCardsNeeded - g_Heroes[83].GetNumGemCards()
 	}
 
 	GetNumCards() ;Not encapsulated yet as results used for error checking
@@ -580,7 +566,7 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 			else
 			{
 				this.StatusString.="FAIL-Elly(Level:" . g_Heroes[83].ReadLevel() . ") Ult not available-DM(Level:" . g_Heroes[99].ReadLevel() . ") Ult not available-Lowered Max Rerolls to " . this.Redraws . ":"
-				this.MaxRedraws[this.melfMode]:=this.Redraws ;Lower max re-rolls so we move on; this Casino is busted
+				this.MaxRedraws:=this.Redraws ;Lower max re-rolls so we move on; this Casino is busted
 			}
 		}
 	}

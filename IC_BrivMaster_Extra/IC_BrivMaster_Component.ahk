@@ -193,13 +193,9 @@ Class IC_IriBrivMaster_Component
 		settings.IBM_Route_BrivJump_Q:=4
 		settings.IBM_Route_BrivJump_E:=0
 		settings.IBM_Route_BrivJump_M:=4
-		settings.IBM_Casino_Target_Melf:=3
-		settings.IBM_Casino_Redraws_Melf:=1
-		settings.IBM_Casino_MinCards_Melf:=0
 		settings.IBM_Casino_Target_Base:=3
 		settings.IBM_Casino_Redraws_Base:=1
 		settings.IBM_Casino_MinCards_Base:=0
-		settings.IBM_Casino_Target_InFlight:=1
 		settings.IBM_OffLine_Delay_Time:=15000
 		settings.IBM_OffLine_Sleep_Time:=0
 		settings.IBM_Level_Options_Mod_Key:="Shift"

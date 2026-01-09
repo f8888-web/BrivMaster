@@ -387,16 +387,12 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+7 w%groupWidth% h50, % "Ellywick's Casino"
 		Gui, ICScriptHub:Font, w400
-		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Target / Redraws / Min. Gem	Base:
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+2 Number Limit1 vIBM_Casino_Target_Base gIBM_Casino_Target_Base
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+3 Number Limit1 vIBM_Casino_Redraws_Base gIBM_Casino_Redraws_Base
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+3 Number Limit1 vIBM_Casino_MinCards_Base gIBM_Casino_MinCards_Base
-		Gui, ICScriptHub:Add, Text, x+10 h18 0x200, With Melf:
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+2 Number Limit1 vIBM_Casino_Target_Melf gIBM_Casino_Target_Melf
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+3 Number Limit1 vIBM_Casino_Redraws_Melf gIBM_Casino_Redraws_Melf
-		Gui, ICScriptHub:Add, Edit, +cBlack  w12 x+3 Number Limit1 vIBM_Casino_MinCards_Melf gIBM_Casino_MinCards_Melf
-		Gui, ICScriptHub:Add, Text, x+15 h18 0x200, Target post-Casino:
-		Gui, ICScriptHub:Add, Edit, +cBlack  w15 x+2 Number Limit1 vIBM_Casino_Target_InFlight gIBM_Casino_Target_InFlight
+		Gui, ICScriptHub:Add, Text, xs+10 ys+20 h18 0x200, Target Gem cards:
+		Gui, ICScriptHub:Add, Edit, +cBlack  w15 x+2 Number Limit1 vIBM_Casino_Target_Base gIBM_Casino_Target_Base
+		Gui, ICScriptHub:Add, Text, x+10 h18 0x200, Maximum redraws:
+		Gui, ICScriptHub:Add, Edit, +cBlack  w15 x+3 Number Limit1 vIBM_Casino_Redraws_Base gIBM_Casino_Redraws_Base
+		Gui, ICScriptHub:Add, Text, x+10 h18 0x200, Minimum cards:
+		Gui, ICScriptHub:Add, Edit, +cBlack  w15 x+3 Number Limit1 vIBM_Casino_MinCards_Base gIBM_Casino_MinCards_Base
 		;Script Window Options
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+9 w%groupWidth% h50, % "Window Options"
@@ -573,13 +569,9 @@ class IC_IriBrivMaster_GUI
 		this.RefreshRouteJumpBoxes()
 		this.RefreshRouteStackBoxes()
 		;Ellywick's Casino
-		GuiControl, ICScriptHub:, IBM_Casino_Target_Melf, % data.IBM_Casino_Target_Melf
-		GuiControl, ICScriptHub:, IBM_Casino_Redraws_Melf, % data.IBM_Casino_Redraws_Melf
-		GuiControl, ICScriptHub:, IBM_Casino_MinCards_Melf, % data.IBM_Casino_MinCards_Melf
 		GuiControl, ICScriptHub:, IBM_Casino_Target_Base, % data.IBM_Casino_Target_Base
 		GuiControl, ICScriptHub:, IBM_Casino_Redraws_Base, % data.IBM_Casino_Redraws_Base
 		GuiControl, ICScriptHub:, IBM_Casino_MinCards_Base, % data.IBM_Casino_MinCards_Base
-		GuiControl, ICScriptHub:, IBM_Casino_Target_InFlight, % data.IBM_Casino_Target_InFlight
 		;Window
 		GuiControl, ICScriptHub:, IBM_Window_X, % data.IBM_Window_X
 		GuiControl, ICScriptHub:, IBM_Window_Y, % data.IBM_Window_Y
@@ -1337,22 +1329,6 @@ IBM_NonGemFarm_Elly_Stop()
 	g_IriBrivMaster.IBM_Elly_StopNonGemFarm()
 }
 
-IBM_Casino_Target_Melf()
-{
-	GuiControlGet, value,, IBM_Casino_Target_Melf
-	g_IriBrivMaster.UpdateSetting("IBM_Casino_Target_Melf",value+0)
-}
-IBM_Casino_Redraws_Melf()
-{
-	GuiControlGet, value,, IBM_Casino_Redraws_Melf
-	g_IriBrivMaster.UpdateSetting("IBM_Casino_Redraws_Melf",value+0)
-}
-IBM_Casino_MinCards_Melf()
-{
-	GuiControlGet, value,, IBM_Casino_MinCards_Melf
-	g_IriBrivMaster.UpdateSetting("IBM_Casino_MinCards_Melf",value+0)
-}
-
 IBM_Casino_Target_Base()
 {
 	GuiControlGet, value,, IBM_Casino_Target_Base
@@ -1367,12 +1343,6 @@ IBM_Casino_MinCards_Base()
 {
 	GuiControlGet, value,, IBM_Casino_MinCards_Base
 	g_IriBrivMaster.UpdateSetting("IBM_Casino_MinCards_Base",value+0)
-}
-
-IBM_Casino_Target_InFlight()
-{
-	GuiControlGet, value,, IBM_Casino_Target_InFlight
-	g_IriBrivMaster.UpdateSetting("IBM_Casino_Target_InFlight",value+0)
 }
 
 IBM_Route_BrivJump_Q_Edit()
