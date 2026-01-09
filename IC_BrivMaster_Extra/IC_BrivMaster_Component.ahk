@@ -973,7 +973,7 @@ Class IC_IriBrivMaster_Component
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
             this.SharedRunData.UpdateOutbound("IBM_RestoreWindow_Enabled",!this.SharedRunData.IBM_RestoreWindow_Enabled)
 		else
-			Msgbox % "Failed to update script."
+			Msgbox 48, "BrivMaster","Failed to update script." ;48 is excamation, +0 for just OK
 	}
 
 	ParseRouteImportString(routeString)
@@ -1054,7 +1054,7 @@ Class IC_IriBrivMaster_Component
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
             this.SharedRunData.UpdateOutbound("IBM_RunControl_DisableOffline",!this.SharedRunData.IBM_RunControl_DisableOffline) ;Toggle
 		else
-			Msgbox % "Failed to update script."
+			Msgbox 48, "BrivMaster","Failed to update script." ;48 is excamation, +0 for just OK
 	}
 
 	SetControl_QueueOffline()
@@ -1062,7 +1062,7 @@ Class IC_IriBrivMaster_Component
 		If (ComObjType(this.SharedRunData,"IID") OR this.RefreshComObject())
 			this.SharedRunData.UpdateOutbound("IBM_RunControl_ForceOffline",!this.SharedRunData.IBM_RunControl_ForceOffline) ; Toggle
 		else
-			Msgbox % "Failed to update script."
+			Msgbox 48, "BrivMaster","Failed to update script." ;48 is excamation, +0 for just OK
 	}
 
 	UpdateStatus() ;Run by timer to update the GUI
