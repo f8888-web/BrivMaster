@@ -473,6 +473,7 @@ class IC_BrivMaster_EllywickDealer_Class ;A class for managing Ellywick's card d
 				 if (!this.UsedUlt AND this.ShouldRedraw())
 					this.UseEllywickUlt()
 			}
+			else if (this.MinCards == 0 OR (!this.UsedUlt AND this.GetNumCards()>=this.MinCards)) ;If we want to release at a certain number of cards we need to wait for the ult to resolve to be able to count correctly
 				this.WaitRoomExit()
 		}
 		else
