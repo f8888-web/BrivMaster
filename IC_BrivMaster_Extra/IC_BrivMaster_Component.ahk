@@ -14,8 +14,7 @@ global g_IriBrivMaster_GUI:=New IC_IriBrivMaster_GUI() ;TODO: Can we make this g
 global g_Heroes:={}
 global g_IBM_Settings:={}
 global g_InputManager:=New IC_BrivMaster_InputManager_Class()
-global g_IBM:={} ;Nasty hack for the input manager expecting the current HWnd to be in g_IBM.GameMaster.Hwnd, which is needed for the Elly tool TODO: Make this less horrible
-
+global g_IBM:={} ;Nasty hack for the input manager expecting the current HWnd to be in g_IBM.GameMaster.Hwnd, which is needed for the Elly tool TODO: Make this less horrible. Possibly by actually having g_IBM used for IBM things?!
 global g_IriBrivMaster_ModLoc := A_LineFile . "\..\IC_BrivMaster_Mods.ahk"
 global g_IriBrivMaster_StartFunctions:={}
 global g_IriBrivMaster_StopFunctions:={}
@@ -646,7 +645,7 @@ Class IC_IriBrivMaster_Component
 		this.SettingCheck(gameSettings,"ReduceFramerateWhenNotInFocus","CapFPSinBG",true,changeCount,change)
 		this.SettingCheck(gameSettings,"FormationSaveIncludeFeatsCheck","SaveFeats",true,changeCount,change)
 		this.SettingCheck(gameSettings,"UseConsolePortraits","ConsolePortraits",true,changeCount,change)
-		this.SettingCheck(gameSettings,"NarrowHeroBoxes","NarrowHero",true,changeCount,change)
+		this.SettingCheck(gameSettings,"NarrowHeroBoxes","NarrowHero",true,changeCount,change) ;TODO: This needs to be forced on, as otherwise memory reads relating to the herobox won't work
 		this.SettingCheck(gameSettings,"ShowAllHeroBoxes","AllHero",true,changeCount,change)
 		this.SettingCheck(gameSettings,"HotKeys","Swap25100",false,changeCount,change)
 		if (changeCount)

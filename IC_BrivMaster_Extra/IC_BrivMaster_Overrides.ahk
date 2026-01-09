@@ -19,7 +19,7 @@ class IC_BrivMaster_ServerCall_Class extends IC_ServerCalls_Class
         {
             try
             {
-                response := this.ServerCallSave(save)
+                response:=this.ServerCallSave(save)
             }
             catch, ErrMsg
             {
