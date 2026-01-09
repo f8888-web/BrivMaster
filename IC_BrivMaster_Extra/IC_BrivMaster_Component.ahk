@@ -214,7 +214,7 @@ Class IC_IriBrivMaster_Component
 		settings.IBM_ChestSnatcher_Options_Open_Gold:=0 ;TODO: These were set to 0 to prevent accidents when changing from using the main script settings, in the future update to more practical defauls
 		settings.IBM_ChestSnatcher_Options_Open_Silver:=0
 		settings.IBM_Game_Settings_Option_Profile:=1
-		settings.IBM_Game_Settings_Option_Set:={1:{Name:"Profile 1",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,AllHero:true,Swap25100:false},2:{Name:"Profile 2",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,AllHero:true,Swap25100:false}}
+		settings.IBM_Game_Settings_Option_Set:={1:{Name:"Profile 1",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false},2:{Name:"Profile 2",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false}}
 		settings.IBM_Game_Exe:="IdleDragons.exe"
 		settings.IBM_Game_Path:="" ;Path and Launch command are user dependant so can't have a default
 		settings.IBM_Game_Launch:=""
@@ -645,10 +645,9 @@ Class IC_IriBrivMaster_Component
 		this.SettingCheck(gameSettings,"ReduceFramerateWhenNotInFocus","CapFPSinBG",true,changeCount,change)
 		this.SettingCheck(gameSettings,"FormationSaveIncludeFeatsCheck","SaveFeats",true,changeCount,change)
 		this.SettingCheck(gameSettings,"UseConsolePortraits","ConsolePortraits",true,changeCount,change)
+		this.SettingCheck(gameSettings,"NarrowHeroBoxes","NarrowHero",true,changeCount,change) ;TODO: This needs to be forced on, as otherwise memory reads relating to the herobox won't work
 		this.SettingCheck(gameSettings,"ShowAllHeroBoxes","AllHero",true,changeCount,change)
 		this.SettingCheck(gameSettings,"HotKeys","Swap25100",false,changeCount,change)
-		this.ForcedSettingCheck(gameSettings,"NarrowHeroBoxes","true",changeCount,change) ;Fixed, always true, note this needs to be a string for correct JSON output
-		this.ForcedSettingCheck(gameSettings,"LevelupAmountIndex",3,changeCount,change) ;Fixed, always 3 (x100 levelling)
 		if (changeCount)
 		{
 			if (change)
@@ -660,7 +659,7 @@ Class IC_IriBrivMaster_Component
 				}
 				else
 				{
-					MsgBox,48,Briv Master,Game settings cannot be changed whilst Idle Champions is running
+					MsgBox,,Game Running,Game settings cannot be changed whilst Idle Champions is running
 					g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . this.settings.IBM_Game_Settings_Option_Set[profile,"Name"] . " have " . changeCount . (changeCount==1 ? " difference" : " differences"),"cFFC000")
 				}
 
@@ -708,16 +707,6 @@ Class IC_IriBrivMaster_Component
 			changeCount++
 			if (change)
 				gameSettings[CNEName]:=targetValue
-		}
-	}
-	
-	ForcedSettingCheck(gameSettings, CNEName, value, byRef changeCount,change:=false) ;For settings where we don't give or save an option
-	{
-		if gameSettings[CNEName]!=value
-		{
-			changeCount++
-			if (change)
-				gameSettings[CNEName]:=value
 		}
 	}
 
