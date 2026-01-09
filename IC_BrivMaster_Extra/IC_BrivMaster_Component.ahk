@@ -242,7 +242,7 @@ Class IC_IriBrivMaster_Component
         ; Apply settings to BrivGemFarm
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
 		{
-			this.SharedRunData.IBM_UpdateSettingsFromFile()
+			this.SharedRunData.UpdateSettingsFromFile()
 		}
 		g_IBM_Settings:=this.settings ;TODO: This is a hack to make the g_BrivUserSettingsFromAddons values available via the hub, needed due to the override of g_SF.Memory.OpenProcessReader()
 		this.LEGACY_UpdateStatus("Settings saved")
@@ -333,7 +333,7 @@ Class IC_IriBrivMaster_Component
 
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
 		{
-			this.SharedRunData.IBM_ResetRunStats()
+			this.SharedRunData.ResetRunStats()
 		}
 
 		GuiControl, ICScriptHub:, IBM_Stats_Group, % "Run Stats"
@@ -974,7 +974,7 @@ Class IC_IriBrivMaster_Component
 	SetControl_RestoreWindow() ;Toggles
 	{
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
-            this.SharedRunData.IBM_UpdateOutbound("IBM_RestoreWindow_Enabled",!this.SharedRunData.IBM_RestoreWindow_Enabled)
+            this.SharedRunData.UpdateOutbound("IBM_RestoreWindow_Enabled",!this.SharedRunData.IBM_RestoreWindow_Enabled)
 		else
 			Msgbox % "Failed to update script."
 	}
@@ -1055,7 +1055,7 @@ Class IC_IriBrivMaster_Component
 	SetControl_OfflineStacking()
 	{
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
-            this.SharedRunData.IBM_UpdateOutbound("IBM_RunControl_DisableOffline",!this.SharedRunData.IBM_RunControl_DisableOffline) ;Toggle
+            this.SharedRunData.UpdateOutbound("IBM_RunControl_DisableOffline",!this.SharedRunData.IBM_RunControl_DisableOffline) ;Toggle
 		else
 			Msgbox % "Failed to update script."
 	}
@@ -1063,7 +1063,7 @@ Class IC_IriBrivMaster_Component
 	SetControl_QueueOffline()
 	{
 		If (ComObjType(this.SharedRunData,"IID") OR this.RefreshComObject())
-			this.SharedRunData.IBM_UpdateOutbound("IBM_RunControl_ForceOffline",!this.SharedRunData.IBM_RunControl_ForceOffline) ; Toggle
+			this.SharedRunData.UpdateOutbound("IBM_RunControl_ForceOffline",!this.SharedRunData.IBM_RunControl_ForceOffline) ; Toggle
 		else
 			Msgbox % "Failed to update script."
 	}
