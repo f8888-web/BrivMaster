@@ -444,6 +444,8 @@ class IC_IriBrivMaster_GUI
 		GUIFunctions.AddToolTip( "IBM_Level_Options_BrivBoost_Multi", "This is how many times greater Briv's HP should be than the incoming damage of 100 enemies. Useful range 8 (fast stacking) to 12 (slower stacking)")
 		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Level_Diana_Cheese gIBM_Level_Diana_Cheese, Dynamic Diana
 		GUIFunctions.AddToolTip( "IBM_Level_Diana_Cheese", "Diana can give excess chests after the daily reset. This option will raise her level to 200 for Electrum Chest Scavenger from 3 minutes before the daily reset to 30 minutes after. Her level in the main options should be left at 100")
+		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Level_Recovery_Softcap gIBM_Level_Recovery_Softcap, Recovery Levelling
+		GUIFunctions.AddToolTip( "IBM_Level_Recovery_Softcap", "With this option selected, champions will be levelled to their last update when reaching a boss zone in stack conversion recovery, that is when Briv has no stacks and the minimum stack zone has yet to be reached. This can aid killing armoured bosses, but will raise the minimum zone required to gain online stacks")
 		Gui, ICScriptHub:Add, CheckBox, xs+10 y+8 h18 0x200 vIBM_Level_Options_Limit_Tatyana gIBM_Level_Options_Limit_Tatyana, Smart Tatyana in Casino
 		GUIFunctions.AddToolTip( "IBM_Level_Options_Limit_Tatyana", "Only level Tatyana at the start of a run if Melf's Spawn More effect is not active in the Casino zone. To use this option her Start level should be set to 0")
 		Gui, ICScriptHub:Add, CheckBox, x+10 h18 0x200 vIBM_Level_Options_Suppress_Front gIBM_Level_Options_Suppress_Front, Surpress Front Row
@@ -557,6 +559,7 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Key, % data.IBM_Level_Options_Mod_Key
 		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Value, % data.IBM_Level_Options_Mod_Value
 		GuiControl, ICScriptHub:, IBM_Level_Diana_Cheese, % data.IBM_Level_Diana_Cheese
+		GuiControl, ICScriptHub:, IBM_Level_Recovery_Softcap, % data.IBM_Level_Recovery_Softcap
 		;Chests
 		this.UpdateChestSnatcherOptions(data)
 		;Game settings
@@ -1317,6 +1320,12 @@ IBM_OffLine_Sleep_Time_Edit()
 {
 	GuiControlGet, value,, IBM_OffLine_Sleep_Time_Edit
 	g_IriBrivMaster.UpdateSetting("IBM_OffLine_Sleep_Time",value+0)
+}
+
+IBM_Level_Recovery_Softcap()
+{
+	GuiControlGet, value,, IBM_Level_Recovery_Softcap
+	g_IriBrivMaster.UpdateSetting("IBM_Level_Recovery_Softcap",value+0)
 }
 
 IBM_NonGemFarm_Elly_Start()
