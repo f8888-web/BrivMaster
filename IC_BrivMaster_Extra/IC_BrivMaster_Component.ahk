@@ -228,6 +228,8 @@ Class IC_IriBrivMaster_Component
 		settings.IBM_Allow_Modron_Buff_Off:=false ;Hidden setting - allows the script to be started without the modron core buff enabled, for those who want to use potions via saved familiars
 		settings.IBM_Ellywick_NonGemFarm_Cards:=[0,0,4,5,0,0,0,1,0,0] ;Min/Max for each card in cardID order
 		settings.IBM_Level_Recovery_Softcap:=0
+		settings.IBM_Format_Date_Display:="yyyy-MM-ddTHH:mm:ss" ;Hidden setting for date / time display
+		settings.IBM_Format_Date_File:="yyyyMMddTHHmmss" ;Hidden setting for date / time output in filenames, as : is not a valid character there
         return settings
     }
 
@@ -535,7 +537,7 @@ Class IC_IriBrivMaster_Component
 						GH_colour:="c000000"
 					GuiControl, ICScriptHub:+%GH_colour%, IBM_Stats_Gem_Hunter
 					GuiControl, ICScriptHub:MoveDraw,IBM_Stats_Gem_Hunter ;Required to update the colour as we don't change the text
-					FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
+					FormatTime, formattedDateTime,,% g_IBM_Settings["IBM_Format_Date_Display"]
 					GuiControl, ICScriptHub:, IBM_Stats_Group, % "Run Stats (" . formattedDateTime . ")"
 				}
 			}

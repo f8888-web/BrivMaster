@@ -31,7 +31,7 @@ CoordMode, Mouse, Client
 global g_SF:=New IC_BrivMaster_SharedFunctions_Class ; includes IBM MemoryFunctions in g_SF.Memory
 global g_IBM_Settings:={}
 global g_IBM:=New IC_BrivMaster_GemFarm_Class
-global g_zlib:=New IC_BrivMaster_Budget_Zlib_Class() ;Created global as it has a lot of one-time setup and we want to avoid re-creating it TODO: Set up to be used without an?
+global g_zlib:=New IC_BrivMaster_Budget_Zlib_Class() ;Created global as it has a lot of one-time setup and we want to avoid re-creating it TODO: Set up to be used without an instance?
 global g_ServerCall ;This is instantiated by g_SF.ResetServerCall()
 global g_IBM_Settings_Addons:={}
 global g_Heroes:={} ;Has to be instantiated after memory reads are available
@@ -664,7 +664,7 @@ class IC_BrivMaster_GemFarm_Class
 		}
 
 		Gui, IBM_GemFarm:New, -Resize -MaximizeBox
-		FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
+		FormatTime, formattedDateTime,,% g_IBM_Settings["IBM_Format_Date_Display"]
 		Gui IBM_GemFarm:Add, Text, w95 xm+5, % "Gem Farm Started:"
 		Gui IBM_GemFarm:Add, Text, w105 x+3, % formattedDateTime
 		Gui IBM_GemFarm:Add, Text, w95 xm+5, % "Settings Updated:"
@@ -682,7 +682,7 @@ class IC_BrivMaster_GemFarm_Class
 
 	RefreshGemFarmWindow() ;Updates the time settings were updated
 	{
-	   FormatTime, formattedDateTime,, yyyy-MM-ddTHH:mm:ss
+	   FormatTime, formattedDateTime,,% g_IBM_Settings["IBM_Format_Date_Display"]
 	   GuiControl, IBM_GemFarm:, IBM_GemFarm_Settings_Update_Time, % formattedDateTime
 	}
 
