@@ -482,7 +482,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 	WorldMapRestart() ;Forces an adventure restart through closing IC and using server calls TODO: 2 line function that is only used in one place?
     {
         g_SharedData.UpdateOutbound("LoopString","Zone is -1. At world map?")
-        this.RestartAdventure( "Zone is -1. At world map?" )
+        this.RestartAdventure( "At world map?" )
     }
 	
 	RestartAdventure(reason:="")
