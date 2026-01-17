@@ -43,6 +43,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 				this.SetLastActiveWindowWhileWaitingForGameExe(timeoutVal - ElapsedTime)
             this.ActivateLastWindow()
             g_SF.Memory.OpenProcessReader()
+			g_SharedData.UpdateOutbound("IBM_ProcessSwap",true) ;Prompt the hub to update as well
             ElapsedTime:=A_TickCount - StartTime
             if(ElapsedTime < timeoutVal)
                 loadingZone:=this.WaitForGameReady(waitForReadyTimeout) ;NOTE: WaitForGameReady will turn Critical On via WaitForFinalStatUpdates
