@@ -240,17 +240,17 @@ class IC_BrivMaster_Budget_Zlib_Class ;A class for applying z-lib compression. B
 		else if(length<=114)
 			return "0010111" . this.IntToBinaryStringLSB(length-99,4)
 		else if(length<=130)
-			return "00011000" . this.IntToBinaryStringLSB(length-115,4)
+			return "11000000" . this.IntToBinaryStringLSB(length-115,4)
 		else if(length<=162)
-			return "00011001" . this.IntToBinaryStringLSB(length-131,5)
+			return "11000001" . this.IntToBinaryStringLSB(length-131,5)
 		else if(length<=194)
-			return "00011010" . this.IntToBinaryStringLSB(length-163,5)
+			return "11000010" . this.IntToBinaryStringLSB(length-163,5)
 		else if(length<=226)
-			return "00011011" . this.IntToBinaryStringLSB(length-195,5)
+			return "11000011" . this.IntToBinaryStringLSB(length-195,5)
 		else if(length<=257)
-			return "00011100" . this.IntToBinaryStringLSB(length-227,5)
+			return "11000100" . this.IntToBinaryStringLSB(length-227,5)
 		else if(length==258)
-			return "00011101"
+			return "11000101"
 	}
 
 	CalcDistanceCode(distance)
