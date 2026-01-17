@@ -419,7 +419,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 				this.CloseIC("Failed to start Idle Champions")
 				openResult:=this.OpenIC("Called from SafetyCheck() loop")
             }
-            if(this.Memory.ReadResetting() AND this.Memory.ReadCurrentZone() <= 1 AND this.Memory.ReadCurrentObjID() == "")
+            if(g_SF.Memory.ReadResetting() AND g_SF.Memory.ReadCurrentZone() <= 1 AND g_SF.Memory.ReadCurrentObjID() == "")
                 this.WorldMapRestart()
             this.RecoverFromGameClose()
             this.BadSaveTest()
@@ -489,7 +489,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
     {
 		g_SharedData.UpdateOutbound("LoopString","ServerCall: Restarting adventure")
 		g_IBM.Logger.ForceFail() ;As this can be after we've reached the zone target if the reset got stuck
-		g_IBM.Logger.AddMessage("Forced Restart (Reason:" . reason . " at:z" . this.Memory.ReadCurrentZone() . " with haste:" . this.Memory.ReadHasteStacks() . ")")
+		g_IBM.Logger.AddMessage("Forced Restart (Reason:" . reason . " at:z" . g_SF.Memory.ReadCurrentZone() . " with haste:" . g_SF.Memory.ReadHasteStacks() . ")")
 		this.CloseIC(reason)
 		g_SharedData.UpdateOutbound("LoopString","ServerCall: Checking stack conversion") ;This message would ideally be shown only momentarily, but if the server is having issues the servercall will run to timeout and this allows us to see that it is that holding the script up
 		if (g_SF.sprint!="" AND g_SF.steelbones!="")
