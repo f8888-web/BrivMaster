@@ -321,7 +321,8 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 	CloseIC(string:="",usePID:=false)
     {
 		g_SharedData.UpdateOutbound("LastCloseReason",string)
-        g_SF.ResetServerCall() ;Check that server call object is updated before closing IC in case any server calls need to be made by the script before the game restarts TODO: Consider the scenarios where this matters that might follow from this function, should just be saving stacks?
+		g_IBM.Logger.AddMessage("Closing Game" . (string ? " " . string : ""))
+		g_SF.ResetServerCall() ;Check that server call object is updated before closing IC in case any server calls need to be made by the script before the game restarts TODO: Consider the scenarios where this matters that might follow from this function, should just be saving stacks?
         if (string!="")
             string:=": " . string
         g_SharedData.UpdateOutbound("LoopString","Closing IC" . string)
