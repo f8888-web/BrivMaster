@@ -291,7 +291,7 @@ Recovery Levelling: With this option selected, if Briv does not have enough stac
 
 Smart Tatyana in Casino: When using a setup that has Melf in the M formation, this option will only level Tatyana (if also present) at the start of the run if Melf's spawn-more buff is not active. This may be beneficial because a decent level Melf (~30 spawn) is able to allow Ellywick to draw rapidly alone, and the extra champion plus load from having a full Tatyana wave active at once might not be worth it. If using this option, Tatyana's 'Start' level should be 0.
 	
-Surpress From Row: If selected champions other than Briv will not be levelled if in the front row of the M formation at the start of the run. This is useful to ensure any attacks made against the formation whilst the Casino runs are directed at Briv, and thus grant Steelbones stacks. Do not use if the other champion in the front row is needed for some reason.
+Supress Front Row: If selected champions other than Briv will not be levelled if in the front row of the M formation at the start of the run. This is useful to ensure any attacks made against the formation whilst the Casino runs are directed at Briv, and thus grant Steelbones stacks. Do not use if the other champion in the front row is needed for some reason.
 	
 Ghost Level: During the Casino, level champions that are not part of the formation so long as they will not be placed, either due to all slots being full or only slots at the front being available and the formation being under attack. This option makes it more likely all speed effects will be ready for the first normal zone. Only applied when combining, and should normally be enabled.
 	
@@ -335,9 +335,9 @@ The following provide the Author's current setup, which is an end-game farm usin
 | Hew Maan | 220 | 0 | 220  | This example has Tatyana in M, so Hew Maan cannot have a spec saved. This avoids his spec pop-up which would appear if 300 was used.
 | Tatyana | 100  | 4  | 100 | See comment on Briv.
 | Diana | 100 | 2 | 100
-| Ellywick | 200 | 4↓100 | 200 | See priority description above for the reason this is benefical, and also the comment on Briv.
+| Ellywick | 200 | 4↓100 | 200 | See priority description above for the reason this is beneficial, and also the comment on Briv.
 | Imoen | 50 | 0 | 50 | Imoen gains the ability we need at level 40, and an ability of non-trivial complexity at level 60 (Perseverance, counting Favoured Foe kills). As Imoen is not important at the start of the run, she can use modifier levelling without much impact to avoid that ability.
-| Melf | 70 | 2 | 70 | This example has Baldric in M, so MElf cannot have a spec saved. This avoids his spec pop-up which would appear if 100 was used.
+| Melf | 70 | 2 | 70 | This example has Baldric in M, so Melf cannot have a spec saved. This avoids his spec pop-up which would appear if 100 was used.
 | Baldric | 200 | 2 | 200
 		
 > Author's Note: When saving Briv Master's settings, level settings will be ignored if no champions are displayed at all. Take care if tweaking options whilst doing something else in-game, as it is a little bit too easy to overwrite your settings. Once you have things configured to your satisfaction making a backup of IC_BrivMaster_Settings.json might be sensible.
