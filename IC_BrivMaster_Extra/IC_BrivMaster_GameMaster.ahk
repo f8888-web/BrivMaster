@@ -227,6 +227,8 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
         ; wait for offline progress to finish
         g_SharedData.UpdateOutbound("LoopString","Waiting for offline progress...")
         offlineDone:=g_SF.Memory.ReadOfflineDone()
+		if(!offlineDone)
+			timeout*=2 ;Increase timeout to ensure offline progress can complete after server issues TODO: Check something else in this loop to make sure the game is actually alive?
 		while( ElapsedTime < timeout AND !offlineDone)
         {
             g_IBM.IBM_Sleep(45)
