@@ -691,8 +691,8 @@ class IC_BrivMaster_GemFarm_Class
 	{
 		gameMajor:=g_SF.Memory.ReadBaseGameVersion() ;Major version, e.g. 636.3 will return 636
 		gameMinor:=g_SF.Memory.IBM_ReadGameVersionMinor() ;If the game is 636.3, return .3, 637 will return empty as it has no minor version
-		importsMajor:=g_ImportsGameVersion64
-		importsMinor:=g_ImportsGameVersionPostFix64
+		importsMajor:=g_SF.Memory.Versions.Import_Version_Major
+		importsMinor:=g_SF.Memory.Versions.Import_Version_Minor
 		colour:="cRed" ;Default
 		if (gameMajor!="" AND importsMajor!="") ;If both major versions are populated
 		{
@@ -702,7 +702,7 @@ class IC_BrivMaster_GemFarm_Class
 				colour:="cFFA000" ;"cFFC000" Amber had insuffient contrast so darkened a bit
 		}
 		gameString:=gameMajor ? (gameMajor . (gameMinor ? gameMinor : "")) : "Unable to detect"
-		importString:=importsMajor ? (importsMajor . (importsMinor ? importsMinor : "")) : "Unable to detect"
+		importString:=importsMajor ? (importsMajor . (importsMinor ? importsMinor : "") . " " . g_SF.Memory.Versions.Import_Revision) : "Unable to detect"
 		GuiControl, IBM_GemFarm:+%colour%, IBM_GemFarm_Version_Game
 		GuiControl, IBM_GemFarm:+%colour%, IBM_GemFarm_Version_Imports
 		GuiControl, IBM_GemFarm:, IBM_GemFarm_Version_Game, % gameString
