@@ -588,7 +588,7 @@ Class IC_IriBrivMaster_Component
 		else
 			this.MemoryReadFailCount++ ;The zone read is used as the trigger to refresh memory if needed, as it's done every time and should be available outside of a few moments during reset TODO: That isn't so true during offlines (even BrivMaster's ones)
 		;Current stats - Steelbones stacks
-  		stacks:=g_SF.Memory.ReadSBStacks()
+  		stacks:=g_Heroes[58].ReadSBStacks()
         if (stacks=="") ;If the memory read isn't current
         {
             if (this.Stats.StacksSB=="")
@@ -602,7 +602,7 @@ Class IC_IriBrivMaster_Component
 			message_SB:=this.Stats.StacksSB
         }
 		;Current stats - Haste stacks
-        stacks:=g_SF.Memory.ReadHasteStacks()
+        stacks:=g_Heroes[58].ReadHasteStacks()
 		if (stacks=="") ;If the memory read isn't current
         {
             if (this.Stats.StacksHaste=="")

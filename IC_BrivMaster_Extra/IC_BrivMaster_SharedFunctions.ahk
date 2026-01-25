@@ -163,8 +163,8 @@ class IC_BrivMaster_SharedFunctions_Class
         this.UserID:=this.Memory.ReadUserID()
 		this.UserHash:=this.Memory.ReadUserHash()
 		this.InstanceID:=this.Memory.ReadInstanceID()
-        this.sprint:=this.Memory.ReadHasteStacks() ;TODO: Calling Haste 'Sprint' here is confusing; need to check throughout IC_Core if replacing it however (N.B. The reason for this naming is that the stat in the game is called 'BrivSprintStacks'). Possibly using that stat name in full would be clearer?
-        this.steelbones:=this.Memory.ReadSBStacks()
+        this.sprint:=g_Heroes[58].ReadHasteStacks() ;TODO: Calling Haste 'Sprint' here is confusing; need to check throughout IC_Core if replacing it however (N.B. The reason for this naming is that the stat in the game is called 'BrivSprintStacks'). Possibly using that stat name in full would be clearer?
+        this.steelbones:=g_Heroes[58].ReadSBStacks()
     }
 
 	;Removed saving of Servercall information to a JSON file, which never appeared to get used

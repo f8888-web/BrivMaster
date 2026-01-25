@@ -177,7 +177,7 @@ class IC_BrivMaster_GemFarm_Class
 					{
 						g_SharedData.UpdateOutbound_Increment("TotalBossesHit")
 						g_SharedData.UpdateOutbound_Increment("BossesHitThisRun")
-						if (g_IBM_Settings["IBM_Level_Recovery_Softcap"] AND !this.offRamp AND !this.failedConversionMode AND needToStack AND g_SF.Memory.ReadHasteStacks() < 50) ;Only check for recovery levelling when we hit a boss. Checks offramp as needtostack won't be updated if true
+						if (g_IBM_Settings["IBM_Level_Recovery_Softcap"] AND !this.offRamp AND !this.failedConversionMode AND needToStack AND g_Heroes[58].ReadHasteStacks() < 50) ;Only check for recovery levelling when we hit a boss. Checks offramp as needtostack won't be updated if true
 						{
 							this.failedConversionMode:=true
 							this.levelManager.SetupFailedConversion()
@@ -427,7 +427,7 @@ class IC_BrivMaster_GemFarm_Class
             }
 			if (!frontColumnLevellingAllowed) ;If not released in the loop, reset levels but don't level as we need to get on with progression
 				this.IBM_EllywickCasino_UnlockChamps(lockedFrontColumnChamps)
-			this.Logger.AddMessage("Casino{z" . g_SF.Memory.ReadCurrentZone() . " T=" . ElapsedTime . " R=" . this.EllywickCasino.Redraws . " M=" . this.RouteMaster.MelfManager.GetCurrentMelfEffect() .  " SB=" . g_SF.Memory.ReadSBStacks() . (this.EllywickCasino.StatusString ? " " . this.EllywickCasino.StatusString : "") . "}")
+			this.Logger.AddMessage("Casino{z" . g_SF.Memory.ReadCurrentZone() . " T=" . ElapsedTime . " R=" . this.EllywickCasino.Redraws . " M=" . this.RouteMaster.MelfManager.GetCurrentMelfEffect() .  " SB=" . g_Heroes[58].ReadSBStacks() . (this.EllywickCasino.StatusString ? " " . this.EllywickCasino.StatusString : "") . "}")
 		}
 		else
 		{
