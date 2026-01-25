@@ -239,7 +239,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
         {
 			if(!skipFinal)
 				this.WaitForFinalStatUpdates()
-			g_PreviousZoneStartTime:=A_TickCount
+			g_IBM.PreviousZoneStartTime:=A_TickCount
             return true
         }
         this.CloseIC("WaitForGameReady-Failed to finish in " . Floor(timeout/1000) . "s")

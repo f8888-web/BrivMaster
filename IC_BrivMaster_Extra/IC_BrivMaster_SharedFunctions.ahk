@@ -2,8 +2,6 @@
 #include %A_LineFile%\..\IC_BrivMaster_Memory.ahk
 #include %A_LineFile%\..\..\..\SharedFunctions\SH_KeyHelper.ahk ;Used for IC_BrivMaster_InputManager_Class
 
-global g_PreviousZoneStartTime ;TODO: Why is this in here? It is used by CheckifStuck - move elsewhere if that function moves. Or possibly move it anyway...at least into the class constructor
-
 class IC_BrivMaster_SharedFunctions_Class
 {
 	__new()
@@ -87,53 +85,7 @@ class IC_BrivMaster_SharedFunctions_Class
         return true
     }
 
-	;A test if stuck on current area. After 35s, toggles autoprogress every 5s. After 45s, attempts falling back up to 2 times. After 65s, restarts level.
-    CheckifStuck(isStuck:=false) ;TODO: The forced option being shoehorned into this seems out of place. Possibly due to the need to reset the static variables? Could make them farm object members instead?
-    {
-        static lastCheck:=0
-        static fallBackTries:=0
-        if (isStuck)
-        {
-            g_IBM.GameMaster.RestartAdventure("Game is stuck z[" . this.Memory.ReadCurrentZone() . "]")
-            g_IBM.GameMaster.SafetyCheck()
-            g_PreviousZoneStartTime := A_TickCount
-            lastCheck:=0
-            fallBackTries:=0
-            return true
-        }
-		dtCurrentZoneTime := Round((A_TickCount - g_PreviousZoneStartTime) / 1000, 2)
-		if (dtCurrentZoneTime <= 35) ;Irisiri - added fast exit for the standard case
-			return false
-        else if (dtCurrentZoneTime > 35 AND dtCurrentZoneTime <= 45 AND dtCurrentZoneTime - lastCheck > 5) ; first check - ensuring autoprogress enabled
-        {
-            g_IBM.RouteMaster.ToggleAutoProgress(1, true)
-            if(dtCurrentZoneTime < 40)
-                lastCheck:=dtCurrentZoneTime
-        }
-        if (dtCurrentZoneTime > 45 AND fallBackTries < 3 AND dtCurrentZoneTime - lastCheck > 15) ; second check - Fall back to previous zone and try to continue
-        {
-            ; reset memory values in case they missed an update.
-            g_IBM.GameMaster.Hwnd:=WinExist("ahk_exe " . g_IBM_Settings["IBM_Game_Exe"]) ;TODO: This can screw things up if the there is more than one process open. At least align with .PID?
-            this.Memory.OpenProcessReader()
-            this.ResetServerCall()
-            ; try a fall back
-            g_IBM.RouteMaster.FallBackFromZone()
-            g_IBM.RouteMaster.SetFormation() ;In the base script this just goes to Q, which might not be ideal, especially for feat swap
-            g_IBM.RouteMaster.ToggleAutoProgress(1, true)
-            lastCheck:=dtCurrentZoneTime
-            fallBackTries++
-        }
-        if (dtCurrentZoneTime > 65)
-        {
-            g_IBM.GameMaster.RestartAdventure("Game is stuck z[" . this.Memory.ReadCurrentZone() . "]" )
-            g_IBM.GameMaster.SafetyCheck()
-            g_PreviousZoneStartTime:=A_TickCount
-            lastCheck:=0
-            fallBackTries:=0
-            return true
-        }
-        return false
-    }
+	
 
     DoRushWait(stopProgress:=false) ;Wait for Thellora (ID=139) to activate her Rush ability. TODO: unknown what ReadRushTriggered() returns if she starts with 0 stacks or we have 0 favour (with the former being the case that might matter)
     {

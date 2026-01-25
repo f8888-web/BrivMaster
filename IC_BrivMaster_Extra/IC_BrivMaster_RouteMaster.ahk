@@ -428,7 +428,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 		else
 			g_IBM.Logger.AddMessage("BlankRestart() Exit, End@z" . returnZone . "," . generatedStacks . ",Time:" . totalTime . ",OfflineTime:" . g_SF.Memory.ReadOfflineTime() . ",Server:" . g_SF.Memory.IBM_GetWebRootFriendly())
         g_SharedData.UpdateOutbound("IBM_RunControl_StackString","Restarted at z" . returnZone . " in " . Round(totalTime/ 1000,2) . "s")
-		g_PreviousZoneStartTime := A_TickCount
+		g_IBM.PreviousZoneStartTime:= A_TickCount
     }
 
 	TestForSteelBonesStackFarming() ;Returns true if we have a failure, namely the out of stacks and need to force restart case
@@ -565,10 +565,10 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
         {
 			g_IBM.GameMaster.RestartAdventure( "Ultra took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
             g_IBM.GameMaster.SafetyCheck()
-            g_PreviousZoneStartTime:=A_TickCount
+            g_IBM.PreviousZoneStartTime:=A_TickCount
             return
         }
-        g_PreviousZoneStartTime:=A_TickCount
+        g_IBM.PreviousZoneStartTime:=A_TickCount
 		generatedStacks:=stacks - startStacks
 		g_SharedData.UpdateOutbound("IBM_RunControl_StackString","Stacking: Completed online Ultra at z" . highZone . " generating " . generatedStacks . " stacks in " . Round(ElapsedTime/ 1000,2) . "s")
 		g_IBM.Logger.AddMessage("Ultra{M=" . this.MelfManager.GetCurrentMelfEffect() . " z" . highZone . " Tar=" . targetStacks . "}," . generatedStacks . "," . ElapsedTime)
@@ -658,10 +658,10 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
             Critical Off
 			g_IBM.GameMaster.RestartAdventure( "Normal took too long (" . ROUND(ElapsedTime/1000,1) . "s)") ;TODO for both this and StackNormal() - this seems a bit extreme?
             g_IBM.GameMaster.SafetyCheck()
-            g_PreviousZoneStartTime := A_TickCount
+            g_IBM.PreviousZoneStartTime:=A_TickCount
             return
         }
-        g_PreviousZoneStartTime := A_TickCount
+        g_IBM.PreviousZoneStartTime:=A_TickCount
         runComplete:=g_SF.Memory.ReadHighestZone()>=this.targetZone ;If we'll jump from stack zone straight to reset zone things get a bit weird as the game behaves differently transitioning to the reset zone
 		if (!runComplete)
 		{
@@ -798,7 +798,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
 			g_IBM.Logger.AddMessage("Offline:" . g_SF.Memory.ReadCurrentZone() . "," . stacks . ",Time:" . A_TickCount - this.offlineSaveTime . ",Attempt:" . retryAttempt . ",OfflineTime:" . g_SF.Memory.ReadOfflineTime() . ",Server:" . g_SF.Memory.IBM_GetWebRootFriendly())
 			this.offlineSaveTime:=-1 ;Flags as not active
         }
-        g_PreviousZoneStartTime := A_TickCount
+        g_IBM.PreviousZoneStartTime:=A_TickCount
 		generatedStacks:=g_Heroes[58].ReadSBStacks() - startStacks
 		totalTime:=A_TickCount-offlineStartTime
 		if (retryAttempt > maxRetries+1) ;We're a bit screwed at this point, +1 as retryAttempt is really 'tryAttempt'
@@ -1247,7 +1247,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
     {
         g_IBM.levelManager.LevelClickDamage()
         this.StartAutoProgressSoft()
-        g_PreviousZoneStartTime:=A_TickCount
+        g_IBM.PreviousZoneStartTime:=A_TickCount
     }
 }
 
