@@ -911,7 +911,9 @@ class IC_IriBrivMaster_GUI
 			GuiControl, ICScriptHub:Text, IBM_RunControl_RestoreWindow_Toggle, Enable
 		}
 		GuiControl, ICScriptHub:Enable, IBM_RunControl_RestoreWindow_Toggle
-		GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_RestoreWindow_Status
+		GuiControlGet, activeTab, ICScriptHub:, ModronTabControl
+		if(activeTab=="Briv Master")
+			GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_RestoreWindow_Status
 	}
 
 	UpdateRunControlDisable(disableOffline) ;Offline stacking Pause/Resume
@@ -927,7 +929,9 @@ class IC_IriBrivMaster_GUI
 			GuiControl, ICScriptHub:Text, IBM_RunControl_Offline_Toggle, Pause
 		}
 		GuiControl, ICScriptHub:Enable, IBM_RunControl_Offline_Toggle
-		GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_Offline_StatusPause
+		GuiControlGet, activeTab, ICScriptHub:, ModronTabControl
+		if(activeTab=="Briv Master")
+			GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_Offline_StatusPause ;Only MoveDraw if the tab is active, to avoid weird bleed-throughh
 	}
 
 	UpdateRunControlForce(queueOffline) ;Force Queue
@@ -943,7 +947,9 @@ class IC_IriBrivMaster_GUI
 			GuiControl, ICScriptHub:Text, IBM_RunControl_Offline_Queue_Toggle, Queue
 		}
 		GuiControl, ICScriptHub:Enable, IBM_RunControl_Offline_Queue_Toggle
-		GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_Offline_StatusQueue
+		GuiControlGet, activeTab, ICScriptHub:, ModronTabControl
+		if(activeTab=="Briv Master")
+			GuiControl, ICScriptHub:MoveDraw,IBM_RunControl_Offline_StatusQueue
 	}
 
 	UpdateRunStatus(cycleString,statusString,stackString)
