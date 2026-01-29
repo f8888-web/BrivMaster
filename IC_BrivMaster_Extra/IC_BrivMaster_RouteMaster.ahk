@@ -939,7 +939,7 @@ class IC_BrivMaster_RouteMaster_Class ;A class for managing routes
         g_SharedData.UpdateOutbound("LoopString","Falling back from boss zone")
         while (!Mod(g_SF.Memory.ReadCurrentZone(), 5) AND ElapsedTime < maxLoopTime)
         {
-            this.KEY_LEFT
+            this.KEY_LEFT.KeyPress()
 			fellBack:=true
 			g_IBM.IBM_Sleep(15)
 			ElapsedTime:=A_TickCount - StartTime
