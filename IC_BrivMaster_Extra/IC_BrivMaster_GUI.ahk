@@ -610,83 +610,96 @@ class IC_IriBrivMaster_GUI
 
 	UpdateGUISettings(data)
     {
-        this.controlLock:=true ;Prevent control g-labels messing things up whilst populating. This is particularly import when one label processes multiple controls, as it can read values out of yet-to-be-populated controls and thus blank that setting
-		;Stacking Zone group
-		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Zone_Edit, % data.IBM_Offline_Stack_Zone
-		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Min_Edit, % data.IBM_Offline_Stack_Min
-		GuiControl, ICScriptHub:, IBM_OffLine_Flames_Use, % data.IBM_OffLine_Flames_Use
-		Loop, 5
-		{
-			GuiControl, ICScriptHub:, IBM_OffLine_Flames_Zone_Edit_%A_Index%, % data.IBM_OffLine_Flames_Zones[A_Index]
-		}
-		IBM_OffLine_Flames_Enable_Edit(data.IBM_OffLine_Flames_Use) ;And for the flames zone boxes
-		GuiControl, ICScriptHub:, IBM_Online_Melf_Use, % data.IBM_Online_Use_Melf
-		GuiControl, ICScriptHub:, IBM_Online_Melf_Min_Edit, % data.IBM_Online_Melf_Min
-		GuiControl, ICScriptHub:, IBM_Online_Melf_Max_Edit, % data.IBM_Online_Melf_Max
-		IBM_Online_Melf_Enable(data.IBM_Online_Use_Melf)
-		GuiControl, ICScriptHub:, IBM_Online_Ultra_Enabled, % data.IBM_Online_Ultra_Enabled
-		;Briv jumps
-		GuiControl, ICScriptHub:, IBM_Route_BrivJump_Q_Edit, % data.IBM_Route_BrivJump_Q
-		GuiControl, ICScriptHub:, IBM_Route_BrivJump_E_Edit, % data.IBM_Route_BrivJump_E
-		GuiControl, ICScriptHub:, IBM_Route_BrivJump_M_Edit, % data.IBM_Route_BrivJump_M
-		;RouteMaster tab
-		GuiControl, ICScriptHub:, IBM_Route_Combine, % data.IBM_Route_Combine
-		IBM_Combine_Enable(data.IBM_Route_Combine)
-		GuiControl, ICScriptHub:, IBM_Route_Combine_Boss_Avoidance, % data.IBM_Route_Combine_Boss_Avoidance
-		;Levelling options
-		GuiControl, ICScriptHub:, IBM_Level_Options_Input_Max, % data.IBM_LevelManager_Input_Max
-		GuiControl, ICScriptHub:, IBM_Level_Options_BrivBoost_Use, % data.IBM_LevelManager_Boost_Use
-		GuiControl, ICScriptHub:, IBM_Level_Options_BrivBoost_Multi, % data.IBM_LevelManager_Boost_Multi
-		IBM_Level_Options_BrivBoost_Enable(data.IBM_LevelManager_Boost_Use)
-		GuiControl, ICScriptHub:, IBM_Level_Options_Limit_Tatyana, % data.IBM_Level_Options_Limit_Tatyana
-		GuiControl, ICScriptHub:, IBM_Level_Options_Suppress_Front, % data.IBM_Level_Options_Suppress_Front
-		GuiControl, ICScriptHub:, IBM_Level_Options_Ghost, % data.IBM_Level_Options_Ghost
-		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Key, % data.IBM_Level_Options_Mod_Key
-		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Value, % data.IBM_Level_Options_Mod_Value
-		GuiControl, ICScriptHub:, IBM_Level_Diana_Cheese, % data.IBM_Level_Diana_Cheese
-		GuiControl, ICScriptHub:, IBM_Level_Recovery_Softcap, % data.IBM_Level_Recovery_Softcap
-		;Chests
-		this.UpdateChestSnatcherOptions(data)
+        this.controlLock:=true ;Prevent control g-labels messing things up whilst populating. This is particularly important when one label processes multiple controls, as it can read values out of yet-to-be-populated controls and thus blank that setting
+		
+		;BRIV MASTER TAB
+		
+		;Chests & Rewards
+		this.UpdateChestSnatcherOptions()
 		;Game settings
-		profile:=data.IBM_Game_Settings_Option_Profile
-		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_1, % profile==1
-		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_2, % !(profile==1)
-		this.GameSettings_Update(data)
+		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_1, % g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile==1
+		GuiControl, ICScriptHub:, IBM_Game_Settings_Profile_2, % g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile!=1
+		this.GameSettings_Update()
+		this.UpdateNonGemFarmEllySettings(g_IBM_Settings.HUB.IBM_Ellywick_NonGemFarm_Cards) ;TODO: Shouldn't need to have a global passed to it
+		
+		;BM GAME TAB
+		
+		;Game Location
+		GuiControl, ICScriptHub:, IBM_Game_Exe, % g_IBM_Settings.IBM_Game_Exe
+		GuiControl, ICScriptHub:, IBM_Game_Path, % g_IBM_Settings.IBM_Game_Path
+		GuiControl, ICScriptHub:, IBM_Game_Launch, % g_IBM_Settings.IBM_Game_Launch
+		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % g_IBM_Settings.IBM_Game_Hide_Launcher
 		;Offsets
 		GuiControl, ICScriptHub:, IBM_Offsets_Check, % g_IBM_Settings.HUB.IBM_Offsets_Check
 		GuiControl, ICScriptHub:, IBM_Offsets_Lock_Pointers, % g_IBM_Settings.HUB.IBM_Offsets_Lock_Pointers
 		;Versions
-		GuiControl, ICScriptHub:, IBM_Version_Check, % data.IBM_Version_Check
-		;Levelling
-		this.RefreshLevelRows()
+		GuiControl, ICScriptHub:, IBM_Version_Check, % g_IBM_Settings.HUB.IBM_Version_Check
+		
+		;BM ROUTE TAB
+		
+		;Combine options
+		GuiControl, ICScriptHub:, IBM_Route_Combine, % g_IBM_Settings.IBM_Route_Combine
+		IBM_Combine_Enable(g_IBM_Settings.IBM_Route_Combine)
+		GuiControl, ICScriptHub:, IBM_Route_Combine_Boss_Avoidance, % g_IBM_Settings.IBM_Route_Combine_Boss_Avoidance
+		;Route
 		this.RefreshRouteJumpBoxes()
 		this.RefreshRouteStackBoxes()
+		;Briv jumps
+		GuiControl, ICScriptHub:, IBM_Route_BrivJump_Q, % g_IBM_Settings.IBM_Route_BrivJump_Q
+		GuiControl, ICScriptHub:, IBM_Route_BrivJump_E, % g_IBM_Settings.IBM_Route_BrivJump_E
+		GuiControl, ICScriptHub:, IBM_Route_BrivJump_M, % g_IBM_Settings.IBM_Route_BrivJump_M
+		;Stacking Zone
+		GuiControl, ICScriptHub:, IBM_Offline_Stack_Zone, % g_IBM_Settings.IBM_Offline_Stack_Zone
+		GuiControl, ICScriptHub:, IBM_OffLine_Stack_Min, % g_IBM_Settings.IBM_Offline_Stack_Min
+		GuiControl, ICScriptHub:, IBM_OffLine_Flames_Use, % g_IBM_Settings.IBM_OffLine_Flames_Use
+		Loop, 5
+		{
+			GuiControl, ICScriptHub:, IBM_OffLine_Flames_Zone_Edit_%A_Index%, % g_IBM_Settings.IBM_OffLine_Flames_Zones[A_Index]
+		}
+		IBM_OffLine_Flames_Enable_Edit(g_IBM_Settings.IBM_OffLine_Flames_Use) ;And for the flames zone boxes
+		GuiControl, ICScriptHub:, IBM_Online_Melf_Use, % g_IBM_Settings.IBM_Online_Use_Melf
+		GuiControl, ICScriptHub:, IBM_Online_Melf_Min, % g_IBM_Settings.IBM_Online_Melf_Min
+		GuiControl, ICScriptHub:, IBM_Online_Melf_Max, % g_IBM_Settings.IBM_Online_Melf_Max
+		IBM_Online_Melf_Enable(g_IBM_Settings.IBM_Online_Use_Melf)
+		GuiControl, ICScriptHub:, IBM_Online_Ultra_Enabled, % g_IBM_Settings.IBM_Online_Ultra_Enabled
+		;Offline settings
+		GuiControl, ICScriptHub:, IBM_OffLine_Delay_Time, % g_IBM_Settings.IBM_OffLine_Delay_Time
+		GuiControl, ICScriptHub:, IBM_OffLine_Sleep_Time, % g_IBM_Settings.IBM_OffLine_Sleep_Time
+		GuiControl, ICScriptHub:, IBM_OffLine_Freq_Edit, % g_IBM_Settings.IBM_OffLine_Freq
+		GuiControl, ICScriptHub:, IBM_OffLine_Blank, % g_IBM_Settings.IBM_OffLine_Blank
+		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay, % g_IBM_Settings.IBM_OffLine_Blank_Relay
+		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay_Zones, % g_IBM_Settings.IBM_OffLine_Blank_Relay_Zones
+		IBM_Offline_Blank_EnableControls(g_IBM_Settings.IBM_OffLine_Blank,g_IBM_Settings.IBM_OffLine_Blank_Relay)
+		GuiControl, ICScriptHub:, IBM_OffLine_Timeout, % g_IBM_Settings.IBM_OffLine_Timeout
+		GuiControl, ICScriptHub:, IBM_Route_Offline_Restore_Window, % g_IBM_Settings.IBM_Route_Offline_Restore_Window
 		;Ellywick's Casino
 		GuiControl, ICScriptHub:, IBM_Casino_Target_Base, % g_IBM_Settings.IBM_Casino_Target_Base
 		GuiControl, ICScriptHub:, IBM_Casino_Redraws_Base, % g_IBM_Settings.IBM_Casino_Redraws_Base
 		GuiControl, ICScriptHub:, IBM_Casino_MinCards_Base, % g_IBM_Settings.IBM_Casino_MinCards_Base
 		;Window
-		GuiControl, ICScriptHub:, IBM_Window_X, % data.IBM_Window_X
-		GuiControl, ICScriptHub:, IBM_Window_Y, % data.IBM_Window_Y
-		GuiControl, ICScriptHub:, IBM_Window_Hide, % data.IBM_Window_Hide
-		GuiControl, ICScriptHub:, IBM_Window_Dark_Icon, % data.IBM_Window_Dark_Icon
-		;Offline
-		GuiControl, ICScriptHub:, IBM_OffLine_Delay_Time_Edit, % data.IBM_OffLine_Delay_Time
-		GuiControl, ICScriptHub:, IBM_OffLine_Sleep_Time_Edit, % data.IBM_OffLine_Sleep_Time
-		GuiControl, ICScriptHub:, IBM_OffLine_Freq_Edit, % data.IBM_OffLine_Freq
-		GuiControl, ICScriptHub:, IBM_OffLine_Blank, % data.IBM_OffLine_Blank
-		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay, % data.IBM_OffLine_Blank_Relay
-		GuiControl, ICScriptHub:, IBM_OffLine_Blank_Relay_Zones, % data.IBM_OffLine_Blank_Relay_Zones
-		IBM_Offline_Blank_EnableControls(data.IBM_OffLine_Blank,data.IBM_OffLine_Blank_Relay)
-		GuiControl, ICScriptHub:, IBM_OffLine_Timeout_Edit, % data.IBM_OffLine_Timeout
-		;Run control
-		GuiControl, ICScriptHub:, IBM_RunControl_RestoreWindow_Default, % data.IBM_Route_Offline_Restore_Window
-		;Game Location
-		GuiControl, ICScriptHub:, IBM_Game_Exe, % data.IBM_Game_Exe
-		GuiControl, ICScriptHub:, IBM_Game_Path, % data.IBM_Game_Path
-		GuiControl, ICScriptHub:, IBM_Game_Launch, % data.IBM_Game_Launch
-		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % data.IBM_Game_Hide_Launcher
-		this.UpdateNonGemFarmEllySettings(data.IBM_Ellywick_NonGemFarm_Cards)
+		GuiControl, ICScriptHub:, IBM_Window_X, % g_IBM_Settings.IBM_Window_X
+		GuiControl, ICScriptHub:, IBM_Window_Y, % g_IBM_Settings.IBM_Window_Y
+		GuiControl, ICScriptHub:, IBM_Window_Hide, % g_IBM_Settings.IBM_Window_Hide
+		GuiControl, ICScriptHub:, IBM_Window_Dark_Icon, % g_IBM_Settings.IBM_Window_Dark_Icon
+		
+		
+		;BM LEVELS TAB
+
+		;Levelling options
+		GuiControl, ICScriptHub:, IBM_LevelManager_Input_Max, % g_IBM_Settings.IBM_LevelManager_Input_Max
+		GuiControl, ICScriptHub:, IBM_Level_Options_BrivBoost_Use, % g_IBM_Settings.IBM_LevelManager_Boost_Use
+		GuiControl, ICScriptHub:, IBM_LevelManager_Boost_Multi, % g_IBM_Settings.IBM_LevelManager_Boost_Multi
+		IBM_Level_Options_BrivBoost_Enable(g_IBM_Settings.IBM_LevelManager_Boost_Use)
+		GuiControl, ICScriptHub:, IBM_Level_Options_Limit_Tatyana, % g_IBM_Settings.IBM_Level_Options_Limit_Tatyana
+		GuiControl, ICScriptHub:, IBM_Level_Options_Suppress_Front, % g_IBM_Settings.IBM_Level_Options_Suppress_Front
+		GuiControl, ICScriptHub:, IBM_Level_Options_Ghost, % g_IBM_Settings.IBM_Level_Options_Ghost
+		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Key, % g_IBM_Settings.IBM_Level_Options_Mod_Key
+		GuiControl, ICScriptHub:ChooseString, IBM_Level_Options_Mod_Value, % g_IBM_Settings.IBM_Level_Options_Mod_Value
+		GuiControl, ICScriptHub:, IBM_Level_Diana_Cheese, % g_IBM_Settings.IBM_Level_Diana_Cheese
+		GuiControl, ICScriptHub:, IBM_Level_Recovery_Softcap, % g_IBM_Settings.IBM_Level_Recovery_Softcap
+		;Levelling
+		this.RefreshLevelRows()
+
 		this.controlLock:=false
     }
 
