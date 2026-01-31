@@ -704,8 +704,8 @@ class IC_IriBrivMaster_GUI
 	CreateLevelRow(index)
 	{
 		global
-		Gui, ICScriptHub:Add, Text, xs+10 y+5 h20 w15 Left 0x200 Hidden vIBM_LevelRow_%index%_Seat, %seat%
-		Gui, ICScriptHub:Add, Text, x+1 h20 w90 Left 0x200 Hidden vIBM_LevelRow_%index%_Name, % data["Name"]
+		Gui, ICScriptHub:Add, Text, xs+10 y+5 h20 w15 Left 0x200 Hidden vIBM_LevelRow_%index%_Seat
+		Gui, ICScriptHub:Add, Text, x+1 h20 w90 Left 0x200 Hidden vIBM_LevelRow_%index%_Name
 		Gui, ICScriptHub:Add, Edit, +cBlack  w40 x+1 Number Limit4 Hidden vIBM_LevelRow_%index%_z1
 		Gui, ICScriptHub:Add, DropDownList, w55 x+1 Hidden AltSubmit hwndIBM_LevelRow_DLL_%index% vIBM_LevelRow_%index%_Priority, 5|4|3|2|1|0||-1|-2|-3|-4|-5|5↓100|4↓100|3↓100|2↓100|1↓100|5↓200|4↓200|3↓200|2↓200|1↓200
 		DDLindex:=IBM_LevelRow_DLL_%index%
