@@ -169,75 +169,85 @@ Class IC_IriBrivMaster_Component
 			this.CheckOffsetVersions() ;TODO: Again a timer perhaps?
     }
 
-	; Returns an object with default values for all settings.
-    GetNewSettings()
+	GetSettingsTemplate() ;_DEFAULT property allows us to seperate the object structure from the default values, as some defaults are themselves objects
     {
         settings:={}
-        settings.IBM_Offline_Stack_Zone:=500
-		settings.IBM_Offline_Stack_Min:=300
-		settings.IBM_OffLine_Flames_Use := false
-        settings.IBM_OffLine_Flames_Zones := [500,500,500,500,500]
-		settings.IBM_Route_Combine := 0
-		settings.IBM_Route_Combine_Boss_Avoidance := 1
-		settings.IBM_DailyRewardClaim_Enable := false
-        settings.IBM_LevelManager_Levels[0,58,"z1"]:=200
-        settings.IBM_LevelManager_Levels[0,58,"min"]:=200
-        settings.IBM_LevelManager_Levels[1,58,"z1"]:=200
-        settings.IBM_LevelManager_Levels[1,58,"min"]:=200
-		settings.IBM_Route_Zones_Jump:=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-		settings.IBM_Route_Zones_Stack:=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-		settings.IBM_Online_Use_Melf:=false
-		settings.IBM_Online_Melf_Min:=349
-		settings.IBM_Online_Melf_Max:=800
-		settings.IBM_Online_Ultra_Enabled:=false
-		settings.IBM_LevelManager_Input_Max:=5
-		settings.IBM_LevelManager_Boost_Use:=false
-		settings.IBM_LevelManager_Boost_Multi:=8
-		settings.IBM_Route_BrivJump_Q:=4
-		settings.IBM_Route_BrivJump_E:=0
-		settings.IBM_Route_BrivJump_M:=4
-		settings.IBM_Casino_Target_Base:=3
-		settings.IBM_Casino_Redraws_Base:=1
-		settings.IBM_Casino_MinCards_Base:=0
-		settings.IBM_OffLine_Delay_Time:=15000
-		settings.IBM_OffLine_Sleep_Time:=0
-		settings.IBM_Level_Options_Mod_Key:="Shift"
-		settings.IBM_Level_Options_Mod_Value:=10
-		settings.IBM_Route_Offline_Restore_Window:=true
-		settings.IBM_OffLine_Freq:=1
-		settings.IBM_OffLine_Blank:=0
-		settings.IBM_OffLine_Blank_Relay:=0
-		settings.IBM_OffLine_Blank_Relay_Zones:=400
-		settings.IBM_Level_Options_Limit_Tatyana:=false
-		settings.IBM_Level_Options_Suppress_Front:=true
-		settings.IBM_Level_Options_Ghost:=true
-		settings.IBM_ChestSnatcher_Options_Min_Gem:=500000
-		settings.IBM_ChestSnatcher_Options_Min_Gold:=500
-		settings.IBM_ChestSnatcher_Options_Min_Silver:=500
-		settings.IBM_ChestSnatcher_Options_Min_Buy:=250
-		settings.IBM_ChestSnatcher_Options_Open_Gold:=0 ;TODO: These were set to 0 to prevent accidents when changing from using the main script settings, in the future update to more practical defauls
-		settings.IBM_ChestSnatcher_Options_Open_Silver:=0
-		settings.IBM_Game_Settings_Option_Profile:=1
-		settings.IBM_Game_Settings_Option_Set:={1:{Name:"Profile 1",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false},2:{Name:"Profile 2",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false}}
-		settings.IBM_Game_Exe:="IdleDragons.exe"
-		settings.IBM_Game_Path:="" ;Path and Launch command are user dependant so can't have a default
-		settings.IBM_Game_Launch:=""
-		settings.IBM_Game_Hide_Launcher:=false
-		settings.IBM_OffLine_Timeout:=5
-		settings.IBM_Window_X:=0
-		settings.IBM_Window_Y:=900 ;To keep the window on-screen at 1080
-		settings.IBM_Window_Hide:=false
-		settings.IBM_Level_Diana_Cheese:=false
-		settings.IBM_Window_Dark_Icon:=false
-		settings.IBM_Allow_Modron_Buff_Off:=false ;Hidden setting - allows the script to be started without the modron core buff enabled, for those who want to use potions via saved familiars
-		settings.IBM_Ellywick_NonGemFarm_Cards:=[0,0,4,5,0,0,0,1,0,0] ;Min/Max for each card in cardID order
-		settings.IBM_Level_Recovery_Softcap:=0
-		settings.IBM_Format_Date_Display:="yyyy-MM-ddTHH:mm:ss" ;Hidden setting for date / time display
-		settings.IBM_Format_Date_File:="yyyyMMddTHHmmss" ;Hidden setting for date / time output in filenames, as : is not a valid character there
-		settings.IBM_Version_Check:=false
-		settings.IBM_Offsets_Check:=false
-		settings.IBM_Offsets_Lock_Pointers:=false
-		settings.IBM_Offsets_URL:="https://raw.githubusercontent.com/RLee-EN/BrivMaster-Imports/refs/heads/main/" ;Hidden setting to allow a different offset source to be used if wanted
+		settings.IBM_Offline_Stack_Zone["_DEFAULT"]:=500
+		settings.IBM_Offline_Stack_Min["_DEFAULT"]:=300
+		settings.IBM_OffLine_Flames_Use["_DEFAULT"]:=false
+        settings.IBM_OffLine_Flames_Zones["_DEFAULT"]:=[500,500,500,500,500]
+		settings.IBM_Route_Combine["_DEFAULT"]:=0
+		settings.IBM_Route_Combine_Boss_Avoidance["_DEFAULT"]:=1
+		settings.IBM_DailyRewardClaim_Enable["_DEFAULT"]:=false
+		settings.IBM_LevelManager_Levels["_DEFAULT",7]:={"min": 100,"prio": 0,"priolimit": "","z1": 100}
+		settings.IBM_LevelManager_Levels["_DEFAULT",58]:={"min": 200,"prio": 3,"priolimit": "","z1": 200}
+		settings.IBM_LevelManager_Levels["_DEFAULT",59]:={"min": 70,"prio": 2,"priolimit": "","z1": 70}
+		settings.IBM_LevelManager_Levels["_DEFAULT",75]:={"min": 220,"prio": 0,"priolimit": "","z1": 220}
+		settings.IBM_LevelManager_Levels["_DEFAULT",83]:={"min": 200,"prio": 4,"priolimit": 100,"z1": 200}
+		settings.IBM_LevelManager_Levels["_DEFAULT",91]:={"min": 300,"prio": 0,"priolimit": "","z1": 300}
+		settings.IBM_LevelManager_Levels["_DEFAULT",97]:={"min": 100,"prio": 4,"priolimit": 100,"z1": 100}
+		settings.IBM_LevelManager_Levels["_DEFAULT",99]:={"min": 200,"prio": 2,"priolimit": "","z1": 200}
+		settings.IBM_LevelManager_Levels["_DEFAULT",117]:={"min": 50,"prio": 0,"priolimit": "","z1": 50}
+		settings.IBM_LevelManager_Levels["_DEFAULT",139]:={"min": 1,"prio": 0,"priolimit": "","z1": 1}
+		settings.IBM_LevelManager_Levels["_DEFAULT",145]:={"min": 100,"prio": 0,"priolimit": "","z1": 100}
+		settings.IBM_LevelManager_Levels["_DEFAULT",148]:={"min": 100,"prio": 2,"priolimit": "","z1": 100}
+		settings.IBM_LevelManager_Levels["_DEFAULT",165]:={"min": 200,"prio": 2,"priolimit": "","z1": 200}
+		settings.IBM_Route_Zones_Jump["_DEFAULT"]:=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+		settings.IBM_Route_Zones_Stack["_DEFAULT"]:=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+		settings.IBM_Online_Use_Melf["_DEFAULT"]:=false
+		settings.IBM_Online_Melf_Min["_DEFAULT"]:=349
+		settings.IBM_Online_Melf_Max["_DEFAULT"]:=800
+		settings.IBM_Online_Ultra_Enabled["_DEFAULT"]:=false
+		settings.IBM_LevelManager_Input_Max["_DEFAULT"]:=5
+		settings.IBM_LevelManager_Boost_Use["_DEFAULT"]:=false
+		settings.IBM_LevelManager_Boost_Multi["_DEFAULT"]:=8
+		settings.IBM_Route_BrivJump_Q["_DEFAULT"]:=4
+		settings.IBM_Route_BrivJump_E["_DEFAULT"]:=0
+		settings.IBM_Route_BrivJump_M["_DEFAULT"]:=4
+		settings.IBM_Casino_Target_Base["_DEFAULT"]:=3
+		settings.IBM_Casino_Redraws_Base["_DEFAULT"]:=1
+		settings.IBM_Casino_MinCards_Base["_DEFAULT"]:=0
+		settings.IBM_OffLine_Delay_Time["_DEFAULT"]:=15000
+		settings.IBM_OffLine_Sleep_Time["_DEFAULT"]:=0
+		settings.IBM_Level_Options_Mod_Key["_DEFAULT"]:="Shift"
+		settings.IBM_Level_Options_Mod_Value["_DEFAULT"]:=10
+		settings.IBM_Route_Offline_Restore_Window["_DEFAULT"]:=true
+		settings.IBM_OffLine_Freq["_DEFAULT"]:=1
+		settings.IBM_OffLine_Blank["_DEFAULT"]:=0
+		settings.IBM_OffLine_Blank_Relay["_DEFAULT"]:=0
+		settings.IBM_OffLine_Blank_Relay_Zones["_DEFAULT"]:=400
+		settings.IBM_Level_Options_Limit_Tatyana["_DEFAULT"]:=false
+		settings.IBM_Level_Options_Suppress_Front["_DEFAULT"]:=true
+		settings.IBM_Level_Options_Ghost["_DEFAULT"]:=true
+		settings.IBM_Level_Recovery_Softcap["_DEFAULT"]:=0
+		settings.IBM_Format_Date_Display["_DEFAULT"]:="yyyy-MM-ddTHH:mm:ss" ;Hidden setting for date / time display
+		settings.IBM_Format_Date_File["_DEFAULT"]:="yyyyMMddTHHmmss" ;Hidden setting for date / time output in filenames, as : is not a valid character there
+		settings.IBM_Game_Exe["_DEFAULT"]:="IdleDragons.exe"
+		settings.IBM_Game_Path["_DEFAULT"]:="" ;Path and Launch command are user dependant so can't have a default
+		settings.IBM_Game_Launch["_DEFAULT"]:=""
+		settings.IBM_Game_Hide_Launcher["_DEFAULT"]:=false
+		settings.IBM_OffLine_Timeout["_DEFAULT"]:=5
+		settings.IBM_Window_X["_DEFAULT"]:=0
+		settings.IBM_Window_Y["_DEFAULT"]:=900 ;To keep the window on-screen at 1080
+		settings.IBM_Window_Hide["_DEFAULT"]:=false
+		settings.IBM_Level_Diana_Cheese["_DEFAULT"]:=false
+		settings.IBM_Window_Dark_Icon["_DEFAULT"]:=false
+		settings.IBM_Allow_Modron_Buff_Off["_DEFAULT"]:=false ;Hidden setting - allows the script to be started without the modron core buff enabled, for those who want to use potions via saved familiars
+		settings.HUB:={} ;Separate hub-only settings
+		settings.HUB.IBM_ChestSnatcher_Options_Min_Gem["_DEFAULT"]:=500000
+		settings.HUB.IBM_ChestSnatcher_Options_Min_Gold["_DEFAULT"]:=500
+		settings.HUB.IBM_ChestSnatcher_Options_Min_Silver["_DEFAULT"]:=500
+		settings.HUB.IBM_ChestSnatcher_Options_Min_Buy["_DEFAULT"]:=250
+		settings.HUB.IBM_ChestSnatcher_Options_Open_Gold["_DEFAULT"]:=0
+		settings.HUB.IBM_ChestSnatcher_Options_Open_Silver["_DEFAULT"]:=0
+		settings.HUB.IBM_Game_Settings_Option_Profile["_DEFAULT"]:=1
+		settings.HUB.IBM_Game_Settings_Option_Set[1,"_DEFAULT"]:={Name:"Profile 1",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false}
+		settings.HUB.IBM_Game_Settings_Option_Set[2,"_DEFAULT"]:={Name:"Profile 2",Framerate:600,Particles:0,HRes:1920,VRes:1080,Fullscreen:false,CapFPSinBG:false,SaveFeats:false,ConsolePortraits:false,NarrowHero:true,AllHero:true,Swap25100:false}
+		settings.HUB.IBM_Ellywick_NonGemFarm_Cards["_DEFAULT"]:=[0,0,4,5,0,0,0,1,0,0] ;Min/Max for each card in cardID order
+		settings.HUB.IBM_Version_Check["_DEFAULT"]:=false
+		settings.HUB.IBM_Offsets_Check["_DEFAULT"]:=false
+		settings.HUB.IBM_Offsets_Lock_Pointers["_DEFAULT"]:=false
+		settings.HUB.IBM_Offsets_URL["_DEFAULT"]:="https://raw.githubusercontent.com/RLee-EN/BrivMaster-Imports/refs/heads/main/" ;Hidden setting to allow a different offset source to be used if wanted
         return settings
     }
 
@@ -684,7 +694,7 @@ Class IC_IriBrivMaster_Component
 	{
 		if (IBMName=="Swap25100") ;Special case for the hotkey swap
 		{
-			if (this.settings.IBM_Game_Settings_Option_Set[this.settings.IBM_Game_Settings_Option_Profile,IBMName]) ;If not using this option we don't care what the user has set them to, so only check in this case
+			if (g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile,IBMName]) ;If not using this option we don't care what the user has set them to, so only check in this case
 			{
 				level25:=gameSettings[CNEName,"hero_level_25"] ;This should be a single-element array ["LeftControl"]
 				if !(level25.Count()==1 AND level25[1]=="LeftControl")
@@ -1294,7 +1304,7 @@ Class IC_IriBrivMaster_Component
 			}
 		}
 		GuiControl, ICScriptHub:, IBM_Offsets_Text_Platform, % "Platform: " . this.GetPlatform(platformID)
-		remoteURL:=this.settings.IBM_Offsets_URL . "IC_Offsets_Header_P" . platformID . ".csv"
+		remoteURL:=g_IBM_Settings.HUB.IBM_Offsets_URL . "IC_Offsets_Header_P" . platformID . ".csv"
 		this.BasicServerCaller:=new SH_ServerCalls() ;For basic server calls when version checking only - we won't be attached to the farm script / game at start up
 		offsetHeader:=this.BasicServerCaller.BasicServerCall(remoteURL) ;CSV: Import version, import revision, pointer version, pointer revision
 		splitCSV:=StrSplit(offsetHeader,",")
@@ -1351,7 +1361,7 @@ Class IC_IriBrivMaster_Component
 			}
 		}
 		GuiControl, ICScriptHub:, IBM_Offsets_Text_Platform, % "Platform: " . this.GetPlatform(platformID)
-		remoteURL:=this.settings.IBM_Offsets_URL . "IC_Offsets_Header_P" . platformID . ".csv"
+		remoteURL:=g_IBM_Settings.HUB.IBM_Offsets_URL . "IC_Offsets_Header_P" . platformID . ".csv"
 		this.BasicServerCaller:=new SH_ServerCalls() ;For basic server calls when version checking only - we won't be attached to the farm script / game at start up
 		offsetHeader:=this.BasicServerCaller.BasicServerCall(remoteURL) ;CSV: Import version, import revision, pointer version, pointer revision
 		splitCSV:=StrSplit(offsetHeader,",")
@@ -1372,12 +1382,12 @@ Class IC_IriBrivMaster_Component
 			GuiControl, ICScriptHub:, IBM_Offsets_Text_Imports_GitHub, % "GitHub: " . splitCSV[1] . " " . splitCSV[2]
 			GuiControl, ICScriptHub:+%colour%, IBM_Offsets_Text_Imports_GitHub%index%
 			prompt:="Confirm download of the following:"
-			prompt.=this.settings.IBM_Offsets_Lock_Pointers ? "`nPointers preserved" : "`nPointers: " . splitCSV[3] . " " . splitCSV[4]
+			prompt.=g_IBM_Settings.HUB.IBM_Offsets_Lock_Pointers ? "`nPointers preserved" : "`nPointers: " . splitCSV[3] . " " . splitCSV[4]
 			prompt.="`nImports: " . splitCSV[1] . " " . splitCSV[2]
 			Msgbox 36, Briv Master, %prompt% ;32 is question, 4 is Yes/No
 			ifMsgBox Yes
 			{
-				remoteURL:=this.settings.IBM_Offsets_URL . "IC_Offsets_Data_P" . platformID . ".zlib"
+				remoteURL:=g_IBM_Settings.HUB.IBM_Offsets_URL . "IC_Offsets_Data_P" . platformID . ".zlib"
 				offsetZlib:=this.BasicServerCaller.BasicServerCall(remoteURL)
 				if(offsetZlib)
 				{
@@ -1397,7 +1407,7 @@ Class IC_IriBrivMaster_Component
 						FileAppend, %importString%, %dataPath%
 					}
 					dataPath:=scriptDir . "\Offsets\IC_Offsets.json"
-					if(this.settings.IBM_Offsets_Lock_Pointers) ;In this case we have to load the existing pointer file, update the import versions, and re-output
+					if(g_IBM_Settings.HUB.IBM_Offsets_Lock_Pointers) ;In this case we have to load the existing pointer file, update the import versions, and re-output
 					{
 						FileRead, existingJSON, %dataPath%
 						existingData:=AHK_JSON.Load(existingJSON)
