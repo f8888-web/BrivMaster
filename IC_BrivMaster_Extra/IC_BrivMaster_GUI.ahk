@@ -1485,7 +1485,7 @@ IBM_Online_Melf_Enable(enableControl)
 
 IBM_Route_Import_Button()
 {
-	InputBox routeString, Route Export,,,,100,,,,,
+	InputBox routeString, Route Import,,,,100,,,,, ;InputBox, OutputVar , Title, Prompt, Hide, Width, Height, X, Y, Locale, Timeout, Default
 	g_IriBrivMaster.ParseRouteImportString(routeString)
 }
 
