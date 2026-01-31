@@ -1275,7 +1275,7 @@ Class IC_IriBrivMaster_Component
 		currentImports:=g_SF.Memory.GetImportsVersion()
 		comparison:=this.VersionComparison(gameVersion,currentImports)
 		if(comparison.GT)
-			colour:="cRed"
+			colour:=this.GetThemeTextColour("WarningTextColor")
 		else
 			colour:=this.GetThemeTextColour()
 		GuiControl, ICScriptHub:, IBM_Offsets_Text_Imports_Current,% "Current: " . currentImports
@@ -1302,14 +1302,14 @@ Class IC_IriBrivMaster_Component
 		{
 			comparison:=this.VersionComparison(splitCSV[3],currentPointers)
 			if(comparison.GT)
-				colour:="cRed"
+				colour:=this.GetThemeTextColour("WarningTextColor")
 			else
 				colour:=this.GetThemeTextColour()
 			GuiControl, ICScriptHub:+%colour%, IBM_Offsets_Text_Pointers_GitHub%index%
 			GuiControl, ICScriptHub:, IBM_Offsets_Text_Pointers_GitHub, % "GitHub: " . splitCSV[3] . " " . splitCSV[4]
 			comparison:=this.VersionComparison(splitCSV[1],currentImports)
 			if(comparison.GT)
-				colour:="cRed"
+				colour:=this.GetThemeTextColour("WarningTextColor")
 			else
 				colour:=this.GetThemeTextColour()
 			GuiControl, ICScriptHub:+%colour%, IBM_Offsets_Text_Imports_GitHub%index%
@@ -1332,7 +1332,7 @@ Class IC_IriBrivMaster_Component
 		currentImports:=g_SF.Memory.GetImportsVersion()
 		comparison:=this.VersionComparison(gameVersion,currentImports)
 		if(comparison.GT)
-			colour:="cRed"
+			colour:=this.GetThemeTextColour("WarningTextColor")
 		else
 			colour:=this.GetThemeTextColour()
 		GuiControl, ICScriptHub:, IBM_Offsets_Text_Imports_Current,% "Current: " . currentImports
@@ -1359,14 +1359,14 @@ Class IC_IriBrivMaster_Component
 		{
 			comparison:=this.VersionComparison(splitCSV[3],currentPointers)
 			if(comparison.GT)
-				colour:="cRed"
+				colour:=this.GetThemeTextColour("WarningTextColor")
 			else
 				colour:=this.GetThemeTextColour()
 			GuiControl, ICScriptHub:, IBM_Offsets_Text_Pointers_GitHub, % "GitHub: " . splitCSV[3] . " " . splitCSV[4]
 			GuiControl, ICScriptHub:+%colour%, IBM_Offsets_Text_Pointers_GitHub%index%
 			comparison:=this.VersionComparison(splitCSV[1],currentImports)
 			if(comparison.GT)
-				colour:="cRed"
+				colour:=this.GetThemeTextColour("WarningTextColor")
 			else
 				colour:=this.GetThemeTextColour()
 			GuiControl, ICScriptHub:, IBM_Offsets_Text_Imports_GitHub, % "GitHub: " . splitCSV[1] . " " . splitCSV[2]
