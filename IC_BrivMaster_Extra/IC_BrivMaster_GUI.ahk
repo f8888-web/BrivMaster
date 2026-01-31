@@ -1196,11 +1196,13 @@ IBM_MainButtons_Start() {
     g_IriBrivMaster.Run_Clicked()
 }
 
-IBM_MainButtons_Stop() {
+IBM_MainButtons_Stop()
+{
     g_IriBrivMaster.Stop_Clicked()
 }
 
-IBM_MainButtons_Connect() {
+IBM_MainButtons_Connect()
+{
     g_IriBrivMaster.Connect_Clicked()
 }
 
