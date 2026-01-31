@@ -1204,10 +1204,10 @@ IBM_OffLine_Timeout_Edit()
 
 IBM_Launch_Override() ;To allow us to use IBM game location settings TODO: The game launch routine should probably not be in the GUI file. Also duplication with farm script side
 {
-	programLoc:=g_IriBrivMaster.settings.IBM_Game_Launch
+	programLoc:=g_IBM_Settings.IBM_Game_Launch
     try
     {
-		if (g_IriBrivMaster.settings.IBM_Game_Hide_Launcher)
+		if (g_IBM_Settings.IBM_Game_Hide_Launcher)
 			Run, %programLoc%,,Hide, openPID
 		else
 			Run, %programLoc%,,,openPID
@@ -1216,11 +1216,11 @@ IBM_Launch_Override() ;To allow us to use IBM game location settings TODO: The g
     {
         MsgBox, 48, % "Unable to launch game, `nVerify the game location is set properly in the Briv Master settings. If you do not wish to use Briv Master's location settings please disable the addon"
     }
-	if (g_SF.GetProcessName(openPID)==g_IriBrivMaster.settings.IBM_Game_Exe) ;If we launch the game .exe directly (e.g. Steam) the Run PID will be the game, but for things like EGS it will not so we need to find it
+	if (g_SF.GetProcessName(openPID)==g_IBM_Settings.IBM_Game_Exe) ;If we launch the game .exe directly (e.g. Steam) the Run PID will be the game, but for things like EGS it will not so we need to find it
 		g_SF.PID:=openPID
     else
 	{
-		Process, Exist, % g_IriBrivMaster.settings.IBM_Game_Exe
+		Process, Exist, % g_IBM_Settings.IBM_Game_Exe
 		g_SF.PID:=ErrorLevel
 	}
 	Process, Priority, % g_SF.PID, Realtime ;Raises IC's priority
@@ -1292,7 +1292,7 @@ IBM_Game_Settings_Profile()
 {
 	GuiControlGet, value,, IBM_Game_Settings_Profile_1
 	profile:=value ? 1 : 2
-	g_IriBrivMaster.UpdateSetting("IBM_Game_Settings_Option_Profile",profile)
+	g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile:=profile
 	g_IriBrivMaster.GameSettingsCheck()
 }
 
@@ -1330,12 +1330,12 @@ IBM_Game_Settings_Option_Change() ;This just updates everything, since we should
 	loop 2 ;Two profiles
 	{
 		profileIndex:=A_Index
-		for setting,_ in g_IriBrivMaster.settings.IBM_Game_Settings_Option_Set[profileIndex]
+		for setting,_ in g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profileIndex]
 		{
 			GuiControlGet, value,, IBM_Game_Settings_Option_%setting%_%profileIndex%
 			if value is integer ;Mixed types between the name (string) and values (int/bool)
 				value:=value+0
-			g_IriBrivMaster.settings.IBM_Game_Settings_Option_Set[profileIndex,setting]:=value
+			g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profileIndex,setting]:=value
 		}
 	}
 }
@@ -1365,7 +1365,7 @@ IBM_ChestsSnatcher_Options()
 	}
 	else
 	{
-		g_IriBrivMaster_GUI.UpdateChestSnatcherOptions(g_IriBrivMaster.settings) ;TODO: Get this neater access to the settings?
+		g_IriBrivMaster_GUI.UpdateChestSnatcherOptions()
 		GuiControlGet, StatusList, Hwnd, IBM_ChestsSnatcher_Status
 		WinGetPos, StatusListX, StatusListY,StatusListW,StatusListH, % "ahk_id " . StatusList
 		targetX:=StatusListX+StatusListW//2
@@ -1379,23 +1379,23 @@ IBM_ChestSnatcher_Options_OK_Button() ;Applies all the the ChestSnatcher options
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Buy
 	if (value>g_IriBrivMaster.CONSTANT_serverRateBuy) ;Can't buy more than 250 chests at a time
 		value:=g_IriBrivMaster.CONSTANT_serverRateBuy
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Buy",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Buy:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Gold
 	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
 		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Gold",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Open_Gold:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Open_Silver
 	if (value > g_IriBrivMaster.CONSTANT_serverRateOpen) ;Can't open more than 1000 at a time
 		value:=g_IriBrivMaster.CONSTANT_serverRateOpen
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Open_Silver",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Open_Silver:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gem
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gem",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Gem:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Gold
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Gold",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Gold:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Min_Silver
-	g_IriBrivMaster.UpdateSetting("IBM_ChestSnatcher_Options_Min_Silver",value)
+	g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Silver:=value
 	GuiControlGet, value,, IBM_ChestSnatcher_Options_Claim
-	g_IriBrivMaster.UpdateSetting("IBM_DailyRewardClaim_Enable",value)
+	g_IBM_Settings.HUB.IBM_DailyRewardClaim_Enable:=value
 	Gui, IBM_ChestSnatcher_Options:Hide
 }
 
