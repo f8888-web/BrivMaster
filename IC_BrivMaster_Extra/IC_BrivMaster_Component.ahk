@@ -1267,11 +1267,10 @@ Class IC_IriBrivMaster_Component
 			if(RegExMatch(webRoot,"ps\d+[^/]+",match))
 				return match
 			else
-				return "Invalid URL"
+				return "Invalid URL. Servercall fallback: " . g_ServerCall.webRoot
 		}
 		else
-			webRoot:="Invalid memory read"
-		return webRoot
+			return "Invalid memory read. Servercall fallback: " . g_ServerCall.webRoot
 	}
 
 	CheckOffsetVersions()
