@@ -1536,7 +1536,6 @@ IBM_Route_Combine()
 	GuiControlGet, value,, IBM_Route_Combine
 	g_IriBrivMaster.UpdateSetting("IBM_Route_Combine",value)
 	IBM_Combine_Enable(value)
-	g_IriBrivMaster_GUI.RefreshLevelRows() ;As we save separately for combine / no combine
 }
 
 IBM_Combine_Enable(enableControl)
