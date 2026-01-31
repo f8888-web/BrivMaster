@@ -863,7 +863,7 @@ class IC_IriBrivMaster_GUI
 	LoadCurrentLevels() ;Loads currently saved levels into the main level data set
 	{
 		;Levels are saved per stategy, then by champ ID
-		savedLevels:=g_IriBrivMaster.Settings["IBM_LevelManager_Levels",g_IriBrivMaster.Settings["IBM_Route_Combine"]]
+		savedLevels:=g_IBM_Settings["IBM_LevelManager_Levels"]
 		for seat, seatMembers in this.levelDataSet
 		{
 			for champID, champData in seatMembers
@@ -1068,8 +1068,7 @@ IBM_LevelRow_Feats_Set()
 		{
 			if(champData["ListIndex"]==row1)
 			{
-				g_IriBrivMaster.UpdateLevelSettings(g_IriBrivMaster_GUI.GetLevelRowData()) ;Makes sure new champions are in the data set before we attempt to make changes
-				savedLevels:=g_IriBrivMaster.Settings["IBM_LevelManager_Levels",g_IriBrivMaster.Settings["IBM_Route_Combine"]]
+				g_IBM_Settings.IBM_LevelManager_Levels:=g_IriBrivMaster_GUI.GetLevelRowData() ;Makes sure new champions are in the data set before we attempt to make changes
 				HERO_FEATS:=g_SF.Memory.GameManager.game.gameInstances[0].Controller.userData.FeatHandler.heroFeatSlots[champID].List
 				size:=HERO_FEATS.size.Read()
 				currentFeats:={}
@@ -1155,8 +1154,8 @@ IBM_LevelRow_Feats_Clear()
 		{
 			if(champData["ListIndex"]==row1)
 			{
-				g_IriBrivMaster.UpdateLevelSettings(g_IriBrivMaster_GUI.GetLevelRowData()) ;Makes sure new champions are in the data set before we attempt to make changes
-				savedLevels:=g_IriBrivMaster.Settings["IBM_LevelManager_Levels",g_IriBrivMaster.Settings["IBM_Route_Combine"]]
+				g_IBM_Settings.IBM_LevelManager_Levels:=g_IriBrivMaster_GUI.GetLevelRowData() ;Makes sure new champions are in the data set before we attempt to make changes
+				savedLevels:=g_IBM_Settings["IBM_LevelManager_Levels"]
 				savedLevels[champID,"Feat_List"]:=""
 				savedLevels[champID,"Feat_Exclusive"]:=false
 			}

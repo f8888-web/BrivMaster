@@ -143,10 +143,10 @@ Class IC_IriBrivMaster_Component
 		this.GemFarmGUID:=g_SF.LoadObjectFromAHKJSON(A_LineFile . "\..\LastGUID_IBM_GemFarm.json")
         g_Heroes:=new IC_BrivMaster_Heroes_Class()
 		this.LoadSettings()
-		g_IBM_Settings:=this.settings ;TODO: This is a hack to make the settings global available via the hub, needed due to the override of g_SF.Memory.OpenProcessReader()
 		g_SF:=New IC_BrivMaster_SharedFunctions_Class ;Overwrite with IBM class entirely
 		g_IriBrivMaster_GUI.Init() ;Must follow IBM memory manager being set up in g_SF
-		g_IriBrivMaster_GUI.UpdateGUISettings(this.settings) ;TODO: Given we're loading settings before displaying the UI now, they should just be applied via Init() to avoid setting defaults and immediately overwriting them?
+		g_IriBrivMaster_GUI.UpdateGUISettings(g_IBM_Settings) ;TODO: Given we're loading settings before displaying the UI now, they should just be applied via Init() to avoid setting defaults and immediately overwriting them?
+		this.ChestSnatcher:=New IC_IriBrivMaster_ChestSnatcher_Class()
 		this.ResetStats() ;Before we initiate the timers
 		g_IriBrivMaster_StartFunctions.Push(ObjBindMethod(this, "Start"))
         g_IriBrivMaster_StopFunctions.Push(ObjBindMethod(this, "Stop"))
@@ -164,9 +164,9 @@ Class IC_IriBrivMaster_Component
 		this.Chests.OpenedGold:=0
 		this.Chests.OpenedSilver:=0
 		this.Chests.OpenedGold:=0
-		if(this.settings.IBM_Version_Check)
+		if(g_IBM_Settings.HUB.IBM_Version_Check)
 			this.RunVersionCheck() ;TODO: It might make sense to delay this via a timer?
-		if(this.settings.IBM_Offsets_Check)
+		if(g_IBM_Settings.HUB.IBM_Offsets_Check)
 			this.CheckOffsetVersions() ;TODO: Again a timer perhaps?
     }
 
@@ -244,14 +244,9 @@ Class IC_IriBrivMaster_Component
 
 	SaveSettings()
     {
-        settings:=this.Settings
-        IC_BrivMaster_SharedFunctions_Class.WriteObjectToAHKJSON(IC_BrivMaster_SharedData_Class.SettingsPath, settings)
-        ; Apply settings to BrivGemFarm
+        IC_BrivMaster_SharedFunctions_Class.WriteObjectToAHKJSON(IC_BrivMaster_SharedData_Class.SettingsPath, g_IBM_Settings)
 		if (ComObjType(this.SharedRunData,"IID") or this.RefreshComObject())
-		{
-			this.SharedRunData.UpdateSettingsFromFile()
-		}
-		g_IBM_Settings:=this.settings ;TODO: This is a hack to make the g_BrivUserSettingsFromAddons values available via the hub, needed due to the override of g_SF.Memory.OpenProcessReader()
+			this.SharedRunData.UpdateSettingsFromFile() ;Apply settings to the farm script
 		this.LEGACY_UpdateStatus("Settings saved")
     }
 
@@ -644,7 +639,7 @@ Class IC_IriBrivMaster_Component
 			if (!this.GameSettingFileLocation) ;We tried and we failed
 				return
 		}
-		profile:=this.settings.IBM_Game_Settings_Option_Profile
+		profile:=g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile
 		gameSettings:=g_SF.LoadObjectFromAHKJSON(this.GameSettingFileLocation,true)
 		changeCount:=0
 		this.SettingCheck(gameSettings,"TargetFramerate","Framerate",false,changeCount,change) ;TODO: Just use the CNE names for all the simple ones and loop this?!
@@ -666,23 +661,23 @@ Class IC_IriBrivMaster_Component
 				if (this.IsGameClosed())
 				{
 					g_SF.WriteObjectToAHKJSON(this.GameSettingFileLocation,gameSettings,true)
-					g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . this.settings.IBM_Game_Settings_Option_Set[profile,"Name"] . " aligned with " . (changeCount==1 ? "1 change" : changeCount . " changes"),"cGreen")
+					g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profile,"Name"] . " aligned with " . (changeCount==1 ? "1 change" : changeCount . " changes"),"cGreen")
 				}
 				else
 				{
 					MsgBox,48,Briv Master,Game settings cannot be changed whilst Idle Champions is running
-					g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . this.settings.IBM_Game_Settings_Option_Set[profile,"Name"] . " have " . changeCount . (changeCount==1 ? " difference" : " differences"),"cFFC000")
+					g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profile,"Name"] . " have " . changeCount . (changeCount==1 ? " difference" : " differences"),"cFFC000")
 				}
 
 			}
 			else
 			{
-				g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . this.settings.IBM_Game_Settings_Option_Set[profile,"Name"] . " have " . changeCount . (changeCount==1 ? " difference" : " differences"),"cFFC000")
+				g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profile,"Name"] . " have " . changeCount . (changeCount==1 ? " difference" : " differences"),"cFFC000")
 			}
 		}
 		else
 		{
-			g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . this.settings.IBM_Game_Settings_Option_Set[profile,"Name"] . " match","cGreen")
+			g_IriBrivMaster_GUI.GameSettings_Status(checkTime . " IC and " . g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[profile,"Name"] . " match","cGreen")
 		}
 	}
 
@@ -710,9 +705,9 @@ Class IC_IriBrivMaster_Component
 			return
 		}
 		if (isBoolean)
-			targetValue:=this.settings.IBM_Game_Settings_Option_Set[this.settings.IBM_Game_Settings_Option_Profile,IBMName]==1 ? "true" : "false"
+			targetValue:=g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile,IBMName]==1 ? "true" : "false"
 		else
-			targetValue:=this.settings.IBM_Game_Settings_Option_Set[this.settings.IBM_Game_Settings_Option_Profile,IBMName]
+			targetValue:=g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set[g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile,IBMName]
 		if gameSettings[CNEName]!=targetValue
 		{
 			changeCount++
@@ -733,7 +728,7 @@ Class IC_IriBrivMaster_Component
 
 	GetSettingsFileLocation(checkTime)
 	{
-		settingsFileLoc:=this.settings.IBM_Game_Path . "IdleDragons_Data\StreamingAssets\localSettings.json"
+		settingsFileLoc:=g_IBM_Settings.IBM_Game_Path . "IdleDragons_Data\StreamingAssets\localSettings.json"
 		if (FileExist(settingsFileLoc))
 		{
 			this.GameSettingFileLocation:=settingsFileLoc
@@ -928,7 +923,7 @@ Class IC_IriBrivMaster_Component
 
 	RefreshUserData()
     {
-        if(WinExist("ahk_exe " . this.settings.IBM_Game_Exe)) ; only update server when the game is open
+        if(WinExist("ahk_exe " . g_IBM_Settings.IBM_Game_Exe)) ; only update server when the game is open
         {
             g_SF.Memory.OpenProcessReader()
             g_SF.ResetServerCall()
@@ -1001,24 +996,24 @@ Class IC_IriBrivMaster_Component
 		RegExMatch(routeString,"{([A-Za-z0-9-_]+),.*}",routeMatches)
 		if (strlen(routeMatches1)>0)
 		{
-			this.settings.IBM_Route_Zones_Jump:=this.ConvertBase64ToBinaryArray(routeMatches1)
-			while (this.settings.IBM_Route_Zones_Jump.Length() > 50) ;The input will represent a multiple of 6 bits
-				this.settings.IBM_Route_Zones_Jump.Pop()
+			g_IBM_Settings.IBM_Route_Zones_Jump:=this.ConvertBase64ToBinaryArray(routeMatches1)
+			while (g_IBM_Settings.IBM_Route_Zones_Jump.Length() > 50) ;The input will represent a multiple of 6 bits
+				g_IBM_Settings.IBM_Route_Zones_Jump.Pop()
 			g_IriBrivMaster_GUI.RefreshRouteJumpBoxes()
 		}
 		RegExMatch(routeString,"{.*,([A-Za-z0-9-_]+)}",routeMatches)
 		if (strlen(routeMatches1)>0)
 		{
-			this.settings.IBM_Route_Zones_Stack:=this.ConvertBase64ToBinaryArray(routeMatches1)
-			while (this.settings.IBM_Route_Zones_Stack.Length() > 50) ;The input will represent a multiple of 6 bits
-				this.settings.IBM_Route_Zones_Stack.Pop()
+			g_IBM_Settings.IBM_Route_Zones_Stack:=this.ConvertBase64ToBinaryArray(routeMatches1)
+			while (g_IBM_Settings.IBM_Route_Zones_Stack.Length() > 50) ;The input will represent a multiple of 6 bits
+				g_IBM_Settings.IBM_Route_Zones_Stack.Pop()
 			g_IriBrivMaster_GUI.RefreshRouteStackBoxes()
 		}
 	}
 
 	GetRouteExportString()
 	{
-		return "{" . this.ConvertBinaryArrayToBase64(this.settings.IBM_Route_Zones_Jump) . "," . this.ConvertBinaryArrayToBase64(this.settings.IBM_Route_Zones_Stack) . "}"
+		return "{" . this.ConvertBinaryArrayToBase64(g_IBM_Settings.IBM_Route_Zones_Jump) . "," . this.ConvertBinaryArrayToBase64(g_IBM_Settings.IBM_Route_Zones_Stack) . "}"
 	}
 
 	ConvertBinaryArrayToBase64(value) ;Converts an array of 0/1 values to base 64. Note this is NOT proper base64url as we've no interest in making it byte compatible. As we have 50 values we'd be 22bits over
@@ -1129,57 +1124,122 @@ Class IC_IriBrivMaster_Component
 
 	LoadSettings()
     {
-        needSave := false
-        default := this.GetNewSettings()
-        this.Settings := settings := IC_BrivMaster_SharedFunctions_Class.LoadObjectFromAHKJSON(IC_BrivMaster_SharedData_Class.SettingsPath) ;Cannot use the instance as it might not be set up yet - it needs the exe location from these settings to set up .Memory
-        if (!IsObject(settings))
+        needSave:=false
+        template:=this.GetSettingsTemplate() ;Needs in all cases, either to create in full, or for key checks
+		g_IBM_Settings:=IC_BrivMaster_SharedFunctions_Class.LoadObjectFromAHKJSON(IC_BrivMaster_SharedData_Class.SettingsPath) ;Cannot use the instance as it might not be set up yet - it needs the exe name from these settings to set up .Memory
+        if (!IsObject(g_IBM_Settings)) ;If no settings are read in create a new default set
         {
-            this.Settings := settings := default
-            needSave := true
+			g_IBM_Settings:=this.CreateDefaultSettingsFromTemplate(template)
+            needSave:=true
         }
         else
         {
-            ; Delete extra settings
-            for k, v in settings
-            {
-                if (!default.HasKey(k))
-                {
-                    settings.Delete(k)
-                    needSave := true
-                }
-            }
-            ; Add missing settings
-            for k, v in default
-            {
-                if (!settings.HasKey(k) || settings[k] == "")
-                {
-                    settings[k] := default[k]
-                    needSave := true
-                }
-            }
+        	;MIGRATION STUFF, added for 0.3.3 for Feb26 release - consider removing after a while
+			if(!g_IBM_Settings.HasKey("HUB"))
+			{
+				g_IBM_Settings.HUB:={} ;Create HUB sub-object and copy over existing settings - they will be removed by the usual extra setting checking
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Gem:=g_IBM_Settings.IBM_ChestSnatcher_Options_Min_Gem
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Gold:=g_IBM_Settings.IBM_ChestSnatcher_Options_Min_Gold
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Silver:=g_IBM_Settings.IBM_ChestSnatcher_Options_Min_Silver
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Min_Buy:=g_IBM_Settings.IBM_ChestSnatcher_Options_Min_Buy
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Open_Gold:=g_IBM_Settings.IBM_ChestSnatcher_Options_Open_Gold
+				g_IBM_Settings.HUB.IBM_ChestSnatcher_Options_Open_Silver:=g_IBM_Settings.IBM_ChestSnatcher_Options_Open_Silver
+				g_IBM_Settings.HUB.IBM_Game_Settings_Option_Profile:=g_IBM_Settings.IBM_Game_Settings_Option_Profile
+				g_IBM_Settings.HUB.IBM_Game_Settings_Option_Set:=g_IBM_Settings.IBM_Game_Settings_Option_Set
+				g_IBM_Settings.HUB.IBM_Ellywick_NonGemFarm_Cards:=g_IBM_Settings.IBM_Ellywick_NonGemFarm_Cards
+				g_IBM_Settings.HUB.IBM_Version_Check:=g_IBM_Settings.IBM_Version_Check
+				g_IBM_Settings.HUB.IBM_Offsets_Check:=g_IBM_Settings.IBM_Offsets_Check
+				g_IBM_Settings.HUB.IBM_Offsets_Lock_Pointers:=g_IBM_Settings.IBM_Offsets_Lock_Pointers
+				g_IBM_Settings.HUB.IBM_Offsets_URL:=g_IBM_Settings.IBM_Offsets_URL
+				MSGBOX 36, Briv Master Settings Migration, % "Hello, I'm Irisiri and I've been screwing around with Briv Master's settings structure. To avoid you having to get set up again BM will attempt to migrate your existing settings.`n`nBM no longer saves champion level settings seperately for the Combine and Non-combine strategy options.`n`nSelect Yes to migrate your Combine level settings`nSelect No to migrate your Non-combine level settings.`n`nYour current setting is: " . (g_IBM_Settings.IBM_Route_Combine ? "Combine (Yes)" : "Non-Combine (No)") ;32 is question, 4 is Yes/No
+				ifMsgBox Yes
+					g_IBM_Settings.IBM_LevelManager_Levels:=g_IBM_Settings.IBM_LevelManager_Levels[1]
+				ifMsgBox No
+					g_IBM_Settings.IBM_LevelManager_Levels:=g_IBM_Settings.IBM_LevelManager_Levels[0]
+			}
+			;END MIGRATION STUFF
+			needSave:=this.CheckForExtraSettings(g_IBM_Settings, template) ;Delete extra settings, without removing object-based values for them
+            needSave:=this.CheckForMissingSettings(g_IBM_Settings,template) OR needSave ;Add extra settings, along with their default values. Order matters here due to lazy OR
         }
         if (needSave)
             this.SaveSettings()
     }
 
-    UpdateSetting(setting, value)
-    {
-        this.Settings[setting] := value
-    }
-
-    UpdateLevelSettings(levelData)
-    {
-        this.Settings["IBM_LevelManager_Levels",this.Settings["IBM_Route_Combine"]] := levelData
-    }
-
-	GetLevelSettings() ;Returns the current level settings from the data (not UI) for the selected combine mode
+	CheckForMissingSettings(settings, template) ;Check all elements of settings and remove any that do not exist in template, up to those with _DEFAULT properties
 	{
-		return this.Settings["IBM_LevelManager_Levels",this.Settings["IBM_Route_Combine"]]
+		needSave:=false
+		for k,v in template.Clone()
+		{
+			if(k!="_DEFAULT") ;Do not treat the default values as settings
+			{
+				if(!settings.HasKey(k))
+				{
+					if(template[k].HasKey("_DEFAULT")) ;If this setting is a leaf node
+						settings[k]:=template[k,"_DEFAULT"]
+					else ;An object that will be further added to later
+						settings[k]:={}
+					needSave:=true
+				}
+				if(isObject(v))
+					 needSave:=this.CheckForMissingSettings(settings[k],v) OR needSave
+			}
+		}
+		return needSave
 	}
+
+	CheckForExtraSettings(settings, template) ;Check all elements of settings and remove any that do not exist in template, up to those with _DEFAULT properties
+	{
+		needSave:=false
+		for k,v in settings.Clone()
+		{
+			if(template.HasKey(k))
+			{
+				if(!template[k].HasKey("_DEFAULT")) ;Marks a 'leaf' note in the template, following items may be object-based values so we can't delete them
+					needSave:=this.CheckForExtraSettings(v,template[k]) OR needSave ;Order matters due to lazy execution
+			}
+			else
+			{
+				settings.Delete(k)
+				needSave:=true
+			}
+		}
+		return needSave
+	}
+	
+	CreateDefaultSettingsFromTemplate(template) ;Extracts all values from the _DEFAULT keys, e.g. template.IBM_Setting._DEFAULT:=true becomes template.IBM_Setting:=true. This is done in place
+	{
+		for k,v in template
+		{
+			if(IsObject(v))
+				this.CreateDefaultSettingsFromTemplate_Recurse(template,k,v)
+		}
+		return template
+	}
+	
+	CreateDefaultSettingsFromTemplate_Recurse(parentObj,key,value)
+	{
+		for k,v in value.Clone()
+		{
+			if(k=="_DEFAULT") ;Assign the value of the default property to the parent it is attached to
+			{
+				parentObj[key]:=v ;This overwrites value, so we just return here
+				return
+			}
+			else if(IsObject(v))
+			{
+				this.CreateDefaultSettingsFromTemplate_Recurse(value,k,v)
+			}
+		}
+	}
+
+    UpdateSetting(setting, value) ;TODO: With no logic around the assignment this seems like a bit of a pointless function
+    {
+        g_IBM_Settings[setting]:=value
+    }
 
 	UpdateRouteSetting(setting,toggleZone)
 	{
-		this.Settings[setting][toggleZone]:=!this.Settings[setting][toggleZone]
+		g_IBM_Settings[setting][toggleZone]:=!g_IBM_Settings[setting][toggleZone]
 	}
 
 	IBM_GetGUIFormationData() ;Generates formation data for the level manager GUI
