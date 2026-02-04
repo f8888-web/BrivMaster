@@ -1,6 +1,6 @@
 #Requires AutoHotkey 1.1.37+ <1.2
 #SingleInstance Force
-;Based on BrivGemFarm Performance by MikeBaldi and Antilectual, and on various addons created by ImpEGamer. Refer to the ReadMe.
+;Based on BrivGemFarm Performance by MikeBaldi and Antilectual, and on various addons created by ImpEGamer. Refer to the Readme.
 
 ;=======================
 ;Script Optimization
