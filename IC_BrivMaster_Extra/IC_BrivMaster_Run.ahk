@@ -117,7 +117,7 @@ class IC_BrivMaster_GemFarm_Class
 			this.currentZone:=g_SF.Memory.ReadCurrentZone() ;Class level variable so it can be reset during rollbacks TODO: Move to routeMaster
 			if (this.currentZone=="")
 				g_IBM.GameMaster.SafetyCheck()
-			if (!this.TriggerStart AND this.offRamp AND this.currentZone <= this.routeMaster.thelloraTarget) ;Additional reset detection
+			if (!this.TriggerStart AND lastResetCount==0 AND this.offRamp AND this.currentZone<=this.routeMaster.thelloraTarget) ;Additional reset detection for the first run after a manual (forced) restart, as we can't tell run 0 from run 0 if another forced restart happens in that one TODO: Should we also store and check the total resets count (currently in the logger partly) to check here? As whilst a background party can increase it, if it has not changed then we can conclude there has been no reset on any party
 			{
 				this.TriggerStart:=true
 				this.Logger.AddMessage("Missed Reset: Offramp set and z[" . this.currentZone . "] is at or before Thellora target z[" . this.routeMaster.thelloraTarget . "]")
