@@ -120,9 +120,9 @@ class IC_BrivMaster_GemFarm_Class
 			if (!this.TriggerStart AND lastResetCount==0 AND this.offRamp AND this.currentZone<=this.routeMaster.thelloraTarget) ;Additional reset detection for the first run after a manual (forced) restart, as we can't tell run 0 from run 0 if another forced restart happens in that one TODO: Should we also store and check the total resets count (currently in the logger partly) to check here? As whilst a background party can increase it, if it has not changed then we can conclude there has been no reset on any party
 			{
 				this.TriggerStart:=true
-				this.Logger.AddMessage("Missed Reset: Offramp set and z[" . this.currentZone . "] is at or before Thellora target z[" . this.routeMaster.thelloraTarget . "]")
+				this.Logger.AddMessage("Missed Reset: Core reset count 0, offramp set and z[" . this.currentZone . "] is at or before Thellora target z[" . this.routeMaster.thelloraTarget . "]")
 			}
-			if (this.TriggerStart OR g_SF.Memory.ReadResetsCount() > lastResetCount) ; first loop or Modron has reset
+			if (this.TriggerStart OR g_SF.Memory.ReadResetsCount()>lastResetCount) ;First loop or Modron has reset
             {
 				g_SharedData.UpdateOutbound("IBM_BuyChests",false)
 				if (g_SharedData.BossesHitThisRun)
