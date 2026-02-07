@@ -30,7 +30,8 @@ class IC_BrivMaster_Logger_Class ;A class for recording run logs
 			else if (this.LogEntries.Run.LastZone < g_IBM.RouteMaster.targetZone) ;If we didn't make it to reset
 				this.LogEntries.Run.Fail:=true
 			g_SharedData.UpdateOutbound("RunLogResetNumber",-1) ;Invalid whilst updating
-			g_SharedData.UpdateOutbound("RunLog",AHK_JSON.Dump(this.LogEntries))
+			logEntryJSON:=AHK_JSON.Dump(this.LogEntries.Run)
+			g_SharedData.UpdateOutbound("RunLog",logEntryJSON)
 			g_SharedData.UpdateOutbound("RunLogResetNumber",this.LogEntries.Run.ResetNumber)
 			;Output log
 			loadTime:=this.LogEntries.Run.ActiveStart - this.LogEntries.Run.Start
