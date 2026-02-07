@@ -637,6 +637,11 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Game_Path, % g_IBM_Settings.IBM_Game_Path
 		GuiControl, ICScriptHub:, IBM_Game_Launch, % g_IBM_Settings.IBM_Game_Launch
 		GuiControl, ICScriptHub:, IBM_Game_Hide_Launcher, % g_IBM_Settings.IBM_Game_Hide_Launcher
+		;Window
+		GuiControl, ICScriptHub:, IBM_Window_X, % g_IBM_Settings.IBM_Window_X
+		GuiControl, ICScriptHub:, IBM_Window_Y, % g_IBM_Settings.IBM_Window_Y
+		GuiControl, ICScriptHub:, IBM_Window_Hide, % g_IBM_Settings.IBM_Window_Hide
+		GuiControl, ICScriptHub:, IBM_Window_Dark_Icon, % g_IBM_Settings.IBM_Window_Dark_Icon
 		;Offsets
 		GuiControl, ICScriptHub:, IBM_Offsets_Check, % g_IBM_Settings.HUB.IBM_Offsets_Check
 		GuiControl, ICScriptHub:, IBM_Offsets_Lock_Pointers, % g_IBM_Settings.HUB.IBM_Offsets_Lock_Pointers
@@ -684,13 +689,7 @@ class IC_IriBrivMaster_GUI
 		GuiControl, ICScriptHub:, IBM_Casino_Target_Base, % g_IBM_Settings.IBM_Casino_Target_Base
 		GuiControl, ICScriptHub:, IBM_Casino_Redraws_Base, % g_IBM_Settings.IBM_Casino_Redraws_Base
 		GuiControl, ICScriptHub:, IBM_Casino_MinCards_Base, % g_IBM_Settings.IBM_Casino_MinCards_Base
-		;Window
-		GuiControl, ICScriptHub:, IBM_Window_X, % g_IBM_Settings.IBM_Window_X
-		GuiControl, ICScriptHub:, IBM_Window_Y, % g_IBM_Settings.IBM_Window_Y
-		GuiControl, ICScriptHub:, IBM_Window_Hide, % g_IBM_Settings.IBM_Window_Hide
-		GuiControl, ICScriptHub:, IBM_Window_Dark_Icon, % g_IBM_Settings.IBM_Window_Dark_Icon
-		
-		
+				
 		;BM LEVELS TAB
 
 		;Levelling options
