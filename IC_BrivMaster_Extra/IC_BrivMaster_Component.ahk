@@ -146,7 +146,7 @@ Class IC_IriBrivMaster_Component
 		this.LoadSettings()
 		g_SF:=New IC_BrivMaster_SharedFunctions_Class ;Overwrite with IBM class entirely
 		g_IriBrivMaster_GUI.Init() ;Must follow IBM memory manager being set up in g_SF
-		g_IriBrivMaster_GUI.UpdateGUISettings(g_IBM_Settings) ;TODO: Given we're loading settings before displaying the UI now, they should just be applied via Init() to avoid setting defaults and immediately overwriting them?
+		g_IriBrivMaster_GUI.UpdateGUISettings() ;TODO: Given we're loading settings before displaying the UI now, they should just be applied via Init() to avoid setting defaults and immediately overwriting them?
 		this.ChestSnatcher:=New IC_IriBrivMaster_ChestSnatcher_Class()
 		this.ResetStats() ;Before we initiate the timers
 		g_IriBrivMaster_StartFunctions.Push(ObjBindMethod(this, "Start"))
