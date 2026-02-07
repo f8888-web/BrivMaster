@@ -321,7 +321,12 @@ class IC_BrivMaster_GemFarm_Class
 				this.routeMaster.UpdateThellora()
 				g_SharedData.UpdateOutbound("LoopString","Ellywick's Casino")
 				this.IBM_EllywickCasino(frontColumn,"min",g_IBM_Settings["IBM_Level_Options_Ghost"])
-				if (!this.routeMaster.IsFeatSwap()) ;If featswapping Briv will jump with whatever value he had at zone completion, so checking here isn't useful, for non-feat swap, check if Briv is correctly placed so we do/don't jump out of the waitroom
+				if (this.routeMaster.IsFeatSwap()) ;Swap formation here as we can't be blocked in the transition
+				{
+					this.routeMaster.StartAutoProgressSoft() ;Start moving ASAP
+					this.routeMaster.SetFormationHighZone() ;Special version for use here on the immediate exit
+				}
+				else ;For non-feat swap, check if Briv is correctly placed so we do/don't jump out of the waitroom
 				{
 					brivShouldBeinEConfig:=this.routeMaster.ShouldWalk(g_SF.Memory.ReadCurrentZone())
 					swapAttempts:=0
@@ -330,10 +335,8 @@ class IC_BrivMaster_GemFarm_Class
 						this.routeMaster.SetFormation() ;Move to standard formation after waiting for the Casino if necessary
 						swapAttempts++
 					} until (brivShouldBeinEConfig==g_Heroes[58].ReadBenched() OR swapAttempts > 10)
+					this.routeMaster.StartAutoProgressSoft() ;Start moving only once Briv is correctly placed or removed
 				}
-				this.routeMaster.StartAutoProgressSoft() ;Start moving ASAP
-				if (this.routeMaster.IsFeatSwap()) ;Swap formation here as we can't be blocked in the transition
-					this.routeMaster.SetFormationHighZone() ;Special version for use here on the immediate exit
 				this.levelManager.LevelFormation("Q","min",500) ;Apply min so BBEG->Dyna swap, Tatyana->Hew swap etc happens. Trying 500ms to allow for Hew x10 levelling to happen
 			}
 			else ;Non-combining
