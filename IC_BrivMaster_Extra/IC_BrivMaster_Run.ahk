@@ -110,8 +110,8 @@ class IC_BrivMaster_GemFarm_Class
 			this.DianaCheeseHelper:=New IC_BrivMaster_DianaCheese_Class
 		g_SharedData.UpdateOutbound("IBM_BuyChests",false)
 		this.PreviousZoneStartTime:=A_TickCount ;TODO: These 3 variables are for CheckifStuck, could maybe using encapsulating somewhere else (simple object for it?)
-		this.CheckifStuck_lastCheck:=0 
-        this.CheckifStuck_fallBackTries:=0	
+		this.CheckifStuck_lastCheck:=0
+        this.CheckifStuck_fallBackTries:=0
 		Loop
         {
 			this.currentZone:=g_SF.Memory.ReadCurrentZone() ;Class level variable so it can be reset during rollbacks TODO: Move to routeMaster

@@ -389,7 +389,7 @@ Class IC_IriBrivMaster_Component
 
 	UpdateStats(dirty)
 	{
-		static CONSTANT_baseGPB:=9.02 ;TODO: Read blessings so this correctly reflects those? Seems a bit of a waste of CPU cycles admittedly...just do it at startup? Would then have to deal with the memory read not being available at that point
+		static CONSTANT_baseGPB:=9.02 ;TODO: Read blessings so this correctly reflects those? Seems a bit of a waste of CPU cycles admittedly...just do it at startup?
 		static CONSTANT_silversPerBoss:=0.05361
 		static CONSTANT_goldPerBoss:=0.00423
 		static CONSTANT_BSCPerSilver:=0.10356

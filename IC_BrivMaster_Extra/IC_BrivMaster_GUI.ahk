@@ -297,7 +297,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, w55 r2 xs+5 y+5 h18, Launch Command:
 		Gui, ICScriptHub:Add, Edit, +cBlack  w40 x+10 w402 r2 vIBM_Game_Launch gIBM_Game_Location_Settings
 		GUIFunctions.AddToolTip("IBM_Game_Launch", "The launch command for the game. This is seperated to allow the use of different launchers")
-		;Script Window Options
+		;Script Window
 		Gui, ICScriptHub:Font, w700
 		Gui, ICScriptHub:Add, Groupbox, Section xm+5 y+9 w%groupWidth% h50, % "Window Options"
 		Gui, ICScriptHub:Font, w400
@@ -346,7 +346,7 @@ class IC_IriBrivMaster_GUI
 		Gui, ICScriptHub:Add, Text, w120 x+10 h18 0x200 vIBM_Offsets_Text_Imports_GitHub, % "GitHub: <Not checked>"		
 		Gui, ICScriptHub:Add, Button, xs+400 yp+0 w70 vIBM_Offsets_Download gIBM_Offsets_Download, Download
 		
-		Gui, ICScriptHub:Add, CheckBox, xs+5 yp+25 w120 h18 0x200 Center vIBM_Offsets_Check gIBM_Generic_Hub_Setting_Int, Check automatically
+		Gui, ICScriptHub:Add, CheckBox, xs+10 yp+25 w120 h18 0x200 Center vIBM_Offsets_Check gIBM_Generic_Hub_Setting_Int, Check automatically
 		GUIFunctions.AddToolTip("IBM_Offsets_Check", "Check this option to automatically check for updates to Script Hub and enabled addons when Script Hub starts")
 		Gui, ICScriptHub:Add, CheckBox, x+10 w120 h18 0x200 Center vIBM_Offsets_Lock_Pointers gIBM_Generic_Hub_Setting_Int, Update imports only
 		GUIFunctions.AddToolTip("IBM_Offsets_Lock_Pointers", "Check this option to only apply new imports when downloading. Use this if you have tweaked the pointers yourself")
