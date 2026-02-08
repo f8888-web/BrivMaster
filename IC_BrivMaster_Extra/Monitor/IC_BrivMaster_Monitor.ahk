@@ -179,6 +179,9 @@ Loop
     Sleep g_Settings.Freq
 }
 
+IBM_MonitorGuiClose:
+ExitApp
+
 IBM_Monitor_Settings()
 {
     GuiControl, IBM_Monitor_Settings:, IBM_Monitor_Settings_Rows, % g_Settings.Rows
