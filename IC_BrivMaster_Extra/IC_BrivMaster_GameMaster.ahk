@@ -424,7 +424,10 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 				openResult:=this.OpenIC("Called from SafetyCheck() loop")
             }
             if(g_SF.Memory.ReadResetting() AND g_SF.Memory.ReadCurrentZone() <= 1 AND g_SF.Memory.ReadCurrentObjID() == "")
-                this.WorldMapRestart()
+            {
+				g_SharedData.UpdateOutbound("LoopString","Zone is -1. At world map?")
+				this.RestartAdventure("At world map?")
+			}
             this.RecoverFromGameClose()
             this.BadSaveTest()
             return false
@@ -481,12 +484,6 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
             g_SharedData.UpdateOutbound_Increment("TotalRollBacks")
         else if (g_IBM.currentZone != "" and g_IBM.currentZone < g_SF.Memory.ReadCurrentZone())
 			g_SharedData.UpdateOutbound_Increment("BadAutoProgress")
-    }
-	
-	WorldMapRestart() ;Forces an adventure restart through closing IC and using server calls TODO: 2 line function that is only used in one place?
-    {
-        g_SharedData.UpdateOutbound("LoopString","Zone is -1. At world map?")
-        this.RestartAdventure( "At world map?" )
     }
 	
 	RestartAdventure(reason:="")
