@@ -512,7 +512,7 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 		if(response)
 		{
 			if(response.success) ;The EndAdventure call response doesnot have an 'Okay' property
-				g_IBM.Logger.AddMessage("End adventure response: success - loading new adventure"))
+				g_IBM.Logger.AddMessage("End adventure response: success - loading new adventure")
 			else
 			{
 				g_IBM.Logger.AddMessage("End adventure response: failure reason=[" . response.failure_reason . "] - resuming")
