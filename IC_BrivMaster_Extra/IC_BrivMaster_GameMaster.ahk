@@ -429,7 +429,10 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
 				this.RestartAdventure("At world map?")
 			}
             this.RecoverFromGameClose()
-            this.BadSaveTest()
+            if(g_IBM.currentZone != "" and g_IBM.currentZone - 1 > g_SF.Memory.ReadCurrentZone())
+				g_SharedData.UpdateOutbound_Increment("TotalRollBacks")
+			else if (g_IBM.currentZone != "" and g_IBM.currentZone < g_SF.Memory.ReadCurrentZone())
+				g_SharedData.UpdateOutbound_Increment("BadAutoProgress")
             return false
         }
         else if (g_SF.Memory.ReadCurrentZone()=="")  ; game loaded but can't read zone? failed to load properly on last load? (Tests if game started without script starting it)
@@ -476,14 +479,6 @@ class IC_BrivMaster_GameMaster_Class ;A class for managing the game process
         }
 		Critical Off ;Turned On previously via WaitForGameReady() calling WaitForFinalStatUpdates()
         g_SharedData.UpdateOutbound("LoopString","Loading game finished")
-    }
-		
-	BadSaveTest() ;TODO: Given this is 4 lines of code used only in one place, is there a need for it to be a separate function? Also TODO: This doesn't check the memory reads are actually valid, does it need to? Also also, should this log?
-    {
-        if(g_IBM.currentZone != "" and g_IBM.currentZone - 1 > g_SF.Memory.ReadCurrentZone())
-            g_SharedData.UpdateOutbound_Increment("TotalRollBacks")
-        else if (g_IBM.currentZone != "" and g_IBM.currentZone < g_SF.Memory.ReadCurrentZone())
-			g_SharedData.UpdateOutbound_Increment("BadAutoProgress")
     }
 	
 	RestartAdventure(reason:="",modronFail:=false) ;modronFail is used to indicate if we're restarting due to apparently being stuck at a modron reset. In this case, if the server doesn't respond it's best not to restart, as once the server is back we'll likely load into the run we were on before. This is a parameter to avoid being stuck permanently TODO: Depending on how this ends up working, probably needs breaking into functions for each stage
