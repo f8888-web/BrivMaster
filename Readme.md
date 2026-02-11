@@ -1,0 +1,104 @@
+# IC Script Hub
+## ``News: ``
+``4.4.6 - 2025-11-03``
+**Welcome** to Script Hub's new home!
+
+For those that use github desktop you can change the remote here:
+![Remote2](/docimages/remote2.png) ![Remote](/docimages/remote.png)
+
+It has been a long time but I think it's time I bring the script over to my profile so I can have better control over the repository. My updates to Script Hub will be made here from now on. Thanks for your support!
+
+ The following notice's statements are still true. Emmote's addons have returned to her own repository again. Imp's are still in the IC_Addon-1 repository on *this* Github profile as linked below. LevelUp addon is still required to function but many addons in the repositories linked are highly recommended.
+
+I have included a batch file to help the transition of connecting most common addons (and mine) to the main script easier if not using the remote origin change. It is [here](https://github.com/antilectual/Idle-Champions/tree/main/mklink-default.txt). Just edit it to use the directories you personally use, rename it .bat, and run to link the addons into Script Hub. I recommend having the script and addons downloaded through Github desktop (or other git client) to make keeping them updated easier.
+
+***Note***: Settings that may need to be re-updated after switch if they didn't stay - BrivGemFarm, Theme Manager, and Addon Management (Re-enabling the addons). Copying settings from previous versions should work fine also. Settings from addons should remain if properly using the junctions (mklink file).
+  
+ ## 
+  
+``v4.4.3 - 2025-10-19:``
+**Important**: This update requires updated addons for them to function properly. Find updated versions of ImpEGamer's addons at  [https://github.com/Imp444/IC_Addons/](https://github.com/Imp444/IC_Addons/) and Emmote's at  [https://github.com/Emmotes/IC_Addons/](https://github.com/Emmotes/IC_Addons/).
+
+##
+2025-08-02:  
+
+Added important [imports](#imports) section. Please read it before running IC Script Hub.
+
+As of game version 629, due to changes with hotkeys the [LevelUp](https://github.com/Imp444/IC_Addons/tree/main/IC_BrivGemFarm_LevelUp_Extra) addon is required to run smoothly. Refer to [Addons.md](Addons.md) for links to more commonly used addons.
+
+---  
+## Introduction
+
+> "This is your last chance. After this, there is no turning back. You take the blue pill—the story ends, you wake up in your bed and believe whatever you want to believe. You take the red pill—you stay in Wonderland, and I show you how deep the rabbit hole goes. Remember: all I'm offering is the truth. Nothing more." 
+>  
+> --- Morpheus 
+
+
+> "I feel the need, the need for speed!"
+> 
+> --- Maverick
+
+Welcome to 2022 and Happy New Year!  
+
+New year, new script. We hope you like it.   
+  
+This script is the successor to ModronGUI.
+
+**Warning**:
+This script reads system memory. I do not know CNE's stance on reading system memory used by the game, so use at your own risk. Pointers may break on any given update and I may no longer decide to update them.
+
+**Warning2**:
+CNE will at times push out multiple patches during the week, changing classes and thus their structure in memory. This can change offsets which will break memory reading functions. It is advised you disable auto updates and keep a back up of a working Assembly-CSharp.dll from your install folder. Refer to the [imports](#imports) section for updating offsets.
+
+## Prerequisites
+
+You need AutoHotKey installed to be able to use `IC Script Hub`. The version of AutoHotKey installed also needs to be version 1.1 and support the switch command. 
+
+[Download AutoHotKey](https://www.autohotkey.com/)
+
+It is recommended that you set up Git and pull `IC Script Hub` via Git. 
+
+This will be the easiest way for you to keep up to date with any changes made in the future. There is a little bit more to do upfront, but you will save so much time in the long run (kinda like scripting the game in the first place).
+
+You may use any Git client you wish. [Here is a step-by-step guide](docfiles/getting-started-with-ic-script-hub-using-git.md) to installing and using Git Desktop with `IC Script Hub`.
+
+If you would rather grab the latest version of the code manually, [head over here to learn how to do that](docfiles/getting-started-with-ic-script-hub-using-zip.md). I really don't recommend it though, as you will have to repeat this entire process every single time as opposed to simply opening an application and clicking a button.
+
+## Imports
+
+IC updates often and because of this the script needs to be updated to be able read the game properly. This is done using `imports`. These currently differ based on if you play on Steam, EGS, or another service.
+
+To create them yourself you can use the export/import tools here: [ScriptHub-AutomaticOffsets](https://github.com/antilectual/ScriptHub-AutomaticOffsets).
+
+To update the imports for your version you can use community created imports, which [Emmote](https://github.com/Emmotes) so generously keeps updated [here](https://github.com/Emmotes/ic_scripting_imports) or on the official [IC discord server](https://discord.com/invite/idlechampions/).
+
+And to update the script:
+In `[Script Hub Folder]\AddOns\IC_Core\MemoryRead\` replace the `Imports` folder there with the `Imports` folder from the zip/repository. Then completely restart the script.
+
+## I know Git Fu!
+
+You now have the latest version of `IC Script Hub` on your machine.
+
+Let's go down the rabbit hole and see what awaits.
+
+Where do you play the game?
+
+[I play on Steam](docfiles/using-ic-script-hub-with-steam.md) 
+
+[I play on EGS](docfiles/using-ic-script-hub-with-egs.md)
+
+[I play on Standalone](docfiles/using-ic-script-hub-with-standalone.md)
+
+[I play on Kartridge](docfiles/using-ic-script-hub-with-kartridge.md)
+
+## Reading this documentation offline
+
+You can open Readme.md (this file) in any Markdown editor on Windows that has a preview function. I use VS Code. 
+
+1. Open the repository folder in VS Code
+2. Open Readme.md
+3. Press `Control+Shift+V` or right click on the file tab and pick `Open Preview`
+4. Read and navigate using the preview pane that just opened
+
+
+
